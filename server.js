@@ -2,6 +2,8 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+// ─── .env loader ────────────────────────────────────────────────────────────
+
 function loadDotEnv() {
     const envPath = path.join(__dirname, '.env');
     if (!fs.existsSync(envPath)) {
@@ -34,6 +36,8 @@ function loadDotEnv() {
 
 loadDotEnv();
 
+// ─── Config ─────────────────────────────────────────────────────────────────
+
 const PORT = Number(process.env.PORT || 8787);
 const DASHBOARD_FILE = path.join(__dirname, 'crisis-monitoring-dashboard.html');
 
@@ -43,6 +47,7 @@ const FASTFOREX_ACCOUNT = process.env.FASTFOREX_ACCOUNT || '';
 const FASTFOREX_API_KEY = process.env.FASTFOREX_API || process.env.FASTFOREX_API_KEY || '';
 const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY || process.env.ALPHA_VANTAGE || '';
 const AISSTREAM_API_KEY = process.env.AISSTREAM_API_KEY || process.env.AISSTREAM || '';
+
 const NEWS_SOURCES = Object.freeze([
     { url: 'https://www.aljazeera.com/xml/rss/all.xml', name: 'Al Jazeera' },
     { url: 'http://feeds.bbci.co.uk/news/world/rss.xml', name: 'BBC' },
@@ -52,17 +57,43 @@ const NEWS_SOURCES = Object.freeze([
     { url: 'https://www.ft.com/?format=rss', name: 'Financial Times' }
 ]);
 
+// Yahoo Finance symbol maps
+const YAHOO_INDEX_SYMBOLS = {
+    kospi: '%5EKS11',
+    kosdaq: '%5EKQ11',
+    nasdaq: '%5EIXIC',
+    dow: '%5EDJI',
+    sp500: '%5EGSPC'
+};
+
+const YAHOO_SECTOR_SYMBOLS = {
+    kbfin: '105560.KS',
+    shinhan: '055550.KS',
+    hanafin: '086790.KS',
+    hyundaie: '000720.KS',
+    daewooec: '047040.KS',
+    dlenc: '375500.KS'
+};
+
+const YAHOO_COMMODITY_SYMBOLS = {
+    wti: 'CL%3DF',
+    brent: 'BZ%3DF',
+    gas: 'NG%3DF',
+    gold: 'GC%3DF'
+};
+
+const YAHOO_FX_SYMBOLS = {
+    usdkrw: 'USDKRW%3DX'
+};
+
 const CACHE_TTL_MS = 60 * 1000;
 const NEWS_CACHE_TTL_MS = 3 * 60 * 1000;
 const MAX_NEWS_ITEMS = 24;
-let indicatorCache = {
-    expiresAt: 0,
-    payload: null
-};
-let newsCache = {
-    expiresAt: 0,
-    payload: null
-};
+
+let indicatorCache = { expiresAt: 0, payload: null };
+let newsCache = { expiresAt: 0, payload: null };
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
 function toNumber(value) {
     const normalized = String(value ?? '').replace(/,/g, '').trim();
@@ -80,7 +111,8 @@ function sendJson(res, statusCode, body) {
     const payload = JSON.stringify(body);
     res.writeHead(statusCode, {
         'Content-Type': 'application/json; charset=utf-8',
-        'Cache-Control': 'no-store'
+        'Cache-Control': 'no-store',
+        'Access-Control-Allow-Origin': '*'
     });
     res.end(payload);
 }
@@ -95,7 +127,7 @@ function sendHtml(res, html) {
 
 async function fetchJson(url) {
     const response = await fetch(url, {
-        headers: { 'User-Agent': 'insight-dashboard/1.0' }
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
     });
     if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -106,7 +138,7 @@ async function fetchJson(url) {
 async function fetchText(url) {
     const response = await fetch(url, {
         headers: {
-            'User-Agent': 'insight-dashboard/1.0',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             Accept: 'application/rss+xml, application/xml, text/xml, */*'
         }
     });
@@ -116,19 +148,163 @@ async function fetchText(url) {
     return response.text();
 }
 
+// ─── Yahoo Finance (FREE, no API key) ───────────────────────────────────────
+
+async function fetchYahooQuote(encodedSymbol) {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodedSymbol}?interval=1d&range=5d&includePrePost=false`;
+    const data = await fetchJson(url);
+
+    const result = data?.chart?.result?.[0];
+    if (!result) {
+        return null;
+    }
+
+    const meta = result.meta;
+    const price = toNumber(meta?.regularMarketPrice);
+    const prevClose = toNumber(meta?.chartPreviousClose ?? meta?.previousClose);
+
+    if (price === null) {
+        return null;
+    }
+
+    let changePct = null;
+    if (prevClose !== null && prevClose !== 0) {
+        changePct = ((price - prevClose) / prevClose) * 100;
+    }
+
+    return { value: price, changePct };
+}
+
+async function fetchYahooQuotes(symbolMap, warnings, label) {
+    const entries = await Promise.all(
+        Object.entries(symbolMap).map(async ([key, symbol]) => {
+            try {
+                const quote = await fetchYahooQuote(symbol);
+                return [key, quote];
+            } catch (error) {
+                warnings.push(`Yahoo ${label} ${key}: ${error.message}`);
+                return [key, null];
+            }
+        })
+    );
+    return Object.fromEntries(entries.filter(([, v]) => v !== null));
+}
+
+// ─── FRED API (interest rates) ──────────────────────────────────────────────
+
+async function fetchFredLatest(seriesId) {
+    if (!FRED_API_KEY) {
+        return null;
+    }
+
+    const url = new URL('https://api.stlouisfed.org/fred/series/observations');
+    url.searchParams.set('series_id', seriesId);
+    url.searchParams.set('api_key', FRED_API_KEY);
+    url.searchParams.set('file_type', 'json');
+    url.searchParams.set('sort_order', 'desc');
+    url.searchParams.set('limit', '12');
+
+    const data = await fetchJson(url.toString());
+    const rows = Array.isArray(data.observations) ? data.observations : [];
+    for (const row of rows) {
+        const parsed = toNumber(row.value);
+        if (parsed !== null) {
+            return parsed;
+        }
+    }
+    return null;
+}
+
+// ─── BOK ECOS (한국 기준금리) ───────────────────────────────────────────────
+
+async function fetchBokBaseRate() {
+    if (!ECOS_API_KEY) {
+        return null;
+    }
+
+    const now = new Date();
+    const endYear = now.getFullYear();
+    const endMonth = String(now.getMonth() + 1).padStart(2, '0');
+    const end = `${endYear}${endMonth}`;
+    const start = `${endYear - 3}01`;
+
+    const url =
+        `https://ecos.bok.or.kr/api/StatisticSearch/${ECOS_API_KEY}/json/kr/1/240/` +
+        `722Y001/M/${start}/${end}/0101000`;
+
+    const data = await fetchJson(url);
+    const rows = data?.StatisticSearch?.row;
+    if (!Array.isArray(rows)) {
+        return null;
+    }
+
+    for (let i = rows.length - 1; i >= 0; i -= 1) {
+        const parsed = toNumber(rows[i]?.DATA_VALUE);
+        if (parsed !== null) {
+            return parsed;
+        }
+    }
+    return null;
+}
+
+// ─── FastForex (USD/KRW fallback) ───────────────────────────────────────────
+
+async function fetchFastForexUsdKrw() {
+    if (!FASTFOREX_API_KEY) {
+        return null;
+    }
+
+    const url = new URL('https://api.fastforex.io/fetch-one');
+    url.searchParams.set('from', 'USD');
+    url.searchParams.set('to', 'KRW');
+    url.searchParams.set('api_key', FASTFOREX_API_KEY);
+    if (FASTFOREX_ACCOUNT) {
+        url.searchParams.set('account', FASTFOREX_ACCOUNT);
+    }
+
+    const data = await fetchJson(url.toString());
+    return toNumber(data?.result?.KRW) ??
+        toNumber(data?.result?.krw) ??
+        toNumber(data?.result);
+}
+
+// ─── Alpha Vantage (stock indices fallback) ─────────────────────────────────
+
+async function fetchAlphaVantageGlobalQuote(symbol) {
+    if (!ALPHA_VANTAGE_API_KEY) {
+        return null;
+    }
+
+    const url = new URL('https://www.alphavantage.co/query');
+    url.searchParams.set('function', 'GLOBAL_QUOTE');
+    url.searchParams.set('symbol', symbol);
+    url.searchParams.set('apikey', ALPHA_VANTAGE_API_KEY);
+
+    const data = await fetchJson(url.toString());
+    const quote = data?.['Global Quote'];
+    if (!quote || typeof quote !== 'object') {
+        return null;
+    }
+
+    const value = toNumber(quote['05. price']);
+    const changePct = toPercentNumber(quote['10. change percent']);
+    if (value === null) {
+        return null;
+    }
+
+    return { value, changePct };
+}
+
+// ─── RSS News ───────────────────────────────────────────────────────────────
+
 function escapeRegExp(input) {
     return String(input).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function decodeEntities(text) {
     const named = {
-        '&amp;': '&',
-        '&lt;': '<',
-        '&gt;': '>',
-        '&quot;': '"',
-        '&#39;': "'",
-        '&apos;': "'",
-        '&nbsp;': ' '
+        '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"',
+        '&#39;': "'", '&apos;': "'", '&nbsp;': ' '
     };
     const withNamed = String(text).replace(
         /&(amp|lt|gt|quot|#39|apos|nbsp);/g,
@@ -188,8 +364,7 @@ function extractRssLink(itemBlock) {
     if (attrMatch?.[1]) {
         return cleanXmlText(attrMatch[1]);
     }
-    const linkText = extractTagText(itemBlock, ['link', 'guid', 'id']);
-    return linkText;
+    return extractTagText(itemBlock, ['link', 'guid', 'id']);
 }
 
 function extractAtomLink(entryBlock) {
@@ -209,42 +384,26 @@ function extractAtomLink(entryBlock) {
 function parseRssItems(xml, sourceName) {
     const blocks = [...String(xml).matchAll(/<item\b[^>]*>([\s\S]*?)<\/item>/gi)];
     return blocks
-        .map(([, block]) => {
-            const title = extractTagText(block, ['title']);
-            const link = extractRssLink(block);
-            const publishedAt = parseDateToIso(
-                extractTagText(block, ['pubDate', 'dc:date', 'updated', 'published'])
-            );
-            const summary = extractTagText(block, ['description', 'content:encoded', 'summary'], { stripMarkup: true });
-            return {
-                source: sourceName,
-                title,
-                link,
-                summary,
-                publishedAt
-            };
-        })
+        .map(([, block]) => ({
+            source: sourceName,
+            title: extractTagText(block, ['title']),
+            link: extractRssLink(block),
+            publishedAt: parseDateToIso(extractTagText(block, ['pubDate', 'dc:date', 'updated', 'published'])),
+            summary: extractTagText(block, ['description', 'content:encoded', 'summary'], { stripMarkup: true })
+        }))
         .filter((item) => item.title && item.link);
 }
 
 function parseAtomItems(xml, sourceName) {
     const blocks = [...String(xml).matchAll(/<entry\b[^>]*>([\s\S]*?)<\/entry>/gi)];
     return blocks
-        .map(([, block]) => {
-            const title = extractTagText(block, ['title']);
-            const link = extractAtomLink(block);
-            const publishedAt = parseDateToIso(
-                extractTagText(block, ['updated', 'published', 'dc:date'])
-            );
-            const summary = extractTagText(block, ['summary', 'content'], { stripMarkup: true });
-            return {
-                source: sourceName,
-                title,
-                link,
-                summary,
-                publishedAt
-            };
-        })
+        .map(([, block]) => ({
+            source: sourceName,
+            title: extractTagText(block, ['title']),
+            link: extractAtomLink(block),
+            publishedAt: parseDateToIso(extractTagText(block, ['updated', 'published', 'dc:date'])),
+            summary: extractTagText(block, ['summary', 'content'], { stripMarkup: true })
+        }))
         .filter((item) => item.title && item.link);
 }
 
@@ -296,10 +455,7 @@ async function buildNewsPayload() {
             return;
         }
         seen.add(key);
-        deduped.push({
-            ...item,
-            publishedAt: item.publishedAt || null
-        });
+        deduped.push({ ...item, publishedAt: item.publishedAt || null });
     });
 
     deduped.sort((a, b) => {
@@ -327,264 +483,113 @@ async function getNews() {
     }
 
     const payload = await buildNewsPayload();
-    newsCache = {
-        payload,
-        expiresAt: now + NEWS_CACHE_TTL_MS
-    };
+    newsCache = { payload, expiresAt: now + NEWS_CACHE_TTL_MS };
     return payload;
 }
 
-async function fetchFredLatest(seriesId) {
-    if (!FRED_API_KEY) {
-        return null;
-    }
-
-    const url = new URL('https://api.stlouisfed.org/fred/series/observations');
-    url.searchParams.set('series_id', seriesId);
-    url.searchParams.set('api_key', FRED_API_KEY);
-    url.searchParams.set('file_type', 'json');
-    url.searchParams.set('sort_order', 'desc');
-    url.searchParams.set('limit', '12');
-
-    const data = await fetchJson(url.toString());
-    const rows = Array.isArray(data.observations) ? data.observations : [];
-    for (const row of rows) {
-        const parsed = toNumber(row.value);
-        if (parsed !== null) {
-            return parsed;
-        }
-    }
-    return null;
-}
-
-async function fetchBokBaseRate() {
-    if (!ECOS_API_KEY) {
-        return null;
-    }
-
-    const now = new Date();
-    const endYear = now.getFullYear();
-    const endMonth = String(now.getMonth() + 1).padStart(2, '0');
-    const end = `${endYear}${endMonth}`;
-    const start = `${endYear - 3}01`;
-
-    const url =
-        `https://ecos.bok.or.kr/api/StatisticSearch/${ECOS_API_KEY}/json/kr/1/240/` +
-        `722Y001/M/${start}/${end}/0101000`;
-
-    const data = await fetchJson(url);
-    const rows = data?.StatisticSearch?.row;
-    if (!Array.isArray(rows)) {
-        return null;
-    }
-
-    for (let i = rows.length - 1; i >= 0; i -= 1) {
-        const parsed = toNumber(rows[i]?.DATA_VALUE);
-        if (parsed !== null) {
-            return parsed;
-        }
-    }
-    return null;
-}
-
-async function fetchFastForexUsdKrw() {
-    if (!FASTFOREX_API_KEY) {
-        return null;
-    }
-
-    const url = new URL('https://api.fastforex.io/fetch-one');
-    url.searchParams.set('from', 'USD');
-    url.searchParams.set('to', 'KRW');
-    url.searchParams.set('api_key', FASTFOREX_API_KEY);
-    if (FASTFOREX_ACCOUNT) {
-        url.searchParams.set('account', FASTFOREX_ACCOUNT);
-    }
-
-    const data = await fetchJson(url.toString());
-    const direct =
-        toNumber(data?.result?.KRW) ??
-        toNumber(data?.result?.krw) ??
-        toNumber(data?.result);
-
-    return direct;
-}
-
-async function fetchAlphaVantageGlobalQuote(symbol) {
-    if (!ALPHA_VANTAGE_API_KEY) {
-        return null;
-    }
-
-    const url = new URL('https://www.alphavantage.co/query');
-    url.searchParams.set('function', 'GLOBAL_QUOTE');
-    url.searchParams.set('symbol', symbol);
-    url.searchParams.set('apikey', ALPHA_VANTAGE_API_KEY);
-
-    const data = await fetchJson(url.toString());
-    const quote = data?.['Global Quote'];
-    if (!quote || typeof quote !== 'object') {
-        return null;
-    }
-
-    const value = toNumber(quote['05. price']);
-    const changePct = toPercentNumber(quote['10. change percent']);
-    if (value === null) {
-        return null;
-    }
-
-    return {
-        value,
-        changePct
-    };
-}
-
-async function fetchStockIndices(warnings) {
-    if (!ALPHA_VANTAGE_API_KEY) {
-        return null;
-    }
-
-    const symbolMap = {
-        kospi: '^KS11',
-        kosdaq: '^KQ11',
-        nasdaq: '^IXIC',
-        dow: '^DJI',
-        sp500: '^GSPC'
-    };
-    const fallbackSymbolMap = {
-        kospi: 'EWY',
-        kosdaq: 'KORU',
-        nasdaq: 'QQQ',
-        dow: 'DIA',
-        sp500: 'SPY'
-    };
-
-    const entries = await Promise.all(
-        Object.entries(symbolMap).map(async ([key, symbol]) => {
-            try {
-                let point = await fetchAlphaVantageGlobalQuote(symbol);
-                if (!point) {
-                    const fallbackSymbol = fallbackSymbolMap[key];
-                    if (fallbackSymbol) {
-                        point = await fetchAlphaVantageGlobalQuote(fallbackSymbol);
-                    }
-                }
-                return [key, point];
-            } catch (error) {
-                warnings.push(`ALPHA_VANTAGE ${key} 실패: ${error.message}`);
-                return [key, null];
-            }
-        })
-    );
-
-    const defaults = {
-        kospi: { value: 2650.2, changePct: 0.65 },
-        kosdaq: { value: 865.7, changePct: -0.22 },
-        nasdaq: { value: 18145.3, changePct: 0.88 },
-        dow: { value: 42035.1, changePct: 0.41 },
-        sp500: { value: 5612.4, changePct: 0.52 }
-    };
-
-    const result = Object.fromEntries(entries.filter(([, point]) => point !== null));
-    if (Object.keys(result).length === 0) {
-        warnings.push('주가지수 데이터 없음(기본값 사용)');
-        return defaults;
-    }
-
-    Object.keys(defaults).forEach((key) => {
-        if (!result[key]) {
-            result[key] = defaults[key];
-            warnings.push(`주가지수 ${key} 기본값 사용`);
-        }
-    });
-
-    if (Object.keys(result).length !== Object.keys(defaults).length) {
-        warnings.push('주가지수 일부만 수신');
-    }
-
-    return result;
-}
+// ─── Build indicators payload ───────────────────────────────────────────────
 
 async function buildIndicatorsPayload() {
     const warnings = [];
 
-    if (!FRED_API_KEY) {
-        warnings.push('FRED_API_KEY 누락');
-    }
-    if (!ECOS_API_KEY) {
-        warnings.push('ECOS_API_KEY 누락');
-    }
-    if (!FASTFOREX_API_KEY) {
-        warnings.push('FASTFOREX_API 누락');
-    }
-    if (!ALPHA_VANTAGE_API_KEY) {
-        warnings.push('ALPHA_VANTAGE_API_KEY 누락');
-    }
-    if (!AISSTREAM_API_KEY) {
-        warnings.push('AISSTREAM_API_KEY 누락');
-    }
+    // 1) Yahoo Finance — free, no API key needed
+    const [yahooIndices, yahooSectors, yahooCommodities, yahooFx] = await Promise.all([
+        fetchYahooQuotes(YAHOO_INDEX_SYMBOLS, warnings, '지수').catch(() => ({})),
+        fetchYahooQuotes(YAHOO_SECTOR_SYMBOLS, warnings, '섹터주').catch(() => ({})),
+        fetchYahooQuotes(YAHOO_COMMODITY_SYMBOLS, warnings, '원자재').catch(() => ({})),
+        fetchYahooQuotes(YAHOO_FX_SYMBOLS, warnings, '환율').catch(() => ({}))
+    ]);
 
+    // 2) Interest rates from FRED/ECOS (need API keys)
     const fedfundsPromise = fetchFredLatest('FEDFUNDS').catch((error) => {
-        warnings.push(`FRED FEDFUNDS 실패: ${error.message}`);
+        warnings.push(`FRED FEDFUNDS: ${error.message}`);
         return null;
     });
 
     const liborPromise = fetchFredLatest('USD3MTD156N')
         .catch(() => null)
         .then(async (value) => {
-            if (value !== null) {
-                return value;
-            }
-            // LIBOR series can be sparse/discontinued; fallback for continuity.
-            const fallback = await fetchFredLatest('SOFR').catch((error) => {
-                warnings.push(`FRED LIBOR/SOFR 실패: ${error.message}`);
-                return null;
-            });
-            if (fallback === null) {
-                warnings.push('LIBOR 데이터 없음');
-            }
+            if (value !== null) return value;
+            const fallback = await fetchFredLatest('SOFR').catch(() => null);
+            if (fallback === null) warnings.push('LIBOR/SOFR 데이터 없음');
             return fallback;
         });
 
     const bokPromise = fetchBokBaseRate().catch((error) => {
-        warnings.push(`BOK 기준금리 실패: ${error.message}`);
+        warnings.push(`BOK 기준금리: ${error.message}`);
         return null;
     });
 
-    const usdkrwPromise = fetchFastForexUsdKrw()
-        .catch((error) => {
-            warnings.push(`FASTFOREX USD/KRW 실패: ${error.message}`);
-            return null;
-        })
-        .then(async (value) => {
-            if (value !== null) {
-                return value;
-            }
+    const [fedfunds, libor, bok] = await Promise.all([fedfundsPromise, liborPromise, bokPromise]);
 
-            const fallback = await fetchFredLatest('DEXKOUS').catch((error) => {
-                warnings.push(`FRED DEXKOUS 실패: ${error.message}`);
-                return null;
-            });
-            if (fallback === null) {
-                warnings.push('USD/KRW 데이터 없음');
-            }
-            return fallback;
-        });
+    // 3) USD/KRW: Yahoo first, then FastForex, then FRED
+    let usdkrw = yahooFx.usdkrw?.value ?? null;
+    let usdkrwChangePct = yahooFx.usdkrw?.changePct ?? null;
+    if (usdkrw === null) {
+        usdkrw = await fetchFastForexUsdKrw().catch(() => null);
+        if (usdkrw === null) {
+            usdkrw = await fetchFredLatest('DEXKOUS').catch(() => null);
+            if (usdkrw === null) warnings.push('USD/KRW 데이터 없음');
+        }
+    }
 
-    const [fedfunds, libor, bok, usdkrw] = await Promise.all([
-        fedfundsPromise,
-        liborPromise,
-        bokPromise,
-        usdkrwPromise
-    ]);
+    // 4) Stock indices: Yahoo first, then Alpha Vantage fallback
+    const stockIndices = { ...yahooIndices };
+    const missingIndices = Object.keys(YAHOO_INDEX_SYMBOLS).filter((k) => !stockIndices[k]);
 
-    const stockIndices = await fetchStockIndices(warnings);
+    if (missingIndices.length > 0 && ALPHA_VANTAGE_API_KEY) {
+        const avSymbols = { kospi: '^KS11', kosdaq: '^KQ11', nasdaq: '^IXIC', dow: '^DJI', sp500: '^GSPC' };
+        await Promise.all(
+            missingIndices.map(async (key) => {
+                try {
+                    const point = await fetchAlphaVantageGlobalQuote(avSymbols[key]);
+                    if (point) stockIndices[key] = point;
+                } catch (error) {
+                    warnings.push(`AlphaVantage ${key}: ${error.message}`);
+                }
+            })
+        );
+    }
+
+    // 5) Sector stocks
+    const sectorStocks = { ...yahooSectors };
+
+    // 6) Commodities
+    const commodities = { ...yahooCommodities };
+
+    // 7) Gold
+    const gold = yahooCommodities.gold?.value ?? null;
+    const goldChangePct = yahooCommodities.gold?.changePct ?? null;
+
+    // Source tracking
+    const sources = [];
+    if (Object.keys(yahooIndices).length > 0) sources.push('Yahoo Finance(지수)');
+    if (Object.keys(yahooSectors).length > 0) sources.push('Yahoo Finance(섹터주)');
+    if (Object.keys(yahooCommodities).length > 0) sources.push('Yahoo Finance(원자재)');
+    if (fedfunds !== null) sources.push('FRED');
+    if (bok !== null) sources.push('ECOS');
+    if (sources.length === 0) sources.push('fallback defaults');
 
     return {
+        // Interest rates
         fedfunds,
         libor,
         bok,
+        // FX
         usdkrw,
+        usdkrwChangePct,
+        // Stock indices
         stockIndices,
+        // Sector stocks: { kbfin: {value, changePct}, shinhan: ... }
+        sectorStocks,
+        // Commodities: { wti: {value, changePct}, brent: ..., gas: ..., gold: ... }
+        commodities,
+        // Standalone gold for finance card
+        gold,
+        goldChangePct,
+        // Meta
         timestamp: new Date().toISOString(),
+        sources,
         warnings
     };
 }
@@ -596,14 +601,24 @@ async function getIndicators() {
     }
 
     const payload = await buildIndicatorsPayload();
-    indicatorCache = {
-        payload,
-        expiresAt: now + CACHE_TTL_MS
-    };
+    indicatorCache = { payload, expiresAt: now + CACHE_TTL_MS };
     return payload;
 }
 
+// ─── HTTP Server ────────────────────────────────────────────────────────────
+
 const server = http.createServer(async (req, res) => {
+    // CORS preflight
+    if (req.method === 'OPTIONS') {
+        res.writeHead(204, {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type'
+        });
+        res.end();
+        return;
+    }
+
     const requestUrl = new URL(req.url || '/', 'http://localhost');
 
     if (requestUrl.pathname === '/' || requestUrl.pathname === '/crisis-monitoring-dashboard.html') {
@@ -620,10 +635,10 @@ const server = http.createServer(async (req, res) => {
     if (requestUrl.pathname === '/api/health') {
         sendJson(res, 200, {
             ok: true,
+            yahooFinance: true,
             fredConfigured: Boolean(FRED_API_KEY),
             ecosConfigured: Boolean(ECOS_API_KEY),
             fastforexConfigured: Boolean(FASTFOREX_API_KEY),
-            fastforexAccountConfigured: Boolean(FASTFOREX_ACCOUNT),
             alphaVantageConfigured: Boolean(ALPHA_VANTAGE_API_KEY),
             aisstreamConfigured: Boolean(AISSTREAM_API_KEY)
         });
@@ -656,4 +671,7 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
     // eslint-disable-next-line no-console
     console.log(`[server] http://localhost:${PORT}`);
+    console.log(`[server] Yahoo Finance: enabled (free, no API key)`);
+    console.log(`[server] FRED: ${FRED_API_KEY ? 'configured' : 'not configured'}`);
+    console.log(`[server] ECOS: ${ECOS_API_KEY ? 'configured' : 'not configured'}`);
 });

@@ -197,6 +197,7 @@
             gap: 16px;
             margin-top: 4px;
             flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
         .header-sector-group {
@@ -527,6 +528,33 @@
 
         .map-asset-marker.vessel {
             border-color: #00d084;
+        }
+
+        .map-asset-marker.base {
+            border-color: #ffb347;
+            background: rgba(255, 179, 71, 0.12);
+        }
+
+        .map-asset-marker.defense {
+            border-color: #e040fb;
+            background: rgba(224, 64, 251, 0.12);
+        }
+
+        .map-asset-marker.ground {
+            border-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.12);
+        }
+
+        .map-asset-marker.base .asset-icon {
+            filter: drop-shadow(0 0 4px rgba(255, 179, 71, 0.4));
+        }
+
+        .map-asset-marker.defense .asset-icon {
+            filter: drop-shadow(0 0 4px rgba(224, 64, 251, 0.4));
+        }
+
+        .map-asset-marker.ground .asset-icon {
+            filter: drop-shadow(0 0 4px rgba(255, 107, 107, 0.4));
         }
 
         .map-asset-marker .asset-icon {
@@ -1409,6 +1437,42 @@
 
         <!-- Energy Trend -->
         <div class="card energy-trend-card">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">ENERGY MARKET</div>
+                    <div class="card-subtitle">에너지 시장</div>
+                </div>
+            </div>
+            <div class="market-grid">
+                <div class="market-item" onclick="showDetails('wti')">
+                    <div class="market-label">WTI 원유</div>
+                    <div class="market-value">
+                        <span id="wti">72.75</span>
+                        <span class="market-change up" id="wti-change">+1.2%</span>
+                    </div>
+                </div>
+                <div class="market-item" onclick="showDetails('brent')">
+                    <div class="market-label">Brent 원유</div>
+                    <div class="market-value">
+                        <span id="brent">79.81</span>
+                        <span class="market-change up" id="brent-change">+1.5%</span>
+                    </div>
+                </div>
+                <div class="market-item" onclick="showDetails('gas')">
+                    <div class="market-label">천연가스</div>
+                    <div class="market-value">
+                        <span id="gas">3.02</span>
+                        <span class="market-change up" id="gas-change">+0.8%</span>
+                    </div>
+                </div>
+                <div class="market-item" onclick="showDetails('lng')">
+                    <div class="market-label">LNG</div>
+                    <div class="market-value">
+                        <span id="lng">14.50</span>
+                        <span class="market-change down" id="lng-change">-0.3%</span>
+                    </div>
+                </div>
+            </div>
             <div class="chart-container">
                 <canvas id="energyChart"></canvas>
             </div>
@@ -1586,21 +1650,53 @@
         const externalIndicatorState = {};
         const MAP_BBOX = Object.freeze({
             minLon: 32.0,
-            minLat: 20.0,
+            minLat: 10.0,
             maxLon: 62.5,
             maxLat: 38.5
         });
         const MAP_HOTSPOTS = [
+            // Critical conflict zones
             { name: 'Tehran', lat: 35.6892, lon: 51.3890, critical: true },
-            { name: 'Hormuz', lat: 26.5667, lon: 56.2500, critical: true },
+            { name: 'Hormuz Strait', lat: 26.5667, lon: 56.2500, critical: true },
+            { name: 'Natanz Nuclear', lat: 33.7253, lon: 51.7266, critical: true },
+            { name: 'Isfahan', lat: 32.6546, lon: 51.6680, critical: true },
+            // Conflict areas
             { name: 'Baghdad', lat: 33.3152, lon: 44.3661, critical: false },
-            { name: 'Damascus', lat: 33.5138, lon: 36.2765, critical: false }
+            { name: 'Damascus', lat: 33.5138, lon: 36.2765, critical: false },
+            { name: 'Beirut', lat: 33.8938, lon: 35.5018, critical: false },
+            { name: 'Sanaa', lat: 15.3694, lon: 44.1910, critical: false },
+            { name: 'Aden', lat: 12.7855, lon: 45.0187, critical: false },
+            // Bab el-Mandeb strait
+            { name: 'Bab el-Mandeb', lat: 12.5833, lon: 43.3333, critical: true }
         ];
         const mapAssetState = [
-            { id: 'asset-air1', label: 'USAF-01', icon: 'AIR', type: 'aircraft', lat: 32.1, lon: 51.9, dLat: 0.04, dLon: 0.08, minLat: 31.2, maxLat: 33.5, minLon: 50.2, maxLon: 54.4 },
-            { id: 'asset-air2', label: 'UAV-07', icon: 'AIR', type: 'aircraft', lat: 31.3, lon: 47.2, dLat: -0.03, dLon: 0.07, minLat: 30.4, maxLat: 32.4, minLon: 45.6, maxLon: 49.4 },
-            { id: 'asset-ship1', label: 'CVN-74', icon: 'SEA', type: 'vessel', lat: 26.9, lon: 56.4, dLat: -0.02, dLon: -0.05, minLat: 26.1, maxLat: 27.7, minLon: 55.6, maxLon: 57.3 },
-            { id: 'asset-ship2', label: 'TANKER-A3', icon: 'SEA', type: 'vessel', lat: 24.6, lon: 58.2, dLat: 0.02, dLon: 0.04, minLat: 23.8, maxLat: 25.2, minLon: 57.5, maxLon: 59.2 }
+            // ── Aircraft ──
+            { id: 'asset-f35', label: 'F-35A #1', icon: '✈', type: 'aircraft', lat: 32.1, lon: 51.9, dLat: 0.05, dLon: 0.09, minLat: 30.5, maxLat: 34.0, minLon: 49.0, maxLon: 55.0 },
+            { id: 'asset-f35b', label: 'F-35A #2', icon: '✈', type: 'aircraft', lat: 30.8, lon: 48.5, dLat: -0.04, dLon: 0.07, minLat: 29.5, maxLat: 32.0, minLon: 46.0, maxLon: 51.0 },
+            { id: 'asset-b52', label: 'B-52H', icon: '✈', type: 'aircraft', lat: 28.5, lon: 50.2, dLat: 0.03, dLon: -0.06, minLat: 27.0, maxLat: 30.0, minLon: 48.0, maxLon: 53.0 },
+            { id: 'asset-uav1', label: 'MQ-9', icon: '✈', type: 'aircraft', lat: 31.3, lon: 47.2, dLat: -0.03, dLon: 0.08, minLat: 30.0, maxLat: 33.0, minLon: 45.0, maxLon: 50.0 },
+            { id: 'asset-uav2', label: 'RQ-4', icon: '✈', type: 'aircraft', lat: 33.8, lon: 53.5, dLat: 0.02, dLon: -0.05, minLat: 32.0, maxLat: 36.0, minLon: 50.0, maxLon: 56.0 },
+            { id: 'asset-awacs', label: 'E-3 AWACS', icon: '✈', type: 'aircraft', lat: 29.5, lon: 47.8, dLat: 0.01, dLon: 0.04, minLat: 28.5, maxLat: 31.0, minLon: 46.0, maxLon: 50.0 },
+            // ── Naval ──
+            { id: 'asset-cvn74', label: 'CVN-74 Stennis', icon: '⚓', type: 'vessel', lat: 26.9, lon: 56.4, dLat: -0.02, dLon: -0.04, minLat: 25.5, maxLat: 27.8, minLon: 55.0, maxLon: 57.5 },
+            { id: 'asset-cvn69', label: 'CVN-69 Eisenhower', icon: '⚓', type: 'vessel', lat: 13.5, lon: 43.8, dLat: 0.02, dLon: 0.03, minLat: 12.0, maxLat: 15.0, minLon: 42.0, maxLon: 45.5 },
+            { id: 'asset-ddg', label: 'DDG-114 Ralph Johnson', icon: '⚓', type: 'vessel', lat: 25.8, lon: 55.2, dLat: -0.01, dLon: -0.03, minLat: 25.0, maxLat: 26.8, minLon: 54.0, maxLon: 56.5 },
+            { id: 'asset-ssn', label: 'SSN-785 John Warner', icon: '⚓', type: 'vessel', lat: 24.2, lon: 57.8, dLat: 0.015, dLon: 0.02, minLat: 23.5, maxLat: 25.5, minLon: 56.5, maxLon: 59.0 },
+            { id: 'asset-tanker', label: 'OILER T-AO 205', icon: '⚓', type: 'vessel', lat: 23.0, lon: 59.5, dLat: 0.01, dLon: -0.02, minLat: 22.0, maxLat: 24.5, minLon: 58.0, maxLon: 61.0 },
+            { id: 'asset-lpd', label: 'LPD-29 Harrisburg', icon: '⚓', type: 'vessel', lat: 14.8, lon: 42.5, dLat: -0.01, dLon: 0.02, minLat: 13.5, maxLat: 16.0, minLon: 41.0, maxLon: 44.0 },
+            // ── Military Bases (stationary) ──
+            { id: 'base-udeid', label: 'Al Udeid AB', icon: '🏛', type: 'base', lat: 25.1174, lon: 51.3150, dLat: 0, dLon: 0, minLat: 25.1, maxLat: 25.2, minLon: 51.3, maxLon: 51.4 },
+            { id: 'base-dhafra', label: 'Al Dhafra AB', icon: '🏛', type: 'base', lat: 24.2483, lon: 54.5478, dLat: 0, dLon: 0, minLat: 24.2, maxLat: 24.3, minLon: 54.5, maxLon: 54.6 },
+            { id: 'base-bahrain', label: 'NSA Bahrain', icon: '🏛', type: 'base', lat: 26.2362, lon: 50.6245, dLat: 0, dLon: 0, minLat: 26.2, maxLat: 26.3, minLon: 50.6, maxLon: 50.7 },
+            { id: 'base-arifjan', label: 'Camp Arifjan', icon: '🏛', type: 'base', lat: 28.8314, lon: 48.1210, dLat: 0, dLon: 0, minLat: 28.8, maxLat: 28.9, minLon: 48.1, maxLon: 48.2 },
+            { id: 'base-djibouti', label: 'Camp Lemonnier', icon: '🏛', type: 'base', lat: 11.5475, lon: 43.1546, dLat: 0, dLon: 0, minLat: 11.5, maxLat: 11.6, minLon: 43.1, maxLon: 43.2 },
+            // ── Air Defense ──
+            { id: 'def-patriot1', label: 'PATRIOT Battery', icon: '🛡', type: 'defense', lat: 25.3, lon: 51.5, dLat: 0, dLon: 0, minLat: 25.2, maxLat: 25.4, minLon: 51.4, maxLon: 51.6 },
+            { id: 'def-thaad', label: 'THAAD System', icon: '🛡', type: 'defense', lat: 24.4, lon: 54.6, dLat: 0, dLon: 0, minLat: 24.3, maxLat: 24.5, minLon: 54.5, maxLon: 54.7 },
+            { id: 'def-irondom', label: 'Iron Dome', icon: '🛡', type: 'defense', lat: 32.08, lon: 34.78, dLat: 0, dLon: 0, minLat: 32.0, maxLat: 32.1, minLon: 34.7, maxLon: 34.9 },
+            // ── Ground Forces ──
+            { id: 'gnd-mech1', label: '3rd BCT', icon: '⚔', type: 'ground', lat: 29.2, lon: 47.9, dLat: 0, dLon: 0, minLat: 29.1, maxLat: 29.3, minLon: 47.8, maxLon: 48.0 },
+            { id: 'gnd-marines', label: '24th MEU', icon: '⚔', type: 'ground', lat: 26.3, lon: 50.7, dLat: 0, dLon: 0, minLat: 26.2, maxLat: 26.4, minLon: 50.6, maxLon: 50.8 }
         ];
         const liveNewsPool = [
             {
@@ -1700,6 +1796,7 @@
                 return;
             }
 
+            // Interest rates
             if (Number.isFinite(payload.fedfunds)) {
                 setIndicatorValue('fedfunds', payload.fedfunds, 2);
             }
@@ -1709,11 +1806,93 @@
             if (Number.isFinite(payload.libor)) {
                 setIndicatorWithChange('libor', payload.libor, 'libor-change', 2);
             }
+
+            // USD/KRW with server-provided change %
             if (Number.isFinite(payload.usdkrw)) {
-                setIndicatorWithChange('usd', payload.usdkrw, 'usd-change', 2, true);
+                applyValueWithPct('usd', payload.usdkrw, 'usd-change', payload.usdkrwChangePct, true);
             }
+
+            // Gold
+            if (Number.isFinite(payload.gold)) {
+                applyValueWithPct('gold', payload.gold, 'gold-change', payload.goldChangePct, true);
+            }
+
+            // Stock indices (KOSPI, KOSDAQ, NASDAQ, DOW, S&P500)
             if (payload.stockIndices && typeof payload.stockIndices === 'object') {
                 applyStockIndexPayload(payload.stockIndices);
+            }
+
+            // Sector stocks (KB금융, 신한지주, 하나금융, 현대건설, 대우건설, DL이앤씨)
+            if (payload.sectorStocks && typeof payload.sectorStocks === 'object') {
+                applySectorStockPayload(payload.sectorStocks);
+            }
+
+            // Commodities → energy chart update
+            if (payload.commodities && typeof payload.commodities === 'object') {
+                applyCommodityData(payload.commodities);
+            }
+        }
+
+        function applyValueWithPct(id, value, changeId, changePct, useGrouping) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            externalIndicatorState[id] = value;
+            el.textContent = useGrouping
+                ? Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                : Number(value).toFixed(2);
+            const changeEl = document.getElementById(changeId);
+            if (!changeEl) return;
+            const pct = Number.isFinite(changePct) ? changePct : 0;
+            changeEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+            changeEl.className = 'market-change ' + (pct >= 0 ? 'up' : 'down');
+        }
+
+        function applySectorStockPayload(sectorStocks) {
+            const keys = ['kbfin', 'shinhan', 'hanafin', 'hyundaie', 'daewooec', 'dlenc'];
+            keys.forEach(key => {
+                const point = sectorStocks[key];
+                if (!point || !Number.isFinite(point.value)) return;
+                const valueEl = document.getElementById(key);
+                const changeEl = document.getElementById(key + '-change');
+                if (!valueEl || !changeEl) return;
+
+                externalIndicatorState[key] = point.value;
+                // Korean stocks: display in 만원 if >= 10000, else 원
+                const raw = Number(point.value);
+                if (raw >= 10000) {
+                    valueEl.textContent = (raw / 10000).toLocaleString('ko-KR', {
+                        minimumFractionDigits: 1, maximumFractionDigits: 1
+                    }) + '만';
+                } else {
+                    valueEl.textContent = raw.toLocaleString('ko-KR');
+                }
+                const pct = Number.isFinite(point.changePct) ? point.changePct : 0;
+                changeEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+                changeEl.className = 'header-stock-change ' + (pct >= 0 ? 'up' : 'down');
+            });
+        }
+
+        function applyCommodityData(commodities) {
+            // Update individual energy indicators
+            ['wti', 'brent', 'gas'].forEach(key => {
+                const point = commodities[key];
+                if (!point || !Number.isFinite(point.value)) return;
+                applyValueWithPct(key, point.value, key + '-change', point.changePct);
+            });
+
+            // Update energy chart with latest prices
+            if (charts.energy && commodities.wti && commodities.brent) {
+                const wtiPrice = commodities.wti.value;
+                const brentPrice = commodities.brent.value;
+                if (Number.isFinite(wtiPrice) && Number.isFinite(brentPrice)) {
+                    const wtiData = charts.energy.data.datasets[0].data;
+                    const brentData = charts.energy.data.datasets[1].data;
+                    wtiData.push(wtiPrice);
+                    brentData.push(brentPrice);
+                    if (wtiData.length > 48) { wtiData.shift(); brentData.shift(); }
+                    charts.energy.data.labels = generateTimeLabels(wtiData.length);
+                    charts.energy.update('none');
+                }
             }
         }
 
