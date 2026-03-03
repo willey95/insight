@@ -115,11 +115,13 @@
         }
 
         .header-stock-inline {
-            display: inline-flex;
+            display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             margin-left: auto;
-            font-size: 10px;
+            flex-grow: 1;
+            justify-content: flex-end;
+            font-size: 9px;
             font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
             text-transform: none;
             letter-spacing: 0.2px;
@@ -129,11 +131,11 @@
         .header-stock-item {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             background: rgba(17, 31, 47, 0.75);
             border: 1px solid #2f4461;
             border-radius: 999px;
-            padding: 2px 9px;
+            padding: 1px 7px;
             white-space: nowrap;
             cursor: pointer;
             transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
@@ -151,15 +153,16 @@
 
         .header-stock-label {
             color: #86a3c6;
-            font-size: 9px;
+            font-size: 8px;
         }
 
         .header-stock-value {
             color: #dce9fc;
+            font-size: 8.5px;
         }
 
         .header-stock-change {
-            font-size: 9px;
+            font-size: 8px;
             font-weight: 700;
         }
 
@@ -512,11 +515,11 @@
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            padding: 1px 5px;
+            padding: 2px 6px;
             border-radius: 999px;
-            background: rgba(9, 17, 28, 0.82);
+            background: rgba(6, 12, 22, 0.94);
             border: 1px solid #3a5a80;
-            box-shadow: 0 2px 7px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
             white-space: nowrap;
             margin-left: -22px;
             margin-top: -12px;
@@ -524,25 +527,27 @@
 
         .map-asset-marker.aircraft {
             border-color: #4ec9ff;
+            background: rgba(8, 20, 38, 0.95);
         }
 
         .map-asset-marker.vessel {
             border-color: #00d084;
+            background: rgba(6, 22, 16, 0.95);
         }
 
         .map-asset-marker.base {
             border-color: #ffb347;
-            background: rgba(255, 179, 71, 0.12);
+            background: rgba(30, 20, 8, 0.95);
         }
 
         .map-asset-marker.defense {
             border-color: #e040fb;
-            background: rgba(224, 64, 251, 0.12);
+            background: rgba(24, 8, 30, 0.95);
         }
 
         .map-asset-marker.ground {
             border-color: #ff6b6b;
-            background: rgba(255, 107, 107, 0.12);
+            background: rgba(30, 10, 10, 0.95);
         }
 
         .map-asset-marker.base .asset-icon {
@@ -818,7 +823,7 @@
 
         .energy-trend-card .chart-container,
         .finance-trend-card .chart-container {
-            height: 100%;
+            flex: 1;
             min-height: 0;
             margin-top: 0;
         }
