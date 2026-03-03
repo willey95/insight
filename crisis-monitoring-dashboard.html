@@ -360,10 +360,10 @@
             display: none;
             position: fixed;
             left: 50%;
-            top: 64px;
+            top: 48px;
             transform: translateX(-50%);
-            width: min(980px, 94vw);
-            max-height: 84vh;
+            width: min(1180px, 96vw);
+            max-height: 88vh;
             z-index: 2100;
             overflow: auto;
             box-shadow: 0 0 0 9999px rgba(4, 8, 14, 0.76), 0 18px 38px rgba(0, 0, 0, 0.5);
@@ -859,9 +859,9 @@
             border: 1px solid #3a4d6a;
             background: rgba(31, 46, 70, 0.52);
             color: #d8e7fc;
-            font-size: 10px;
-            border-radius: 4px;
-            padding: 3px 8px;
+            font-size: 12px;
+            border-radius: 5px;
+            padding: 4px 10px;
             cursor: pointer;
             text-transform: uppercase;
             letter-spacing: 0.3px;
@@ -916,9 +916,9 @@
         .simulation-panel {
             background: rgba(8, 13, 22, 0.86);
             border: 1px solid #22324a;
-            padding: 8px;
-            border-radius: 6px;
-            margin-top: 4px;
+            padding: 10px;
+            border-radius: 7px;
+            margin-top: 6px;
             min-height: 0;
             overflow: auto;
         }
@@ -926,15 +926,15 @@
         .sim-controls {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 6px;
-            margin-bottom: 6px;
+            gap: 8px;
+            margin-bottom: 8px;
         }
 
         .sim-control-label {
-            font-size: 9px;
+            font-size: 11px;
             color: #8ea3c1;
             display: block;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
             letter-spacing: 0.3px;
             text-transform: uppercase;
         }
@@ -948,9 +948,9 @@
             background: rgba(7, 12, 20, 0.95);
             border: 1px solid #334461;
             color: #dce8fb;
-            padding: 5px;
-            border-radius: 4px;
-            font-size: 11px;
+            padding: 7px;
+            border-radius: 5px;
+            font-size: 13px;
             width: 100%;
             font-family: 'IBM Plex Mono', Consolas, monospace;
         }
@@ -959,12 +959,12 @@
             background: linear-gradient(90deg, #2767af 0%, #2f8fc9 100%);
             color: #ecf5ff;
             border: none;
-            padding: 6px 8px;
-            border-radius: 4px;
+            padding: 8px 10px;
+            border-radius: 5px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            font-size: 11px;
+            font-size: 13px;
             letter-spacing: 0.3px;
             text-transform: uppercase;
         }
@@ -976,9 +976,9 @@
 
         .sim-results {
             background: rgba(12, 22, 35, 0.82);
-            padding: 7px;
-            border-radius: 4px;
-            border-left: 2px solid var(--accent-cool);
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid var(--accent-cool);
             display: none;
         }
 
@@ -987,8 +987,8 @@
         }
 
         .sim-results-title {
-            font-size: 12px;
-            margin-bottom: 7px;
+            font-size: 14px;
+            margin-bottom: 9px;
             color: #a9d9ff;
             letter-spacing: 0.35px;
             text-transform: uppercase;
@@ -997,20 +997,20 @@
         .sim-results-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
+            gap: 10px;
         }
 
         .sim-metric-label {
-            font-size: 9px;
+            font-size: 11px;
             color: #8599b6;
             letter-spacing: 0.25px;
         }
 
         .sim-metric-value {
-            font-size: 16px;
+            font-size: 19px;
             font-weight: 700;
             font-family: Consolas, 'Roboto Mono', monospace;
-            margin-top: 1px;
+            margin-top: 2px;
         }
 
         .sim-metric-value.warn {
@@ -1021,9 +1021,9 @@
             background: rgba(30, 45, 68, 0.7);
             border: 1px solid #2c4060;
             color: #8ea9cc;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 10px;
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.2s;
             font-weight: 500;
@@ -1038,8 +1038,8 @@
 
         .sim-tabs {
             display: flex;
-            gap: 2px;
-            margin-bottom: 6px;
+            gap: 3px;
+            margin-bottom: 8px;
             border-bottom: 1px solid #1f2f46;
         }
 
@@ -1047,8 +1047,8 @@
             background: none;
             border: none;
             color: #6a829f;
-            padding: 5px 14px;
-            font-size: 10px;
+            padding: 6px 17px;
+            font-size: 12px;
             cursor: pointer;
             border-bottom: 2px solid transparent;
             transition: all 0.2s;
@@ -1077,56 +1077,56 @@
         .sensitivity-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 10px;
-            margin-top: 6px;
+            font-size: 12px;
+            margin-top: 8px;
         }
 
         .sensitivity-table th {
             background: rgba(20, 35, 55, 0.8);
             color: #8ea9cc;
-            padding: 4px 6px;
+            padding: 5px 8px;
             text-align: center;
             font-weight: 600;
             border: 1px solid #1f2f46;
-            font-size: 9px;
+            font-size: 11px;
             text-transform: uppercase;
         }
 
         .sensitivity-table td {
-            padding: 3px 6px;
+            padding: 4px 8px;
             text-align: center;
             border: 1px solid #1a2a3f;
             font-family: Consolas, 'Roboto Mono', monospace;
-            font-size: 10px;
+            font-size: 12px;
         }
 
         .mc-stats {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
-            margin-top: 6px;
+            gap: 8px;
+            margin-top: 8px;
         }
 
         .mc-stat-box {
             background: rgba(12, 22, 38, 0.8);
             border: 1px solid #1f2f46;
-            border-radius: 4px;
-            padding: 6px;
+            border-radius: 5px;
+            padding: 8px;
             text-align: center;
         }
 
         .mc-stat-label {
-            font-size: 9px;
+            font-size: 11px;
             color: #6a829f;
             text-transform: uppercase;
             letter-spacing: 0.3px;
         }
 
         .mc-stat-value {
-            font-size: 15px;
+            font-size: 18px;
             font-weight: 700;
             font-family: Consolas, 'Roboto Mono', monospace;
-            margin-top: 2px;
+            margin-top: 3px;
         }
 
         /* Modal */
@@ -1301,7 +1301,7 @@
 
             .simulation-card {
                 top: 18px;
-                width: min(960px, 96vw);
+                width: min(1180px, 96vw);
                 max-height: 92vh;
             }
         }
@@ -1407,20 +1407,20 @@
             </div>
             <div class="threat-level">
                 <div class="threat-indicator">
-                    <h3>위협 레벨</h3>
-                    <div class="threat-value">CRITICAL</div>
+                    <h3>군사 활동</h3>
+                    <div class="threat-value" id="threatMilitary">LOADING</div>
                 </div>
                 <div class="threat-indicator">
-                    <h3>교전 확률</h3>
-                    <div class="threat-value">75%</div>
+                    <h3>분쟁 강도</h3>
+                    <div class="threat-value" id="threatConflict">LOADING</div>
                 </div>
                 <div class="threat-indicator">
                     <h3>석유 공급 리스크</h3>
-                    <div class="threat-value">HIGH</div>
+                    <div class="threat-value" id="threatOilRisk">LOADING</div>
                 </div>
                 <div class="threat-indicator">
                     <h3>경제 영향도</h3>
-                    <div class="threat-value">9.2/10</div>
+                    <div class="threat-value" id="threatEconImpact">LOADING</div>
                 </div>
             </div>
             <div class="war-bars">
@@ -1795,10 +1795,10 @@
                         </div>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 7px;">
-                        <div class="chart-container" style="height: 180px;">
+                        <div class="chart-container" style="height: 216px;">
                             <canvas id="simulationChart"></canvas>
                         </div>
-                        <div class="chart-container" style="height: 180px;">
+                        <div class="chart-container" style="height: 216px;">
                             <canvas id="simulationChart2"></canvas>
                         </div>
                     </div>
@@ -1986,6 +1986,9 @@
                 setInterval(refreshExternalIndicators, 60000);
                 refreshLiveNews();
                 setInterval(refreshLiveNews, NEWS_REFRESH_INTERVAL_MS);
+                // Military data: refresh every 30s
+                refreshMilitaryData();
+                setInterval(refreshMilitaryData, 30000);
             }
             chartLibraryAvailable = typeof window.Chart !== 'undefined';
 
@@ -2310,6 +2313,166 @@
                     marker.setLatLng([asset.lat, asset.lon]);
                 }
             });
+        }
+
+        /* ── Real-time Military Data from /api/military ── */
+        let liveAircraftMarkers = {};
+        let liveVesselMarkers = {};
+        let liveConflictMarkers = {};
+        let militaryDataActive = false;
+
+        async function refreshMilitaryData() {
+            if (!geoMap) return;
+            try {
+                const resp = await fetch('/api/military');
+                if (!resp.ok) return;
+                const data = await resp.json();
+
+                if (!militaryDataActive && (data.counts.aircraft > 0 || data.counts.vessels > 0 || data.counts.conflicts > 0)) {
+                    // Real data available — remove mock asset markers
+                    Object.values(mapAssetMarkers).forEach(m => geoMap.removeLayer(m));
+                    mapAssetMarkers = {};
+                    militaryDataActive = true;
+                }
+
+                if (data.aircraft) renderLiveAircraft(data.aircraft);
+                if (data.vessels) renderLiveVessels(data.vessels);
+                if (data.conflicts) renderLiveConflicts(data.conflicts);
+
+                // Update threat indicators with real counts
+                updateThreatFromMilitary(data);
+
+            } catch (err) {
+                // Keep mock data if API fails
+            }
+        }
+
+        function renderLiveAircraft(aircraft) {
+            const seen = new Set();
+            aircraft.forEach(ac => {
+                seen.add(ac.id);
+                const label = ac.callsign !== 'UNKNOWN' ? ac.callsign : ac.type;
+                const tooltip = `${label} | ALT ${Math.round(ac.alt)}ft | ${Math.round(ac.speed)}kts`;
+
+                if (liveAircraftMarkers[ac.id]) {
+                    liveAircraftMarkers[ac.id].setLatLng([ac.lat, ac.lon]);
+                    liveAircraftMarkers[ac.id].setTooltipContent(tooltip);
+                } else {
+                    const icon = window.L.divIcon({
+                        className: 'map-asset-icon',
+                        html: `<span class="map-asset-marker aircraft"><span class="asset-icon">✈</span><span class="asset-label">${escapeHtml(label)}</span></span>`,
+                        iconSize: [0, 0], iconAnchor: [0, 0]
+                    });
+                    const marker = window.L.marker([ac.lat, ac.lon], { icon, keyboard: false }).addTo(geoMap);
+                    marker.bindTooltip(tooltip, { direction: 'top', offset: [0, -5] });
+                    liveAircraftMarkers[ac.id] = marker;
+                }
+            });
+            // Remove stale
+            Object.keys(liveAircraftMarkers).forEach(id => {
+                if (!seen.has(id)) {
+                    geoMap.removeLayer(liveAircraftMarkers[id]);
+                    delete liveAircraftMarkers[id];
+                }
+            });
+        }
+
+        function renderLiveVessels(vessels) {
+            const seen = new Set();
+            vessels.forEach(v => {
+                seen.add(v.id);
+                const label = v.name || v.mmsi || 'VESSEL';
+                const tooltip = `${label} | ${v.type} | ${Math.round(v.speed)}kts`;
+
+                if (liveVesselMarkers[v.id]) {
+                    liveVesselMarkers[v.id].setLatLng([v.lat, v.lon]);
+                } else {
+                    const icon = window.L.divIcon({
+                        className: 'map-asset-icon',
+                        html: `<span class="map-asset-marker vessel"><span class="asset-icon">⚓</span><span class="asset-label">${escapeHtml(label.slice(0, 15))}</span></span>`,
+                        iconSize: [0, 0], iconAnchor: [0, 0]
+                    });
+                    const marker = window.L.marker([v.lat, v.lon], { icon, keyboard: false }).addTo(geoMap);
+                    marker.bindTooltip(tooltip, { direction: 'top', offset: [0, -5] });
+                    liveVesselMarkers[v.id] = marker;
+                }
+            });
+            Object.keys(liveVesselMarkers).forEach(id => {
+                if (!seen.has(id)) {
+                    geoMap.removeLayer(liveVesselMarkers[id]);
+                    delete liveVesselMarkers[id];
+                }
+            });
+        }
+
+        function renderLiveConflicts(conflicts) {
+            // Remove old conflict markers
+            Object.values(liveConflictMarkers).forEach(m => geoMap.removeLayer(m));
+            liveConflictMarkers = {};
+
+            conflicts.forEach((c, i) => {
+                const severity = c.fatalities > 10 ? 'critical' : c.fatalities > 0 ? 'high' : 'low';
+                const color = severity === 'critical' ? '#ff2d55' : severity === 'high' ? '#ff6b00' : '#ffc56f';
+                const radius = severity === 'critical' ? 8 : severity === 'high' ? 6 : 4;
+
+                const circle = window.L.circleMarker([c.lat, c.lon], {
+                    radius,
+                    color,
+                    fillColor: color,
+                    fillOpacity: 0.6,
+                    weight: 1
+                }).addTo(geoMap);
+
+                const dateStr = c.date || '';
+                circle.bindTooltip(
+                    `<b>${escapeHtml(c.type)}</b><br>${escapeHtml(c.location)}, ${escapeHtml(c.country)}<br>${dateStr} | 사상자: ${c.fatalities}`,
+                    { direction: 'top' }
+                );
+                liveConflictMarkers[`conflict-${i}`] = circle;
+            });
+        }
+
+        function updateThreatFromMilitary(data) {
+            const aircraftCount = data.counts.aircraft || 0;
+            const conflictCount = data.counts.conflicts || 0;
+            const recentFatalities = (data.conflicts || []).reduce((s, c) => s + (c.fatalities || 0), 0);
+            const vesselCount = data.counts.vessels || 0;
+
+            // Military activity level
+            const milEl = document.getElementById('threatMilitary');
+            if (milEl) {
+                const level = aircraftCount > 10 ? 'CRITICAL' : aircraftCount > 5 ? 'HIGH' : aircraftCount > 0 ? 'ELEVATED' : 'NORMAL';
+                milEl.textContent = level + ` (${aircraftCount})`;
+                milEl.style.color = level === 'CRITICAL' ? 'var(--down)' : level === 'HIGH' ? '#ffc56f' : 'var(--up)';
+            }
+
+            // Conflict intensity
+            const conflictEl = document.getElementById('threatConflict');
+            if (conflictEl) {
+                const level = conflictCount > 20 ? 'CRITICAL' : conflictCount > 10 ? 'HIGH' : conflictCount > 0 ? 'MODERATE' : 'LOW';
+                conflictEl.textContent = level + ` (${conflictCount})`;
+                conflictEl.style.color = level === 'CRITICAL' ? 'var(--down)' : level === 'HIGH' ? '#ffc56f' : 'var(--up)';
+            }
+
+            // Oil supply risk (based on Hormuz area activity)
+            const oilEl = document.getElementById('threatOilRisk');
+            if (oilEl) {
+                const hormuzAssets = [...(data.aircraft || []), ...(data.vessels || [])].filter(a =>
+                    a.lat > 24 && a.lat < 28 && a.lon > 54 && a.lon < 58
+                ).length;
+                const level = hormuzAssets > 5 ? 'CRITICAL' : hormuzAssets > 2 ? 'HIGH' : hormuzAssets > 0 ? 'ELEVATED' : 'LOW';
+                oilEl.textContent = level;
+                oilEl.style.color = level === 'CRITICAL' ? 'var(--down)' : level === 'HIGH' ? '#ffc56f' : 'var(--up)';
+            }
+
+            // Economic impact score
+            const econEl = document.getElementById('threatEconImpact');
+            if (econEl) {
+                const score = Math.min(10, (aircraftCount * 0.3 + conflictCount * 0.2 + recentFatalities * 0.05 + vesselCount * 0.1)).toFixed(1);
+                econEl.textContent = score + '/10';
+                const num = parseFloat(score);
+                econEl.style.color = num > 7 ? 'var(--down)' : num > 4 ? '#ffc56f' : 'var(--up)';
+            }
         }
 
         function initLiveNews() {
@@ -3219,7 +3382,7 @@
             const histLabels = Array.from({ length: bins }, (_, i) => (minV + i * binW).toFixed(0));
 
             document.getElementById('monteCarloResult').innerHTML = statsHtml +
-                '<div style="height: 150px; margin-top: 8px;"><canvas id="mcHistogramChart"></canvas></div>';
+                '<div style="height: 180px; margin-top: 10px;"><canvas id="mcHistogramChart"></canvas></div>';
 
             if (chartLibraryAvailable) {
                 const ctx = document.getElementById('mcHistogramChart').getContext('2d');
