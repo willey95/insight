@@ -79,7 +79,8 @@ const YAHOO_COMMODITY_SYMBOLS = {
     wti: 'CL%3DF',
     brent: 'BZ%3DF',
     gas: 'NG%3DF',
-    gold: 'GC%3DF'
+    gold: 'GC%3DF',
+    silver: 'SI%3DF'
 };
 
 const YAHOO_FX_SYMBOLS = {

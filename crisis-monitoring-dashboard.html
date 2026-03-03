@@ -1354,12 +1354,7 @@
     <!-- News Ticker -->
     <div class="news-ticker">
         <div class="ticker-content" id="newsTicker">
-            <span class="ticker-item">🔴 긴급: 이란-미국 긴장 고조, 호르무즈 해협 봉쇄 가능성</span>
-            <span class="ticker-item">📈 WTI 유가 $78.50 돌파, 3개월 최고치</span>
-            <span class="ticker-item">⚠️ 한국은행 긴급 회의 소집</span>
-            <span class="ticker-item">💰 금값 온스당 $2,450 기록</span>
-            <span class="ticker-item">🏗️ 건설자재 가격 급등 우려</span>
-            <span class="ticker-item">🏠 부동산 시장 관망세 확산</span>
+            <span class="ticker-item">LOADING LIVE NEWS...</span>
         </div>
     </div>
 
@@ -1369,25 +1364,25 @@
             <span>CRISIS MONITORING DASHBOARD</span>
             <span class="alert-badge">⚠️ 전쟁 위기 경보</span>
             <span class="header-stock-inline" id="headerStockInline">
-                <span class="header-stock-item" onclick="showDetails('kospi')" role="button" tabindex="0"><span class="header-stock-label">KOSPI</span><span class="header-stock-value" id="kospi">2,650.20</span><span class="header-stock-change up" id="kospi-change">+0.65%</span></span>
-                <span class="header-stock-item" onclick="showDetails('kosdaq')" role="button" tabindex="0"><span class="header-stock-label">KOSDAQ</span><span class="header-stock-value" id="kosdaq">865.70</span><span class="header-stock-change down" id="kosdaq-change">-0.22%</span></span>
-                <span class="header-stock-item" onclick="showDetails('nasdaq')" role="button" tabindex="0"><span class="header-stock-label">NASDAQ</span><span class="header-stock-value" id="nasdaq">18,145.30</span><span class="header-stock-change up" id="nasdaq-change">+0.88%</span></span>
-                <span class="header-stock-item" onclick="showDetails('dow')" role="button" tabindex="0"><span class="header-stock-label">DOW</span><span class="header-stock-value" id="dow">42,035.10</span><span class="header-stock-change up" id="dow-change">+0.41%</span></span>
-                <span class="header-stock-item" onclick="showDetails('sp500')" role="button" tabindex="0"><span class="header-stock-label">S&P500</span><span class="header-stock-value" id="sp500">5,612.40</span><span class="header-stock-change up" id="sp500-change">+0.52%</span></span>
+                <span class="header-stock-item" onclick="showDetails('kospi')" role="button" tabindex="0"><span class="header-stock-label">KOSPI</span><span class="header-stock-value" id="kospi">--</span><span class="header-stock-change" id="kospi-change">--%</span></span>
+                <span class="header-stock-item" onclick="showDetails('kosdaq')" role="button" tabindex="0"><span class="header-stock-label">KOSDAQ</span><span class="header-stock-value" id="kosdaq">--</span><span class="header-stock-change" id="kosdaq-change">--%</span></span>
+                <span class="header-stock-item" onclick="showDetails('nasdaq')" role="button" tabindex="0"><span class="header-stock-label">NASDAQ</span><span class="header-stock-value" id="nasdaq">--</span><span class="header-stock-change" id="nasdaq-change">--%</span></span>
+                <span class="header-stock-item" onclick="showDetails('dow')" role="button" tabindex="0"><span class="header-stock-label">DOW</span><span class="header-stock-value" id="dow">--</span><span class="header-stock-change" id="dow-change">--%</span></span>
+                <span class="header-stock-item" onclick="showDetails('sp500')" role="button" tabindex="0"><span class="header-stock-label">S&P500</span><span class="header-stock-value" id="sp500">--</span><span class="header-stock-change" id="sp500-change">--%</span></span>
             </span>
         </h1>
         <div class="header-sector-strip">
             <span class="header-sector-group">
                 <span class="header-sector-label">금융주</span>
-                <span class="header-stock-item" onclick="showDetails('kbfin')" role="button" tabindex="0"><span class="header-stock-label">KB금융</span><span class="header-stock-value" id="kbfin">82.40</span><span class="header-stock-change up" id="kbfin-change">+1.2%</span></span>
-                <span class="header-stock-item" onclick="showDetails('shinhan')" role="button" tabindex="0"><span class="header-stock-label">신한지주</span><span class="header-stock-value" id="shinhan">48.90</span><span class="header-stock-change down" id="shinhan-change">-0.4%</span></span>
-                <span class="header-stock-item" onclick="showDetails('hanafin')" role="button" tabindex="0"><span class="header-stock-label">하나금융</span><span class="header-stock-value" id="hanafin">59.20</span><span class="header-stock-change up" id="hanafin-change">+0.8%</span></span>
+                <span class="header-stock-item" onclick="showDetails('kbfin')" role="button" tabindex="0"><span class="header-stock-label">KB금융</span><span class="header-stock-value" id="kbfin">--</span><span class="header-stock-change" id="kbfin-change">--%</span></span>
+                <span class="header-stock-item" onclick="showDetails('shinhan')" role="button" tabindex="0"><span class="header-stock-label">신한지주</span><span class="header-stock-value" id="shinhan">--</span><span class="header-stock-change" id="shinhan-change">--%</span></span>
+                <span class="header-stock-item" onclick="showDetails('hanafin')" role="button" tabindex="0"><span class="header-stock-label">하나금융</span><span class="header-stock-value" id="hanafin">--</span><span class="header-stock-change" id="hanafin-change">--%</span></span>
             </span>
             <span class="header-sector-group">
                 <span class="header-sector-label">건설주</span>
-                <span class="header-stock-item" onclick="showDetails('hyundaie')" role="button" tabindex="0"><span class="header-stock-label">현대건설</span><span class="header-stock-value" id="hyundaie">38.70</span><span class="header-stock-change up" id="hyundaie-change">+2.0%</span></span>
-                <span class="header-stock-item" onclick="showDetails('daewooec')" role="button" tabindex="0"><span class="header-stock-label">대우건설</span><span class="header-stock-value" id="daewooec">4.22</span><span class="header-stock-change up" id="daewooec-change">+1.1%</span></span>
-                <span class="header-stock-item" onclick="showDetails('dlenc')" role="button" tabindex="0"><span class="header-stock-label">DL이앤씨</span><span class="header-stock-value" id="dlenc">32.90</span><span class="header-stock-change down" id="dlenc-change">-0.6%</span></span>
+                <span class="header-stock-item" onclick="showDetails('hyundaie')" role="button" tabindex="0"><span class="header-stock-label">현대건설</span><span class="header-stock-value" id="hyundaie">--</span><span class="header-stock-change" id="hyundaie-change">--%</span></span>
+                <span class="header-stock-item" onclick="showDetails('daewooec')" role="button" tabindex="0"><span class="header-stock-label">대우건설</span><span class="header-stock-value" id="daewooec">--</span><span class="header-stock-change" id="daewooec-change">--%</span></span>
+                <span class="header-stock-item" onclick="showDetails('dlenc')" role="button" tabindex="0"><span class="header-stock-label">DL이앤씨</span><span class="header-stock-value" id="dlenc">--</span><span class="header-stock-change" id="dlenc-change">--%</span></span>
             </span>
         </div>
         <div class="timestamp" id="timestamp"></div>
@@ -1426,18 +1421,18 @@
             <div class="war-bars">
                 <div class="war-bar">
                     <div class="war-bar-label">해협 봉쇄 위험도</div>
-                    <div class="war-bar-track"><div class="war-bar-fill" style="width: 78%;"></div></div>
-                    <div class="war-bar-value">78%</div>
+                    <div class="war-bar-track"><div class="war-bar-fill" id="warBarBlockade" style="width: 0%;"></div></div>
+                    <div class="war-bar-value" id="warBarBlockadeVal">--%</div>
                 </div>
                 <div class="war-bar">
                     <div class="war-bar-label">에너지 공급 충격</div>
-                    <div class="war-bar-track"><div class="war-bar-fill" style="width: 84%;"></div></div>
-                    <div class="war-bar-value">84%</div>
+                    <div class="war-bar-track"><div class="war-bar-fill" id="warBarEnergy" style="width: 0%;"></div></div>
+                    <div class="war-bar-value" id="warBarEnergyVal">--%</div>
                 </div>
                 <div class="war-bar">
                     <div class="war-bar-label">금융시장 전염도</div>
-                    <div class="war-bar-track"><div class="war-bar-fill" style="width: 69%;"></div></div>
-                    <div class="war-bar-value">69%</div>
+                    <div class="war-bar-track"><div class="war-bar-fill" id="warBarFinance" style="width: 0%;"></div></div>
+                    <div class="war-bar-value" id="warBarFinanceVal">--%</div>
                 </div>
             </div>
         </div>
@@ -1483,36 +1478,36 @@
                 <div class="market-item" onclick="showDetails('fedfunds')">
                     <div class="market-label">Fed 기준금리</div>
                     <div class="market-value">
-                        <span id="fedfunds">5.50</span>
+                        <span id="fedfunds">--</span>
                         <span class="market-change">%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('bok')">
                     <div class="market-label">한국 기준금리</div>
                     <div class="market-value">
-                        <span id="bok">3.50</span>
+                        <span id="bok">--</span>
                         <span class="market-change">%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('libor')">
                     <div class="market-label">US LIBOR (3M)</div>
                     <div class="market-value">
-                        <span id="libor">5.32</span>
-                        <span class="market-change down" id="libor-change">-0.2%</span>
+                        <span id="libor">--</span>
+                        <span class="market-change" id="libor-change">--%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('usd')">
                     <div class="market-label">USD/KRW</div>
                     <div class="market-value">
-                        <span id="usd">1,335</span>
-                        <span class="market-change up" id="usd-change">+2.1%</span>
+                        <span id="usd">--</span>
+                        <span class="market-change" id="usd-change">--%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('gold')">
                     <div class="market-label">금 (oz)</div>
                     <div class="market-value">
-                        <span id="gold">2,450</span>
-                        <span class="market-change up" id="gold-change">+3.8%</span>
+                        <span id="gold">--</span>
+                        <span class="market-change" id="gold-change">--%</span>
                     </div>
                 </div>
             </div>
@@ -1530,29 +1525,29 @@
                 <div class="market-item" onclick="showDetails('steel')">
                     <div class="market-label">철근 가격</div>
                     <div class="market-value">
-                        <span id="steel">850</span>
-                        <span class="market-change up" id="steel-change">+6.5%</span>
+                        <span id="steel">--</span>
+                        <span class="market-change" id="steel-change">--%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('cement')">
                     <div class="market-label">시멘트 가격</div>
                     <div class="market-value">
-                        <span id="cement">125</span>
-                        <span class="market-change up" id="cement-change">+4.2%</span>
+                        <span id="cement">--</span>
+                        <span class="market-change" id="cement-change">--%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('reindex')">
                     <div class="market-label">부동산 지수</div>
                     <div class="market-value">
-                        <span id="reindex">102.5</span>
-                        <span class="market-change down" id="reindex-change">-1.8%</span>
+                        <span id="reindex">--</span>
+                        <span class="market-change" id="reindex-change">--%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('construction')">
                     <div class="market-label">건설 지수</div>
                     <div class="market-value">
-                        <span id="construction">98.3</span>
-                        <span class="market-change down" id="construction-change">-2.3%</span>
+                        <span id="construction">--</span>
+                        <span class="market-change" id="construction-change">--%</span>
                     </div>
                 </div>
             </div>
@@ -1571,29 +1566,29 @@
                 <div class="market-item" onclick="showDetails('wti')">
                     <div class="market-label">WTI 원유</div>
                     <div class="market-value">
-                        <span id="wti">72.75</span>
-                        <span class="market-change up" id="wti-change">+1.2%</span>
+                        <span id="wti">--</span>
+                        <span class="market-change" id="wti-change">--%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('brent')">
                     <div class="market-label">Brent 원유</div>
                     <div class="market-value">
-                        <span id="brent">79.81</span>
-                        <span class="market-change up" id="brent-change">+1.5%</span>
+                        <span id="brent">--</span>
+                        <span class="market-change" id="brent-change">--%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('gas')">
                     <div class="market-label">천연가스</div>
                     <div class="market-value">
-                        <span id="gas">3.02</span>
-                        <span class="market-change up" id="gas-change">+0.8%</span>
+                        <span id="gas">--</span>
+                        <span class="market-change" id="gas-change">--%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('lng')">
                     <div class="market-label">LNG</div>
                     <div class="market-value">
-                        <span id="lng">14.50</span>
-                        <span class="market-change down" id="lng-change">-0.3%</span>
+                        <span id="lng">--</span>
+                        <span class="market-change" id="lng-change">--%</span>
                     </div>
                 </div>
             </div>
@@ -1936,38 +1931,7 @@
             { id: 'gnd-mech1', label: '3rd BCT', icon: '⚔', type: 'ground', lat: 29.2, lon: 47.9, dLat: 0, dLon: 0, minLat: 29.1, maxLat: 29.3, minLon: 47.8, maxLon: 48.0 },
             { id: 'gnd-marines', label: '24th MEU', icon: '⚔', type: 'ground', lat: 26.3, lon: 50.7, dLat: 0, dLon: 0, minLat: 26.2, maxLat: 26.4, minLon: 50.6, maxLon: 50.8 }
         ];
-        const liveNewsPool = [
-            {
-                tag: '속보',
-                source: 'Desk',
-                headline: '호르무즈 해협 통항 보험료 18% 급등',
-                summary: '중동 긴장 고조로 해상 운송 보험료가 급등하고 있습니다.'
-            },
-            {
-                tag: '경보',
-                source: 'Desk',
-                headline: '미 해군, 걸프 해역 감시 전력 증강',
-                summary: '걸프 해역 경계 강화 소식으로 위험 회피 심리가 확대되고 있습니다.'
-            },
-            {
-                tag: '시장',
-                source: 'Desk',
-                headline: 'WTI 변동성 지수 장중 12% 확대',
-                summary: '에너지 가격 민감 섹터 중심으로 변동성이 커지고 있습니다.'
-            },
-            {
-                tag: '속보',
-                source: 'Desk',
-                headline: '이란 외무부, 보복 가능성 언급',
-                summary: '추가 지정학 리스크 가능성이 시장에 반영되고 있습니다.'
-            },
-            {
-                tag: '시장',
-                source: 'Desk',
-                headline: '원/달러 환율 방어를 위한 당국 구두 개입',
-                summary: '환율 급변동 구간에서 당국 발언이 이어지고 있습니다.'
-            }
-        ];
+        // No mock news pool — all news comes from /api/news RSS feeds
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
@@ -2051,6 +2015,8 @@
             // USD/KRW with server-provided change %
             if (Number.isFinite(payload.usdkrw)) {
                 applyValueWithPct('usd', payload.usdkrw, 'usd-change', payload.usdkrwChangePct, true);
+                externalIndicatorState.usdkrw = payload.usdkrw;
+                externalIndicatorState.usdkrwChangePct = payload.usdkrwChangePct || 0;
             }
 
             // Gold
@@ -2072,6 +2038,16 @@
             if (payload.commodities && typeof payload.commodities === 'object') {
                 applyCommodityData(payload.commodities);
             }
+
+            // Update finance chart with USD/KRW, gold, silver
+            applyFinanceChartData(payload);
+
+            // Record data point for correlation matrix and re-render
+            recordCorrelationPoint();
+            renderCorrelationMatrix();
+
+            // Update war status bars from real market data
+            updateWarBarsFromData();
         }
 
         function applyValueWithPct(id, value, changeId, changePct, useGrouping) {
@@ -2119,6 +2095,7 @@
                 const point = commodities[key];
                 if (!point || !Number.isFinite(point.value)) return;
                 applyValueWithPct(key, point.value, key + '-change', point.changePct);
+                externalIndicatorState[key + 'ChangePct'] = point.changePct || 0;
             });
 
             // Update energy chart with latest prices
@@ -2137,6 +2114,61 @@
             }
         }
 
+        function applyFinanceChartData(payload) {
+            if (!charts.finance) return;
+            const usdkrw = payload.usdkrw;
+            const gold = payload.gold;
+            const silver = payload.commodities?.silver?.value ?? null;
+            if (!Number.isFinite(usdkrw) && !Number.isFinite(gold)) return;
+
+            const fxData = charts.finance.data.datasets[0].data;
+            const goldData = charts.finance.data.datasets[1].data;
+            const silverData = charts.finance.data.datasets[2].data;
+
+            if (Number.isFinite(usdkrw)) fxData.push(usdkrw);
+            if (Number.isFinite(gold)) goldData.push(gold);
+            if (Number.isFinite(silver)) silverData.push(silver);
+
+            const maxLen = Math.max(fxData.length, goldData.length, silverData.length);
+            if (maxLen > 48) {
+                fxData.length > 48 && fxData.shift();
+                goldData.length > 48 && goldData.shift();
+                silverData.length > 48 && silverData.shift();
+            }
+            charts.finance.data.labels = generateTimeLabels(maxLen);
+            charts.finance.update('none');
+        }
+
+        function updateWarBarsFromData() {
+            const s = externalIndicatorState;
+            // Blockade risk: derived from military aircraft count + conflict count
+            const milEl = document.getElementById('threatMilitary');
+            const confEl = document.getElementById('threatConflict');
+            const milScore = milEl ? parseFloat(milEl.textContent) || 0 : 0;
+            const confScore = confEl ? parseFloat(confEl.textContent) || 0 : 0;
+            const blockade = Math.min(100, Math.round((milScore + confScore) * 5));
+            setWarBar('warBarBlockade', 'warBarBlockadeVal', blockade);
+
+            // Energy supply shock: derived from oil price change magnitude
+            const wtiChange = Math.abs(s.wtiChangePct || 0);
+            const brentChange = Math.abs(s.brentChangePct || 0);
+            const energyShock = Math.min(100, Math.round((wtiChange + brentChange) * 8));
+            setWarBar('warBarEnergy', 'warBarEnergyVal', energyShock);
+
+            // Financial contagion: derived from FX + stock volatility
+            const fxChange = Math.abs(s.usdkrwChangePct || 0);
+            const kospiChange = Math.abs(s.kospiChangePct || 0);
+            const finContagion = Math.min(100, Math.round((fxChange + kospiChange) * 10));
+            setWarBar('warBarFinance', 'warBarFinanceVal', finContagion);
+        }
+
+        function setWarBar(fillId, valId, pct) {
+            const fill = document.getElementById(fillId);
+            const val = document.getElementById(valId);
+            if (fill) fill.style.width = pct + '%';
+            if (val) val.textContent = pct + '%';
+        }
+
         function applyStockIndexPayload(stockIndices) {
             const keys = ['kospi', 'kosdaq', 'nasdaq', 'dow', 'sp500'];
             keys.forEach(key => {
@@ -2153,14 +2185,15 @@
                 }
 
                 externalIndicatorState[key] = point.value;
+                const changePct = Number.isFinite(point.changePct)
+                    ? point.changePct
+                    : 0;
+                externalIndicatorState[key + 'ChangePct'] = changePct;
                 valueElement.textContent = Number(point.value).toLocaleString('en-US', {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
                 });
 
-                const changePct = Number.isFinite(point.changePct)
-                    ? point.changePct
-                    : 0;
                 changeElement.textContent = (changePct >= 0 ? '+' : '') + changePct.toFixed(2) + '%';
                 changeElement.className = 'header-stock-change ' + (changePct >= 0 ? 'up' : 'down');
             });
@@ -2476,27 +2509,9 @@
         }
 
         function initLiveNews() {
-            const seeds = [
-                { tag: '속보', source: 'Desk', headline: '이란-미국 긴장 고조, 해협 봉쇄 가능성 재부상', summary: '군사적 긴장으로 해상 물류 리스크가 확대되고 있습니다.', ageMin: 0 },
-                { tag: '시장', source: 'Desk', headline: '국제유가 급등에 에너지주 강세 출발', summary: '에너지 민감 업종 중심으로 장 초반 상승폭이 확대되고 있습니다.', ageMin: 2 },
-                { tag: '경보', source: 'Desk', headline: '중동 항로 우회 선박 증가, 운임 추가 상승', summary: '우회 운항 증가로 운송비와 인도 지연 우려가 커지고 있습니다.', ageMin: 5 },
-                { tag: '시장', source: 'Desk', headline: '금값 온스당 2,450달러 상회', summary: '안전자산 선호 심리로 금 가격이 상승세를 유지하고 있습니다.', ageMin: 7 },
-                { tag: '경보', source: 'Desk', headline: '한국은행 상황 점검회의 개최', summary: '환율 및 원자재 급등 대응 논의를 위한 긴급 점검이 진행 중입니다.', ageMin: 10 },
-                { tag: '속보', source: 'Desk', headline: '건설 원자재 단가 상승 압력 확대', summary: '철강과 시멘트 가격 상승으로 원가 부담 확대가 예상됩니다.', ageMin: 13 }
-            ];
-
-            liveNewsItems = seeds.map(item => ({
-                tag: item.tag,
-                source: item.source,
-                headline: item.headline,
-                summary: item.summary,
-                link: '',
-                time: new Date(Date.now() - item.ageMin * 60000)
-            }));
-
-            liveNewsItems.sort((a, b) => b.time - a.time);
+            // Start empty — real news arrives from /api/news
+            liveNewsItems = [];
             renderLiveNewsFeed();
-            renderNewsTicker();
         }
 
         function inferNewsTag(source, headline) {
@@ -2526,7 +2541,10 @@
             if (liveNewsFallbackTimer !== null) {
                 return;
             }
-            liveNewsFallbackTimer = window.setInterval(pushLiveNews, 7000);
+            // Retry API fetch every 30s instead of pushing fake news
+            liveNewsFallbackTimer = window.setInterval(() => {
+                refreshLiveNews();
+            }, 30000);
         }
 
         function stopLocalNewsFallback() {
@@ -2569,22 +2587,8 @@
         }
 
         function pushLiveNews() {
-            const picked = liveNewsPool[Math.floor(Math.random() * liveNewsPool.length)];
-            liveNewsItems.unshift({
-                tag: picked.tag,
-                source: picked.source,
-                headline: picked.headline,
-                summary: picked.summary,
-                link: '',
-                time: new Date()
-            });
-
-            if (liveNewsItems.length > 14) {
-                liveNewsItems.pop();
-            }
-
-            renderLiveNewsFeed();
-            renderNewsTicker();
+            // No-op: local fallback removed. All news comes from /api/news.
+            // scheduleLocalNewsFallback just retries the API fetch instead.
         }
 
         function getNewsBadgeClass(tag) {
@@ -2778,51 +2782,29 @@
         }
 
         function updateMarketData() {
-            const cardIndicators = ['wti', 'brent', 'gas', 'lng', 'gold', 'steel', 'cement'];
-            const headerIndicators = ['kbfin', 'shinhan', 'hanafin', 'hyundaie', 'daewooec', 'dlenc'];
-
-            function tickIndicator(id, changeClass) {
-                const element = document.getElementById(id);
-                if (!element) return;
-                const current = parseMetricValue(element.textContent);
-                const change = (Math.random() - 0.5) * 2;
-                element.textContent = (current + change).toFixed(2);
-                const changeElement = document.getElementById(id + '-change');
-                if (changeElement) {
-                    const pctChange = current !== 0 ? ((change / current) * 100).toFixed(1) : '0.0';
-                    changeElement.textContent = (change >= 0 ? '+' : '') + pctChange + '%';
-                    changeElement.className = changeClass + ' ' + (change >= 0 ? 'up' : 'down');
-                }
-            }
-
-            cardIndicators.forEach(id => tickIndicator(id, 'market-change'));
-            headerIndicators.forEach(id => tickIndicator(id, 'header-stock-change'));
-
-            // Update charts
-            if (chartLibraryAvailable) {
-                updateChartData();
-            }
+            // No-op: real data comes from /api/indicators every 60s
+            // Mock random ticking removed — all values are API-driven
         }
 
         function initCharts() {
-            // Energy Chart
+            // Energy Chart — starts empty, populated by applyCommodityData()
             const energyCanvas = document.getElementById('energyChart');
             if (energyCanvas) {
                 const energyCtx = energyCanvas.getContext('2d');
                 charts.energy = new Chart(energyCtx, {
                     type: 'line',
                     data: {
-                        labels: generateTimeLabels(24),
+                        labels: [],
                         datasets: [{
                             label: 'WTI',
-                            data: generateRandomData(24, 72, 82),
+                            data: [],
                             borderColor: '#ff6b00',
                             backgroundColor: 'rgba(255, 107, 0, 0.1)',
                             tension: 0.4,
                             borderWidth: 2
                         }, {
                             label: 'Brent',
-                            data: generateRandomData(24, 76, 86),
+                            data: [],
                             borderColor: '#00c853',
                             backgroundColor: 'rgba(0, 200, 83, 0.1)',
                             tension: 0.4,
@@ -2833,33 +2815,33 @@
                 });
             }
 
-            // Finance Chart
+            // Finance Chart — starts empty, populated by applyFinanceChartData()
             const financeCanvas = document.getElementById('financeChart');
             if (financeCanvas) {
                 const financeCtx = financeCanvas.getContext('2d');
                 charts.finance = new Chart(financeCtx, {
                     type: 'line',
                     data: {
-                        labels: generateTimeLabels(24),
+                        labels: [],
                         datasets: [{
                             label: 'USD/KRW',
-                            data: generateRandomData(24, 1300, 1350),
+                            data: [],
                             borderColor: '#2196f3',
                             backgroundColor: 'rgba(33, 150, 243, 0.1)',
                             tension: 0.4,
                             borderWidth: 2,
                             yAxisID: 'y'
                         }, {
-                            label: '금',
-                            data: generateRandomData(24, 2400, 2500),
+                            label: 'Gold',
+                            data: [],
                             borderColor: '#ffc107',
                             backgroundColor: 'rgba(255, 193, 7, 0.1)',
                             tension: 0.4,
                             borderWidth: 2,
                             yAxisID: 'y1'
                         }, {
-                            label: '은',
-                            data: generateRandomData(24, 28, 36),
+                            label: 'Silver',
+                            data: [],
                             borderColor: '#cfd8dc',
                             backgroundColor: 'rgba(207, 216, 220, 0.1)',
                             tension: 0.35,
@@ -2871,34 +2853,32 @@
                         ...getChartOptions(''),
                         scales: {
                             y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            ticks: { color: '#95a8c6', font: { size: 9 }, maxTicksLimit: 4 },
-                            grid: { color: '#25354c' }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            ticks: { color: '#95a8c6', font: { size: 9 }, maxTicksLimit: 4 },
-                            grid: { display: false }
-                        },
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                ticks: { color: '#95a8c6', font: { size: 9 }, maxTicksLimit: 4 },
+                                grid: { color: '#25354c' }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                ticks: { color: '#95a8c6', font: { size: 9 }, maxTicksLimit: 4 },
+                                grid: { display: false }
+                            },
                             y2: {
                                 type: 'linear',
                                 display: false,
-                            position: 'right',
-                            min: 20,
-                            max: 40,
-                            grid: { display: false }
-                        },
-                        x: {
-                            ticks: { color: '#95a8c6', font: { size: 9 }, maxTicksLimit: 5 },
-                            grid: { color: '#25354c' }
+                                position: 'right',
+                                grid: { display: false }
+                            },
+                            x: {
+                                ticks: { color: '#95a8c6', font: { size: 9 }, maxTicksLimit: 5 },
+                                grid: { color: '#25354c' }
+                            }
                         }
                     }
-                }
-            });
+                });
             }
         }
 
@@ -2956,45 +2936,85 @@
         }
 
         function updateChartData() {
-            Object.keys(charts).forEach(key => {
-                const chart = charts[key];
-                if (chart.data.datasets[0].data.length > 0) {
-                    // Shift data and add new point
-                    chart.data.datasets.forEach(dataset => {
-                        dataset.data.shift();
-                        const lastValue = parseFloat(dataset.data[dataset.data.length - 1]);
-                        const newValue = lastValue + (Math.random() - 0.5) * 5;
-                        dataset.data.push(newValue.toFixed(2));
-                    });
-                    chart.update('none');
-                }
+            // No-op: chart data updated by applyCommodityData() and applyFinanceChartData()
+        }
+
+        // Rolling data for real-time correlation computation
+        const correlationHistory = { wti: [], fedfunds: [], usdkrw: [], construction: [], realestate: [] };
+        const CORR_MAX_POINTS = 30;
+
+        function recordCorrelationPoint() {
+            const s = externalIndicatorState;
+            if (Number.isFinite(s.wti)) correlationHistory.wti.push(s.wti);
+            if (Number.isFinite(s.fedfunds)) correlationHistory.fedfunds.push(s.fedfunds);
+            if (Number.isFinite(s.usdkrw)) correlationHistory.usdkrw.push(s.usdkrw);
+            // Use Hyundai E&C as construction proxy
+            if (Number.isFinite(s.hyundaie)) correlationHistory.construction.push(s.hyundaie);
+            // Use KB Financial as real estate proxy
+            if (Number.isFinite(s.kbfin)) correlationHistory.realestate.push(s.kbfin);
+            // Trim to max window
+            Object.values(correlationHistory).forEach(arr => {
+                while (arr.length > CORR_MAX_POINTS) arr.shift();
             });
         }
 
-        function initCorrelationMatrix() {
-            const matrix = [
-                [1.00, 0.65, 0.82, 0.91, -0.45],
-                [0.65, 1.00, 0.73, 0.58, -0.62],
-                [0.82, 0.73, 1.00, 0.76, -0.51],
-                [0.91, 0.58, 0.76, 1.00, -0.38],
-                [-0.45, -0.62, -0.51, -0.38, 1.00]
-            ];
+        function pearsonCorrelation(x, y) {
+            const n = Math.min(x.length, y.length);
+            if (n < 3) return null;
+            const xs = x.slice(-n), ys = y.slice(-n);
+            const meanX = xs.reduce((a, b) => a + b, 0) / n;
+            const meanY = ys.reduce((a, b) => a + b, 0) / n;
+            let num = 0, denX = 0, denY = 0;
+            for (let i = 0; i < n; i++) {
+                const dx = xs[i] - meanX, dy = ys[i] - meanY;
+                num += dx * dy;
+                denX += dx * dx;
+                denY += dy * dy;
+            }
+            const den = Math.sqrt(denX * denY);
+            return den === 0 ? 0 : num / den;
+        }
 
+        function computeCorrelationMatrix() {
+            const keys = ['wti', 'fedfunds', 'usdkrw', 'construction', 'realestate'];
+            const matrix = [];
+            for (let i = 0; i < 5; i++) {
+                const row = [];
+                for (let j = 0; j < 5; j++) {
+                    if (i === j) { row.push(1.00); continue; }
+                    const r = pearsonCorrelation(correlationHistory[keys[i]], correlationHistory[keys[j]]);
+                    row.push(r);
+                }
+                matrix.push(row);
+            }
+            return matrix;
+        }
+
+        function initCorrelationMatrix() {
+            renderCorrelationMatrix();
+        }
+
+        function renderCorrelationMatrix() {
             const container = document.getElementById('correlationMatrix');
+            if (!container) return;
+            container.innerHTML = '';
+            const matrix = computeCorrelationMatrix();
             matrix.forEach((row, i) => {
                 row.forEach((value, j) => {
                     const cell = document.createElement('div');
                     cell.className = 'corr-cell';
-                    cell.textContent = value.toFixed(2);
-                    
-                    // Color based on correlation strength
-                    const absValue = Math.abs(value);
-                    if (value > 0) {
-                        cell.style.background = `rgba(0, 200, 83, ${absValue})`;
+                    if (value === null) {
+                        cell.textContent = 'N/A';
+                        cell.style.background = 'rgba(100, 120, 150, 0.3)';
                     } else {
-                        cell.style.background = `rgba(220, 53, 69, ${absValue})`;
+                        cell.textContent = value.toFixed(2);
+                        const absValue = Math.abs(value);
+                        if (value > 0) {
+                            cell.style.background = `rgba(0, 200, 83, ${absValue})`;
+                        } else {
+                            cell.style.background = `rgba(220, 53, 69, ${absValue})`;
+                        }
                     }
-                    
                     cell.onclick = () => showCorrelationDetail(i, j, value);
                     container.appendChild(cell);
                 });
@@ -3003,6 +3023,10 @@
 
         function showCorrelationDetail(i, j, correlation) {
             const labels = ['유가', '금리', '환율', '건설자재', '부동산'];
+            if (correlation === null) {
+                alert(`${labels[i]} vs ${labels[j]}\n데이터 수집 중 (최소 3개 데이터 포인트 필요)`);
+                return;
+            }
             alert(`${labels[i]} vs ${labels[j]}\n상관계수: ${correlation.toFixed(2)}\n\n` +
                   `${Math.abs(correlation) > 0.7 ? '강한' : Math.abs(correlation) > 0.4 ? '중간' : '약한'} ` +
                   `${correlation > 0 ? '양의' : '음의'} 상관관계`);
@@ -3039,30 +3063,36 @@
 
             const title = titles[indicator] || indicator.toUpperCase();
             document.getElementById('modalTitle').textContent = title + ' 상세 분석';
-            
-            // Generate mock statistics
-            const current = parseMetricValue(document.getElementById(indicator).textContent);
-            document.getElementById('modalCurrent').textContent = current.toFixed(2);
-            document.getElementById('modalChange').textContent = '+' + (Math.random() * 10).toFixed(2) + '%';
-            document.getElementById('modalHigh').textContent = (current * 1.15).toFixed(2);
-            document.getElementById('modalLow').textContent = (current * 0.85).toFixed(2);
-            document.getElementById('modalAvg').textContent = current.toFixed(2);
-            document.getElementById('modalVol').textContent = (Math.random() * 5 + 2).toFixed(2) + '%';
 
-            // Create detailed chart
+            // Use real data from externalIndicatorState
+            const current = externalIndicatorState[indicator] || parseMetricValue(document.getElementById(indicator)?.textContent || '0');
+            const changePct = externalIndicatorState[indicator + 'ChangePct'];
+            document.getElementById('modalCurrent').textContent = current.toFixed(2);
+            document.getElementById('modalChange').textContent = Number.isFinite(changePct)
+                ? (changePct >= 0 ? '+' : '') + changePct.toFixed(2) + '%'
+                : 'N/A';
+            document.getElementById('modalHigh').textContent = 'N/A';
+            document.getElementById('modalLow').textContent = 'N/A';
+            document.getElementById('modalAvg').textContent = current.toFixed(2);
+            document.getElementById('modalVol').textContent = 'N/A';
+
+            // Chart: show real history from correlationHistory if available, else empty
             if (chartLibraryAvailable) {
                 if (modalChart) {
                     modalChart.destroy();
                 }
+                const historyKey = { wti: 'wti', fedfunds: 'fedfunds', usdkrw: 'usdkrw', usd: 'usdkrw',
+                    hyundaie: 'construction', kbfin: 'realestate' }[indicator];
+                const histData = historyKey ? (correlationHistory[historyKey] || []) : [];
 
                 const ctx = document.getElementById('modalChart').getContext('2d');
                 modalChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: generateTimeLabels(48),
+                        labels: histData.map((_, i) => 't-' + (histData.length - i)),
                         datasets: [{
                             label: title,
-                            data: generateRandomData(48, current * 0.9, current * 1.1),
+                            data: histData.length > 0 ? histData : [],
                             borderColor: '#ff6b00',
                             backgroundColor: 'rgba(255, 107, 0, 0.1)',
                             tension: 0.4,
@@ -3070,7 +3100,7 @@
                             fill: true
                         }]
                     },
-                    options: getChartOptions('48시간 추이')
+                    options: getChartOptions(histData.length > 0 ? '실시간 추이' : '데이터 수집 중...')
                 });
             } else {
                 drawChartPlaceholder('modalChart', '상세 차트 로딩 실패');
