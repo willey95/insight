@@ -907,16 +907,8 @@ async function buildIndicatorsPayload() {
         return null;
     });
 
-    // 9) Construction index: weighted average of 3 construction stocks change %
-    let constructionIndex = null;
-    const constKeys = ['hyundaie', 'daewooec', 'dlenc'];
-    const constChanges = constKeys
-        .map(k => sectorStocks[k]?.changePct)
-        .filter(v => Number.isFinite(v));
-    if (constChanges.length > 0) {
-        const avgChange = constChanges.reduce((a, b) => a + b, 0) / constChanges.length;
-        constructionIndex = { value: 100 + avgChange, changePct: avgChange };
-    }
+    // 9) Construction index: no reliable free API — left empty
+    const constructionIndex = null;
 
     // Source tracking
     const sources = [];
