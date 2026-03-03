@@ -1,0 +1,2604 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crisis Monitoring Dashboard | Bloomberg Style</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --ticker-height: 24px;
+            --header-height: 82px;
+            --dashboard-gap: 8px;
+            --accent: #ffb347;
+            --accent-cool: #4ec9ff;
+            --accent-soft: #2a3547;
+            --panel-bg: rgba(10, 15, 24, 0.94);
+            --panel-stroke: #1f2b3c;
+            --text: #e5eefc;
+            --muted: #8697b3;
+            --up: #00d084;
+            --down: #ff4d6d;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans KR', 'Noto Sans KR', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #05080f;
+            color: var(--text);
+            overflow: hidden;
+            line-height: 1.15;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+                linear-gradient(rgba(120, 145, 180, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(120, 145, 180, 0.05) 1px, transparent 1px);
+            background-size: 18px 18px;
+            opacity: 0.23;
+            z-index: 0;
+        }
+
+        /* News Ticker */
+        .news-ticker {
+            background: #090e17;
+            padding: 3px 0;
+            overflow: hidden;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            height: var(--ticker-height);
+            border-top: 1px solid #2c3b53;
+            border-bottom: 1px solid #2c3b53;
+        }
+
+        .ticker-content {
+            display: flex;
+            animation: scroll 45s linear infinite;
+            white-space: nowrap;
+        }
+
+        .ticker-item {
+            padding: 0 26px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 0.35px;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
+        }
+
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* Header */
+        .header {
+            background: rgba(6, 10, 17, 0.92);
+            backdrop-filter: blur(4px);
+            padding: 7px 10px;
+            border-bottom: 1px solid #223149;
+            min-height: var(--header-height);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            font-size: 16px;
+            color: #d7e4ff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            letter-spacing: 0.45px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .header-stock-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            font-size: 10px;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
+            text-transform: none;
+            letter-spacing: 0.2px;
+            color: #c8dbf8;
+        }
+
+        .header-stock-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(17, 31, 47, 0.75);
+            border: 1px solid #2f4461;
+            border-radius: 999px;
+            padding: 2px 9px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .header-stock-item:hover {
+            background: rgba(30, 52, 80, 0.88);
+            border-color: #4a7aaf;
+            box-shadow: 0 0 8px rgba(78, 201, 255, 0.18);
+        }
+
+        .header-stock-item:active {
+            background: rgba(40, 65, 95, 0.92);
+        }
+
+        .header-stock-label {
+            color: #86a3c6;
+            font-size: 9px;
+        }
+
+        .header-stock-value {
+            color: #dce9fc;
+        }
+
+        .header-stock-change {
+            font-size: 9px;
+            font-weight: 700;
+        }
+
+        .alert-badge {
+            background: var(--down);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            animation: pulse 2s infinite;
+            color: #17070a;
+            font-weight: 700;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .timestamp {
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .library-warning {
+            font-size: 9px;
+            color: #ffcf8a;
+            margin-top: 1px;
+            min-height: 11px;
+        }
+
+        .header-sector-strip {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+
+        .header-sector-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-sector-label {
+            font-size: 9px;
+            color: #8ba3c4;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
+            white-space: nowrap;
+            padding: 1px 5px;
+            background: rgba(78, 201, 255, 0.08);
+            border-radius: 3px;
+            border: 1px solid rgba(78, 201, 255, 0.15);
+        }
+
+        /* Main Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: minmax(220px, 1.12fr) minmax(290px, 1.38fr) minmax(290px, 1.38fr) minmax(220px, 1fr);
+            grid-template-rows: minmax(170px, 1fr) minmax(170px, 1fr) minmax(180px, 1fr);
+            gap: var(--dashboard-gap);
+            padding: var(--dashboard-gap);
+            max-width: 1920px;
+            margin: 0 auto;
+            height: calc(100vh - var(--ticker-height) - var(--header-height));
+            min-height: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Cards */
+        .card {
+            background: linear-gradient(165deg, rgba(13, 20, 31, 0.95), rgba(7, 11, 19, 0.95));
+            border: 1px solid var(--panel-stroke);
+            border-radius: 7px;
+            padding: 8px;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(78, 94, 119, 0.1);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #223247;
+        }
+
+        .card-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: #9ecbff;
+            text-transform: uppercase;
+            letter-spacing: 0.65px;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
+        }
+
+        .card-subtitle {
+            font-size: 8px;
+            color: #7285a2;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Grid Areas */
+        .war-status {
+            grid-column: 1;
+            grid-row: 1;
+            background: linear-gradient(165deg, rgba(35, 11, 17, 0.96), rgba(19, 8, 12, 0.96));
+            border-color: rgba(255, 77, 109, 0.48);
+            box-shadow: inset 0 0 0 1px rgba(255, 77, 109, 0.12), 0 8px 18px rgba(0, 0, 0, 0.22);
+        }
+
+        .map-card {
+            grid-column: 2 / span 2;
+            grid-row: 1 / span 2;
+        }
+
+        .news-card {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .finance-card {
+            grid-column: 4;
+            grid-row: 1 / span 2;
+        }
+
+        .construction-card {
+            grid-column: 4;
+            grid-row: 3;
+        }
+
+        .correlation-card {
+            grid-column: 1;
+            grid-row: 3;
+            overflow: hidden;
+        }
+
+        .energy-trend-card {
+            grid-column: 2;
+            grid-row: 3;
+        }
+
+        .finance-trend-card {
+            grid-column: 3;
+            grid-row: 3;
+        }
+
+        .correlation-layout {
+            display: grid;
+            grid-template-columns: 72px 1fr;
+            gap: 6px;
+        }
+
+        .correlation-layout-top {
+            align-items: center;
+        }
+
+        .correlation-layout-main {
+            margin-top: 6px;
+        }
+
+        .corr-top-labels {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 4px;
+        }
+
+        .corr-left-labels {
+            display: grid;
+            grid-template-rows: repeat(5, 26px);
+            gap: 3px;
+        }
+
+        .corr-left-label {
+            display: flex;
+            align-items: center;
+        }
+
+        .simulation-card {
+            display: none;
+            position: fixed;
+            left: 50%;
+            top: 64px;
+            transform: translateX(-50%);
+            width: min(980px, 94vw);
+            max-height: 84vh;
+            z-index: 2100;
+            overflow: auto;
+            box-shadow: 0 0 0 9999px rgba(4, 8, 14, 0.76), 0 18px 38px rgba(0, 0, 0, 0.5);
+            border-color: #465472;
+        }
+
+        .simulation-card.active {
+            display: flex;
+        }
+
+        .threat-level {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px;
+            margin-top: 2px;
+        }
+
+        .threat-indicator {
+            padding: 6px;
+            background: rgba(255, 77, 109, 0.1);
+            border-left: 2px solid var(--down);
+            border-radius: 5px;
+        }
+
+        .threat-indicator h3 {
+            font-size: 9px;
+            color: #ffb6c2;
+            margin-bottom: 2px;
+            letter-spacing: 0.35px;
+            text-transform: uppercase;
+        }
+
+        .threat-value {
+            font-family: Consolas, 'Roboto Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffd8df;
+        }
+
+        .war-bars {
+            display: grid;
+            gap: 5px;
+            margin-top: 6px;
+        }
+
+        .war-bar {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .war-bar-label {
+            font-size: 8px;
+            color: #f1b6c1;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            grid-column: 1 / -1;
+        }
+
+        .war-bar-track {
+            position: relative;
+            height: 5px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.14);
+            grid-column: 1 / 2;
+        }
+
+        .war-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #ffbe5c 0%, #ff4d6d 100%);
+        }
+
+        .war-bar-value {
+            font-size: 8px;
+            color: #ffd9df;
+            font-family: Consolas, 'Roboto Mono', monospace;
+        }
+
+        .geo-map-wrap {
+            position: relative;
+            flex: 1;
+            min-height: 0;
+            border: 1px solid #2a3950;
+            border-radius: 6px;
+            overflow: hidden;
+            background: radial-gradient(circle at 30% 20%, #1f2f45 0%, #131c2b 48%, #0b121d 100%);
+        }
+
+        .geo-map-canvas {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .geo-map-wrap .leaflet-container {
+            width: 100%;
+            height: 100%;
+            background: #0b121d;
+            font-family: 'IBM Plex Sans KR', 'Noto Sans KR', sans-serif;
+        }
+
+        .geo-map-wrap .leaflet-control-zoom a {
+            background: #0f1b2c;
+            color: #cce5ff;
+            border-color: #304663;
+        }
+
+        .geo-map-wrap .leaflet-control-attribution {
+            display: none;
+        }
+
+        .map-hotspot-icon,
+        .map-asset-icon {
+            background: transparent !important;
+            border: 0 !important;
+            overflow: visible !important;
+        }
+
+        .map-hotspot-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 0 0 rgba(255, 179, 71, 0.8);
+            animation: pulse-dot 2s infinite;
+        }
+
+        .map-hotspot-dot.hot {
+            background: var(--down);
+            box-shadow: 0 0 0 0 rgba(255, 77, 109, 0.8);
+        }
+
+        .leaflet-tooltip.map-hotspot-label {
+            background: rgba(8, 14, 23, 0.86);
+            border: 1px solid #415d7f;
+            color: #eaf3ff;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: 600;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
+        }
+
+        .leaflet-tooltip.map-hotspot-label::before {
+            border-right-color: #415d7f;
+        }
+
+        .map-asset-marker {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 1px 5px;
+            border-radius: 999px;
+            background: rgba(9, 17, 28, 0.82);
+            border: 1px solid #3a5a80;
+            box-shadow: 0 2px 7px rgba(0, 0, 0, 0.35);
+            white-space: nowrap;
+            margin-left: -22px;
+            margin-top: -12px;
+        }
+
+        .map-asset-marker.aircraft {
+            border-color: #4ec9ff;
+        }
+
+        .map-asset-marker.vessel {
+            border-color: #00d084;
+        }
+
+        .map-asset-marker .asset-icon {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.35px;
+            line-height: 1;
+            filter: drop-shadow(0 0 4px rgba(78, 201, 255, 0.35));
+        }
+
+        .map-asset-marker.vessel .asset-icon {
+            filter: drop-shadow(0 0 4px rgba(0, 208, 132, 0.35));
+        }
+
+        .map-asset-marker .asset-label {
+            font-size: 8px;
+            color: #dce9fb;
+            letter-spacing: 0.25px;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
+        }
+
+        .map-legend {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 4px;
+            font-size: 8px;
+            color: #9da9bf;
+            flex-wrap: wrap;
+            text-transform: uppercase;
+        }
+
+        .legend-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            margin-right: 4px;
+            transform: translateY(1px);
+        }
+
+        .legend-red { background: #dc3545; }
+        .legend-orange { background: #ff6b00; }
+        .legend-green { background: #00c853; }
+
+        .live-news-feed {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding-right: 2px;
+        }
+
+        .live-news-feed::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .live-news-feed::-webkit-scrollbar-thumb {
+            background: #3b465d;
+            border-radius: 999px;
+        }
+
+        .live-news-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 5px;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid #273346;
+            border-left: 2px solid var(--accent);
+            border-radius: 3px;
+            padding: 4px 5px;
+            min-height: 30px;
+            cursor: pointer;
+            transition: border-color 0.15s ease, background-color 0.15s ease;
+        }
+
+        .live-news-item:hover {
+            border-color: #3b6ea1;
+            background: rgba(17, 30, 45, 0.66);
+        }
+
+        .live-news-item:focus-visible {
+            outline: 1px solid #5c8fca;
+            outline-offset: 1px;
+        }
+
+        .news-badge {
+            font-size: 8px;
+            font-weight: 700;
+            padding: 2px 4px;
+            border-radius: 2px;
+            color: #1a1307;
+            background: var(--accent);
+            white-space: nowrap;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
+        }
+
+        .news-badge.alert {
+            background: var(--down);
+            color: #2f040d;
+        }
+
+        .news-badge.market {
+            background: var(--up);
+            color: #052517;
+        }
+
+        .news-headline {
+            font-size: 9px;
+            color: #d2deef;
+            line-height: 1.25;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .news-time {
+            font-size: 8px;
+            color: #7f8fa8;
+            white-space: nowrap;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
+        }
+
+        @keyframes pulse-dot {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.8);
+            }
+            70% {
+                box-shadow: 0 0 0 7px rgba(255, 107, 0, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 107, 0, 0);
+            }
+        }
+
+        /* Market Data Grid */
+        .market-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px;
+            margin-top: 2px;
+        }
+
+        .finance-card .market-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .market-item {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 6px;
+            border-radius: 5px;
+            border: 1px solid #273346;
+            border-left: 2px solid var(--accent);
+            min-height: 46px;
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .market-item:hover {
+            background: rgba(16, 29, 44, 0.68);
+            border-color: #3b6ea1;
+        }
+
+        .market-label {
+            font-size: 9px;
+            color: #8ea0bc;
+            margin-bottom: 1px;
+            letter-spacing: 0.25px;
+        }
+
+        .market-value {
+            font-family: Consolas, 'Roboto Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            white-space: nowrap;
+            color: #e8f1ff;
+        }
+
+        .market-change {
+            font-size: 9px;
+            font-weight: 600;
+        }
+
+        .sector-stock-head {
+            margin-top: 4px;
+            font-size: 8px;
+            color: #8b9eb9;
+            letter-spacing: 0.28px;
+            text-transform: uppercase;
+        }
+
+        .sector-stock-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 4px;
+            margin-top: 3px;
+        }
+
+        .sector-stock-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid #253245;
+            border-left: 2px solid var(--accent-cool);
+            border-radius: 4px;
+            padding: 4px;
+            cursor: pointer;
+            min-height: 34px;
+            transition: border-color 0.15s ease, background-color 0.15s ease;
+        }
+
+        .sector-stock-item:hover {
+            border-color: #4f87c5;
+            background: rgba(16, 29, 44, 0.68);
+        }
+
+        .sector-stock-name {
+            font-size: 8px;
+            color: #cad8ea;
+            margin-bottom: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            letter-spacing: 0.2px;
+        }
+
+        .sector-stock-quote {
+            display: flex;
+            align-items: baseline;
+            gap: 3px;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .sector-stock-quote .market-change {
+            font-size: 8px;
+        }
+
+        .up { color: var(--up); }
+        .down { color: var(--down); }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 88px;
+            min-height: 82px;
+            margin-top: 4px;
+            flex: 1;
+        }
+
+        .finance-card .chart-container,
+        .construction-card .chart-container {
+            height: 64px;
+            min-height: 58px;
+        }
+
+        .energy-trend-card .chart-container,
+        .finance-trend-card .chart-container {
+            height: 100%;
+            min-height: 0;
+            margin-top: 0;
+        }
+
+        .popup-launch {
+            margin-top: 5px;
+            width: 100%;
+            border: 1px solid #37537a;
+            background: rgba(24, 47, 75, 0.45);
+            color: #cce5ff;
+            border-radius: 5px;
+            font-size: 9px;
+            font-weight: 600;
+            padding: 6px 7px;
+            text-align: center;
+            cursor: pointer;
+            letter-spacing: 0.25px;
+            text-transform: uppercase;
+        }
+
+        .popup-launch:hover {
+            background: rgba(36, 72, 112, 0.58);
+            border-color: #5f8ac6;
+        }
+
+        .sim-popup-close {
+            border: 1px solid #3a4d6a;
+            background: rgba(31, 46, 70, 0.52);
+            color: #d8e7fc;
+            font-size: 9px;
+            border-radius: 4px;
+            padding: 3px 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .sim-popup-close:hover {
+            background: rgba(46, 66, 98, 0.7);
+        }
+
+        .chart-container-large {
+            height: 320px;
+        }
+
+        /* Correlation Matrix */
+        .correlation-matrix {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-auto-rows: 26px;
+            gap: 3px;
+            margin-top: 4px;
+        }
+
+        .corr-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid rgba(18, 26, 40, 0.7);
+            font-family: 'IBM Plex Mono', Consolas, monospace;
+        }
+
+        .corr-cell:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 12px rgba(78, 201, 255, 0.35);
+        }
+
+        .corr-label {
+            font-size: 8px;
+            line-height: 1;
+            text-align: center;
+            color: #8394af;
+            padding: 2px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        /* Simulation Panel */
+        .simulation-panel {
+            background: rgba(8, 13, 22, 0.86);
+            border: 1px solid #22324a;
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 4px;
+            min-height: 0;
+            overflow: auto;
+        }
+
+        .sim-controls {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .sim-control-label {
+            font-size: 8px;
+            color: #8ea3c1;
+            display: block;
+            margin-bottom: 3px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .sim-action-wrap {
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .sim-input {
+            background: rgba(7, 12, 20, 0.95);
+            border: 1px solid #334461;
+            color: #dce8fb;
+            padding: 5px;
+            border-radius: 4px;
+            font-size: 10px;
+            width: 100%;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
+        }
+
+        .sim-button {
+            background: linear-gradient(90deg, #2767af 0%, #2f8fc9 100%);
+            color: #ecf5ff;
+            border: none;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 10px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .sim-button:hover {
+            background: linear-gradient(90deg, #2f79cc 0%, #3ea7e6 100%);
+            transform: translateY(-2px);
+        }
+
+        .sim-results {
+            background: rgba(12, 22, 35, 0.82);
+            padding: 7px;
+            border-radius: 4px;
+            border-left: 2px solid var(--accent-cool);
+            display: none;
+        }
+
+        .sim-results.active {
+            display: block;
+        }
+
+        .sim-results-title {
+            font-size: 11px;
+            margin-bottom: 7px;
+            color: #a9d9ff;
+            letter-spacing: 0.35px;
+            text-transform: uppercase;
+        }
+
+        .sim-results-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .sim-metric-label {
+            font-size: 8px;
+            color: #8599b6;
+            letter-spacing: 0.25px;
+        }
+
+        .sim-metric-value {
+            font-size: 15px;
+            font-weight: 700;
+            font-family: Consolas, 'Roboto Mono', monospace;
+            margin-top: 1px;
+        }
+
+        .sim-metric-value.warn {
+            color: #ffc56f;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(165deg, rgba(13, 19, 29, 0.97), rgba(9, 13, 20, 0.97));
+            border: 1px solid #2a3952;
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #2a3952;
+        }
+
+        .modal-close {
+            background: #172536;
+            color: #d5e5fc;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            border: 1px solid #354963;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-box {
+            background: rgba(14, 24, 38, 0.82);
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 2px solid var(--accent-cool);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #8ea0bc;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.35px;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #dce9ff;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
+        }
+
+        .news-modal-content {
+            max-width: 760px;
+        }
+
+        .news-modal-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 12px;
+            color: #8ea3c1;
+            margin-bottom: 14px;
+        }
+
+        .news-modal-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #8ec6ff;
+            text-decoration: none;
+            border: 1px solid #36537b;
+            background: rgba(17, 30, 47, 0.7);
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-size: 12px;
+            margin-bottom: 14px;
+        }
+
+        .news-modal-link:hover {
+            border-color: #4f76ab;
+            background: rgba(22, 41, 63, 0.82);
+        }
+
+        .news-modal-summary {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #d7e3f7;
+            white-space: pre-wrap;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            body {
+                overflow-y: auto;
+            }
+
+            .header-stock-inline {
+                width: 100%;
+                margin-left: auto;
+                gap: 6px;
+                justify-content: flex-end;
+            }
+
+            .header-stock-item:nth-child(n + 4) {
+                display: none;
+            }
+
+            .dashboard {
+                height: auto;
+                min-height: 0;
+                grid-template-columns: 1fr;
+                grid-template-rows: none;
+            }
+
+            .war-status,
+            .map-card,
+            .news-card,
+            .finance-card,
+            .construction-card,
+            .energy-trend-card,
+            .finance-trend-card,
+            .correlation-card,
+            .simulation-card {
+                grid-column: 1;
+                grid-row: auto;
+            }
+
+            .threat-level {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .sim-controls {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .sim-results-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .simulation-card {
+                top: 18px;
+                width: min(960px, 96vw);
+                max-height: 92vh;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .header-stock-item:nth-child(n + 3) {
+                display: none;
+            }
+
+            .threat-level,
+            .sim-controls {
+                grid-template-columns: 1fr;
+            }
+
+            .sim-results-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .correlation-layout {
+                grid-template-columns: 56px 1fr;
+                gap: 4px;
+            }
+
+            .corr-left-labels {
+                grid-template-rows: repeat(5, 22px);
+            }
+
+            .correlation-matrix {
+                grid-auto-rows: 22px;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--accent-cool);
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- News Ticker -->
+    <div class="news-ticker">
+        <div class="ticker-content" id="newsTicker">
+            <span class="ticker-item">🔴 긴급: 이란-미국 긴장 고조, 호르무즈 해협 봉쇄 가능성</span>
+            <span class="ticker-item">📈 WTI 유가 $78.50 돌파, 3개월 최고치</span>
+            <span class="ticker-item">⚠️ 한국은행 긴급 회의 소집</span>
+            <span class="ticker-item">💰 금값 온스당 $2,450 기록</span>
+            <span class="ticker-item">🏗️ 건설자재 가격 급등 우려</span>
+            <span class="ticker-item">🏠 부동산 시장 관망세 확산</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <h1>
+            <span>CRISIS MONITORING DASHBOARD</span>
+            <span class="alert-badge">⚠️ 전쟁 위기 경보</span>
+            <span class="header-stock-inline" id="headerStockInline">
+                <span class="header-stock-item" onclick="showDetails('kospi')" role="button" tabindex="0"><span class="header-stock-label">KOSPI</span><span class="header-stock-value" id="kospi">2,650.20</span><span class="header-stock-change up" id="kospi-change">+0.65%</span></span>
+                <span class="header-stock-item" onclick="showDetails('kosdaq')" role="button" tabindex="0"><span class="header-stock-label">KOSDAQ</span><span class="header-stock-value" id="kosdaq">865.70</span><span class="header-stock-change down" id="kosdaq-change">-0.22%</span></span>
+                <span class="header-stock-item" onclick="showDetails('nasdaq')" role="button" tabindex="0"><span class="header-stock-label">NASDAQ</span><span class="header-stock-value" id="nasdaq">18,145.30</span><span class="header-stock-change up" id="nasdaq-change">+0.88%</span></span>
+                <span class="header-stock-item" onclick="showDetails('dow')" role="button" tabindex="0"><span class="header-stock-label">DOW</span><span class="header-stock-value" id="dow">42,035.10</span><span class="header-stock-change up" id="dow-change">+0.41%</span></span>
+                <span class="header-stock-item" onclick="showDetails('sp500')" role="button" tabindex="0"><span class="header-stock-label">S&P500</span><span class="header-stock-value" id="sp500">5,612.40</span><span class="header-stock-change up" id="sp500-change">+0.52%</span></span>
+            </span>
+        </h1>
+        <div class="header-sector-strip">
+            <span class="header-sector-group">
+                <span class="header-sector-label">금융주</span>
+                <span class="header-stock-item" onclick="showDetails('kbfin')" role="button" tabindex="0"><span class="header-stock-label">KB금융</span><span class="header-stock-value" id="kbfin">82.40</span><span class="header-stock-change up" id="kbfin-change">+1.2%</span></span>
+                <span class="header-stock-item" onclick="showDetails('shinhan')" role="button" tabindex="0"><span class="header-stock-label">신한지주</span><span class="header-stock-value" id="shinhan">48.90</span><span class="header-stock-change down" id="shinhan-change">-0.4%</span></span>
+                <span class="header-stock-item" onclick="showDetails('hanafin')" role="button" tabindex="0"><span class="header-stock-label">하나금융</span><span class="header-stock-value" id="hanafin">59.20</span><span class="header-stock-change up" id="hanafin-change">+0.8%</span></span>
+            </span>
+            <span class="header-sector-group">
+                <span class="header-sector-label">건설주</span>
+                <span class="header-stock-item" onclick="showDetails('hyundaie')" role="button" tabindex="0"><span class="header-stock-label">현대건설</span><span class="header-stock-value" id="hyundaie">38.70</span><span class="header-stock-change up" id="hyundaie-change">+2.0%</span></span>
+                <span class="header-stock-item" onclick="showDetails('daewooec')" role="button" tabindex="0"><span class="header-stock-label">대우건설</span><span class="header-stock-value" id="daewooec">4.22</span><span class="header-stock-change up" id="daewooec-change">+1.1%</span></span>
+                <span class="header-stock-item" onclick="showDetails('dlenc')" role="button" tabindex="0"><span class="header-stock-label">DL이앤씨</span><span class="header-stock-value" id="dlenc">32.90</span><span class="header-stock-change down" id="dlenc-change">-0.6%</span></span>
+            </span>
+        </div>
+        <div class="timestamp" id="timestamp"></div>
+        <div class="library-warning" id="libraryWarning"></div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard">
+        <!-- War Status Monitor -->
+        <div class="card war-status">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">CRISIS INTENSITY RISK</div>
+                    <div class="card-subtitle">전쟁상황모니터링</div>
+                </div>
+                <div class="loading"></div>
+            </div>
+            <div class="threat-level">
+                <div class="threat-indicator">
+                    <h3>위협 레벨</h3>
+                    <div class="threat-value">CRITICAL</div>
+                </div>
+                <div class="threat-indicator">
+                    <h3>교전 확률</h3>
+                    <div class="threat-value">75%</div>
+                </div>
+                <div class="threat-indicator">
+                    <h3>석유 공급 리스크</h3>
+                    <div class="threat-value">HIGH</div>
+                </div>
+                <div class="threat-indicator">
+                    <h3>경제 영향도</h3>
+                    <div class="threat-value">9.2/10</div>
+                </div>
+            </div>
+            <div class="war-bars">
+                <div class="war-bar">
+                    <div class="war-bar-label">해협 봉쇄 위험도</div>
+                    <div class="war-bar-track"><div class="war-bar-fill" style="width: 78%;"></div></div>
+                    <div class="war-bar-value">78%</div>
+                </div>
+                <div class="war-bar">
+                    <div class="war-bar-label">에너지 공급 충격</div>
+                    <div class="war-bar-track"><div class="war-bar-fill" style="width: 84%;"></div></div>
+                    <div class="war-bar-value">84%</div>
+                </div>
+                <div class="war-bar">
+                    <div class="war-bar-label">금융시장 전염도</div>
+                    <div class="war-bar-track"><div class="war-bar-fill" style="width: 69%;"></div></div>
+                    <div class="war-bar-value">69%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Crisis Map -->
+        <div class="card map-card">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">GEO CRISIS MAP</div>
+                    <div class="card-subtitle">Middle East Hotspot Tracking</div>
+                </div>
+            </div>
+            <div class="geo-map-wrap">
+                <div class="geo-map-canvas" id="geoMapCanvas" aria-label="Middle East Crisis Map"></div>
+            </div>
+            <div class="map-legend">
+                <span><i class="legend-dot legend-red"></i>군사 긴장</span>
+                <span><i class="legend-dot legend-orange"></i>충돌 가능성</span>
+                <span><i class="legend-dot legend-green"></i>통상 경로</span>
+            </div>
+        </div>
+
+        <!-- Real-time News -->
+        <div class="card news-card">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">REAL-TIME NEWS</div>
+                    <div class="card-subtitle">실시간뉴스</div>
+                </div>
+            </div>
+            <div class="live-news-feed" id="liveNewsFeed"></div>
+        </div>
+
+        <!-- Financial Indicators -->
+        <div class="card finance-card">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">FX & MACRO PRESSURE</div>
+                    <div class="card-subtitle">금융지표</div>
+                </div>
+            </div>
+            <div class="market-grid">
+                <div class="market-item" onclick="showDetails('fedfunds')">
+                    <div class="market-label">Fed 기준금리</div>
+                    <div class="market-value">
+                        <span id="fedfunds">5.50</span>
+                        <span class="market-change">%</span>
+                    </div>
+                </div>
+                <div class="market-item" onclick="showDetails('bok')">
+                    <div class="market-label">한국 기준금리</div>
+                    <div class="market-value">
+                        <span id="bok">3.50</span>
+                        <span class="market-change">%</span>
+                    </div>
+                </div>
+                <div class="market-item" onclick="showDetails('libor')">
+                    <div class="market-label">US LIBOR (3M)</div>
+                    <div class="market-value">
+                        <span id="libor">5.32</span>
+                        <span class="market-change down" id="libor-change">-0.2%</span>
+                    </div>
+                </div>
+                <div class="market-item" onclick="showDetails('usd')">
+                    <div class="market-label">USD/KRW</div>
+                    <div class="market-value">
+                        <span id="usd">1,335</span>
+                        <span class="market-change up" id="usd-change">+2.1%</span>
+                    </div>
+                </div>
+                <div class="market-item" onclick="showDetails('gold')">
+                    <div class="market-label">금 (oz)</div>
+                    <div class="market-value">
+                        <span id="gold">2,450</span>
+                        <span class="market-change up" id="gold-change">+3.8%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Construction & Real Estate -->
+        <div class="card construction-card">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">CONSTRUCTION / REAL ESTATE</div>
+                    <div class="card-subtitle">건설/부동산</div>
+                </div>
+            </div>
+            <div class="market-grid">
+                <div class="market-item" onclick="showDetails('steel')">
+                    <div class="market-label">철근 가격</div>
+                    <div class="market-value">
+                        <span id="steel">850</span>
+                        <span class="market-change up" id="steel-change">+6.5%</span>
+                    </div>
+                </div>
+                <div class="market-item" onclick="showDetails('cement')">
+                    <div class="market-label">시멘트 가격</div>
+                    <div class="market-value">
+                        <span id="cement">125</span>
+                        <span class="market-change up" id="cement-change">+4.2%</span>
+                    </div>
+                </div>
+                <div class="market-item" onclick="showDetails('reindex')">
+                    <div class="market-label">부동산 지수</div>
+                    <div class="market-value">
+                        <span id="reindex">102.5</span>
+                        <span class="market-change down" id="reindex-change">-1.8%</span>
+                    </div>
+                </div>
+                <div class="market-item" onclick="showDetails('construction')">
+                    <div class="market-label">건설 지수</div>
+                    <div class="market-value">
+                        <span id="construction">98.3</span>
+                        <span class="market-change down" id="construction-change">-2.3%</span>
+                    </div>
+                </div>
+            </div>
+            <button class="popup-launch" onclick="openSimulationPopup()">시뮬레이션</button>
+        </div>
+
+        <!-- Energy Trend -->
+        <div class="card energy-trend-card">
+            <div class="chart-container">
+                <canvas id="energyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Finance Trend -->
+        <div class="card finance-trend-card">
+            <div class="chart-container">
+                <canvas id="financeChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Correlation Matrix -->
+        <div class="card correlation-card">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">CROSS-METRIC CORRELATION</div>
+                    <div class="card-subtitle">지표 간 상관관계 분석</div>
+                </div>
+            </div>
+            <div class="correlation-layout correlation-layout-top">
+                <div></div>
+                <div class="corr-top-labels">
+                    <div class="corr-label">유가</div>
+                    <div class="corr-label">금리</div>
+                    <div class="corr-label">환율</div>
+                    <div class="corr-label">건설자재</div>
+                    <div class="corr-label">부동산</div>
+                </div>
+            </div>
+            <div class="correlation-layout correlation-layout-main">
+                <div class="corr-left-labels">
+                    <div class="corr-label corr-left-label">유가</div>
+                    <div class="corr-label corr-left-label">금리</div>
+                    <div class="corr-label corr-left-label">환율</div>
+                    <div class="corr-label corr-left-label">건설자재</div>
+                    <div class="corr-label corr-left-label">부동산</div>
+                </div>
+                <div class="correlation-matrix" id="correlationMatrix"></div>
+            </div>
+        </div>
+
+        <!-- Simulation Panel -->
+        <div class="card simulation-card" id="simulationPopup">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">IMPACT SIMULATION</div>
+                    <div class="card-subtitle">시나리오 분석</div>
+                </div>
+                <button class="sim-popup-close" onclick="closeSimulationPopup()">닫기</button>
+            </div>
+            <div class="simulation-panel">
+                <div class="sim-controls">
+                    <div>
+                        <label class="sim-control-label">유가 변동 (%)</label>
+                        <input type="number" class="sim-input" id="oilChange" value="10" step="5">
+                    </div>
+                    <div>
+                        <label class="sim-control-label">전쟁 강도 (1-10)</label>
+                        <input type="number" class="sim-input" id="warIntensity" value="7" min="1" max="10">
+                    </div>
+                    <div>
+                        <label class="sim-control-label">기간 (개월)</label>
+                        <input type="number" class="sim-input" id="duration" value="6" min="1" max="24">
+                    </div>
+                    <div class="sim-action-wrap">
+                        <button class="sim-button" onclick="runSimulation()" style="width: 100%;">시뮬레이션 실행</button>
+                    </div>
+                </div>
+                <div class="sim-results" id="simResults">
+                    <h3 class="sim-results-title">📈 예상 영향도</h3>
+                    <div class="sim-results-grid">
+                        <div>
+                            <div class="sim-metric-label">건설비용 증가</div>
+                            <div class="sim-metric-value down" id="simCost">+15.2%</div>
+                        </div>
+                        <div>
+                            <div class="sim-metric-label">부동산 가격 변동</div>
+                            <div class="sim-metric-value up" id="simRE">-3.8%</div>
+                        </div>
+                        <div>
+                            <div class="sim-metric-label">매출 영향</div>
+                            <div class="sim-metric-value down" id="simRevenue">-12.5%</div>
+                        </div>
+                        <div>
+                            <div class="sim-metric-label">리스크 레벨</div>
+                            <div class="sim-metric-value warn" id="simRisk">HIGH</div>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="margin-top: 7px;">
+                        <canvas id="simulationChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Detailed View -->
+    <div class="modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle" style="color: #ff6b00; font-size: 20px;">지표 상세 분석</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-label">현재가</div>
+                    <div class="stat-value" id="modalCurrent">--</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">변동률</div>
+                    <div class="stat-value" id="modalChange">--</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">52주 최고</div>
+                    <div class="stat-value" id="modalHigh">--</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">52주 최저</div>
+                    <div class="stat-value" id="modalLow">--</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">평균</div>
+                    <div class="stat-value" id="modalAvg">--</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">변동성</div>
+                    <div class="stat-value" id="modalVol">--</div>
+                </div>
+            </div>
+            <div class="chart-container chart-container-large">
+                <canvas id="modalChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="newsDetailModal">
+        <div class="modal-content news-modal-content">
+            <div class="modal-header">
+                <h2 id="newsModalTitle" style="color: #8ec6ff; font-size: 20px;">뉴스 상세</h2>
+                <button class="modal-close" onclick="closeNewsModal()">×</button>
+            </div>
+            <div class="news-modal-meta" id="newsModalMeta"></div>
+            <a class="news-modal-link" id="newsModalLink" href="#" target="_blank" rel="noopener noreferrer">원문 기사 열기</a>
+            <p class="news-modal-summary" id="newsModalSummary"></p>
+        </div>
+    </div>
+
+    <script>
+        // Global Variables
+        let charts = {};
+        let modalChart = null;
+        let simulationChartObj = null;
+        let chartLibraryAvailable = false;
+        let liveNewsItems = [];
+        let chartWarningMessage = '';
+        let apiWarningMessage = '';
+        let newsWarningMessage = '';
+        let mapWarningMessage = '';
+        let liveNewsFallbackTimer = null;
+        let geoMap = null;
+        const mapAssetMarkers = {};
+        const DASHBOARD_API_URL = '/api/indicators';
+        const DASHBOARD_NEWS_API_URL = '/api/news';
+        const NEWS_REFRESH_INTERVAL_MS = 3 * 60 * 1000;
+        const KST_TIMEZONE = 'Asia/Seoul';
+        const NEWS_SOURCES = [
+            { url: 'https://www.aljazeera.com/xml/rss/all.xml', name: 'Al Jazeera' },
+            { url: 'http://feeds.bbci.co.uk/news/world/rss.xml', name: 'BBC' },
+            { url: 'https://feeds.reuters.com/reuters/worldNews', name: 'Reuters' },
+            { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', name: 'NYT' },
+            { url: 'https://feeds.bloomberg.com/markets/news.rss', name: 'Bloomberg' },
+            { url: 'https://www.ft.com/?format=rss', name: 'Financial Times' }
+        ];
+        const externalIndicatorState = {};
+        const MAP_BBOX = Object.freeze({
+            minLon: 32.0,
+            minLat: 20.0,
+            maxLon: 62.5,
+            maxLat: 38.5
+        });
+        const MAP_HOTSPOTS = [
+            { name: 'Tehran', lat: 35.6892, lon: 51.3890, critical: true },
+            { name: 'Hormuz', lat: 26.5667, lon: 56.2500, critical: true },
+            { name: 'Baghdad', lat: 33.3152, lon: 44.3661, critical: false },
+            { name: 'Damascus', lat: 33.5138, lon: 36.2765, critical: false }
+        ];
+        const mapAssetState = [
+            { id: 'asset-air1', label: 'USAF-01', icon: 'AIR', type: 'aircraft', lat: 32.1, lon: 51.9, dLat: 0.04, dLon: 0.08, minLat: 31.2, maxLat: 33.5, minLon: 50.2, maxLon: 54.4 },
+            { id: 'asset-air2', label: 'UAV-07', icon: 'AIR', type: 'aircraft', lat: 31.3, lon: 47.2, dLat: -0.03, dLon: 0.07, minLat: 30.4, maxLat: 32.4, minLon: 45.6, maxLon: 49.4 },
+            { id: 'asset-ship1', label: 'CVN-74', icon: 'SEA', type: 'vessel', lat: 26.9, lon: 56.4, dLat: -0.02, dLon: -0.05, minLat: 26.1, maxLat: 27.7, minLon: 55.6, maxLon: 57.3 },
+            { id: 'asset-ship2', label: 'TANKER-A3', icon: 'SEA', type: 'vessel', lat: 24.6, lon: 58.2, dLat: 0.02, dLon: 0.04, minLat: 23.8, maxLat: 25.2, minLon: 57.5, maxLon: 59.2 }
+        ];
+        const liveNewsPool = [
+            {
+                tag: '속보',
+                source: 'Desk',
+                headline: '호르무즈 해협 통항 보험료 18% 급등',
+                summary: '중동 긴장 고조로 해상 운송 보험료가 급등하고 있습니다.'
+            },
+            {
+                tag: '경보',
+                source: 'Desk',
+                headline: '미 해군, 걸프 해역 감시 전력 증강',
+                summary: '걸프 해역 경계 강화 소식으로 위험 회피 심리가 확대되고 있습니다.'
+            },
+            {
+                tag: '시장',
+                source: 'Desk',
+                headline: 'WTI 변동성 지수 장중 12% 확대',
+                summary: '에너지 가격 민감 섹터 중심으로 변동성이 커지고 있습니다.'
+            },
+            {
+                tag: '속보',
+                source: 'Desk',
+                headline: '이란 외무부, 보복 가능성 언급',
+                summary: '추가 지정학 리스크 가능성이 시장에 반영되고 있습니다.'
+            },
+            {
+                tag: '시장',
+                source: 'Desk',
+                headline: '원/달러 환율 방어를 위한 당국 구두 개입',
+                summary: '환율 급변동 구간에서 당국 발언이 이어지고 있습니다.'
+            }
+        ];
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTimestamp();
+            initLiveNews();
+            initMapAssets();
+            setInterval(updateTimestamp, 1000);
+            setInterval(updateMarketData, 5000);
+            if (window.location.protocol === 'file:') {
+                apiWarningMessage = '실데이터 API: 로컬 서버 실행 필요';
+                newsWarningMessage = '뉴스 API: 로컬 서버 실행 필요';
+                scheduleLocalNewsFallback();
+                renderHeaderWarnings();
+            } else {
+                refreshExternalIndicators();
+                setInterval(refreshExternalIndicators, 60000);
+                refreshLiveNews();
+                setInterval(refreshLiveNews, NEWS_REFRESH_INTERVAL_MS);
+            }
+            chartLibraryAvailable = typeof window.Chart !== 'undefined';
+
+            if (chartLibraryAvailable) {
+                initCharts();
+            } else {
+                initChartFallbacks();
+                chartWarningMessage = '차트 라이브러리 로딩 실패';
+                renderHeaderWarnings();
+            }
+
+            initCorrelationMatrix();
+        });
+
+        function renderHeaderWarnings() {
+            const warningElement = document.getElementById('libraryWarning');
+            if (!warningElement) {
+                return;
+            }
+
+            const messages = [chartWarningMessage, apiWarningMessage, newsWarningMessage, mapWarningMessage].filter(Boolean);
+            warningElement.textContent = messages.join(' | ');
+        }
+
+        async function refreshExternalIndicators() {
+            try {
+                const response = await fetch(DASHBOARD_API_URL, { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const payload = await response.json();
+                applyExternalIndicators(payload);
+                apiWarningMessage = Array.isArray(payload.warnings) && payload.warnings.length > 0
+                    ? 'API 경고: ' + payload.warnings.join(', ')
+                    : '';
+                renderHeaderWarnings();
+            } catch (error) {
+                apiWarningMessage = 'API 연동 실패(서버 확인 필요)';
+                renderHeaderWarnings();
+            }
+        }
+
+        function applyExternalIndicators(payload) {
+            if (!payload || typeof payload !== 'object') {
+                return;
+            }
+
+            if (Number.isFinite(payload.fedfunds)) {
+                setIndicatorValue('fedfunds', payload.fedfunds, 2);
+            }
+            if (Number.isFinite(payload.bok)) {
+                setIndicatorValue('bok', payload.bok, 2);
+            }
+            if (Number.isFinite(payload.libor)) {
+                setIndicatorWithChange('libor', payload.libor, 'libor-change', 2);
+            }
+            if (Number.isFinite(payload.usdkrw)) {
+                setIndicatorWithChange('usd', payload.usdkrw, 'usd-change', 2, true);
+            }
+            if (payload.stockIndices && typeof payload.stockIndices === 'object') {
+                applyStockIndexPayload(payload.stockIndices);
+            }
+        }
+
+        function applyStockIndexPayload(stockIndices) {
+            const keys = ['kospi', 'kosdaq', 'nasdaq', 'dow', 'sp500'];
+            keys.forEach(key => {
+                const point = stockIndices[key];
+                if (!point || !Number.isFinite(point.value)) {
+                    return;
+                }
+
+                const changeId = key + '-change';
+                const changeElement = document.getElementById(changeId);
+                const valueElement = document.getElementById(key);
+                if (!valueElement || !changeElement) {
+                    return;
+                }
+
+                externalIndicatorState[key] = point.value;
+                valueElement.textContent = Number(point.value).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+
+                const changePct = Number.isFinite(point.changePct)
+                    ? point.changePct
+                    : 0;
+                changeElement.textContent = (changePct >= 0 ? '+' : '') + changePct.toFixed(2) + '%';
+                changeElement.className = 'header-stock-change ' + (changePct >= 0 ? 'up' : 'down');
+            });
+        }
+
+
+        function setIndicatorValue(id, value, decimals = 2) {
+            const element = document.getElementById(id);
+            if (!element || !Number.isFinite(value)) {
+                return;
+            }
+            element.textContent = Number(value).toFixed(decimals);
+        }
+
+        function setIndicatorWithChange(id, value, changeId, decimals = 2, useGrouping = false) {
+            const element = document.getElementById(id);
+            if (!element || !Number.isFinite(value)) {
+                return;
+            }
+
+            const previous = Number.isFinite(externalIndicatorState[id])
+                ? externalIndicatorState[id]
+                : parseMetricValue(element.textContent);
+            externalIndicatorState[id] = value;
+            const roundedValue = Number(value);
+            element.textContent = useGrouping
+                ? roundedValue.toLocaleString('en-US', {
+                    minimumFractionDigits: decimals,
+                    maximumFractionDigits: decimals
+                })
+                : roundedValue.toFixed(decimals);
+
+            const changeElement = document.getElementById(changeId);
+            if (!changeElement) {
+                return;
+            }
+
+            const deltaPct = previous !== 0 ? ((value - previous) / previous) * 100 : 0;
+            changeElement.textContent = (deltaPct >= 0 ? '+' : '') + deltaPct.toFixed(2) + '%';
+            changeElement.className = 'market-change ' + (deltaPct >= 0 ? 'up' : 'down');
+        }
+
+        function initMapAssets() {
+            const mapCanvas = document.getElementById('geoMapCanvas');
+            if (!mapCanvas) {
+                return;
+            }
+
+            if (typeof window.L === 'undefined') {
+                mapWarningMessage = '지도 라이브러리 로딩 실패';
+                renderHeaderWarnings();
+                return;
+            }
+
+            const southWest = window.L.latLng(MAP_BBOX.minLat, MAP_BBOX.minLon);
+            const northEast = window.L.latLng(MAP_BBOX.maxLat, MAP_BBOX.maxLon);
+            const bounds = window.L.latLngBounds(southWest, northEast);
+
+            geoMap = window.L.map(mapCanvas, {
+                zoomControl: true,
+                attributionControl: false,
+                minZoom: 5,
+                maxZoom: 9,
+                zoomSnap: 0.5
+            });
+
+            window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 12
+            }).addTo(geoMap);
+
+            geoMap.fitBounds(bounds, { padding: [8, 8] });
+            geoMap.setMaxBounds(bounds.pad(0.2));
+
+            MAP_HOTSPOTS.forEach(hotspot => {
+                const marker = window.L.marker([hotspot.lat, hotspot.lon], {
+                    icon: createHotspotIcon(hotspot.critical),
+                    interactive: false,
+                    keyboard: false
+                }).addTo(geoMap);
+                marker.bindTooltip(hotspot.name, {
+                    permanent: true,
+                    direction: 'right',
+                    offset: [8, 0],
+                    className: 'map-hotspot-label'
+                });
+            });
+
+            mapAssetState.forEach(asset => {
+                const marker = window.L.marker([asset.lat, asset.lon], {
+                    icon: createAssetIcon(asset),
+                    keyboard: false
+                }).addTo(geoMap);
+                mapAssetMarkers[asset.id] = marker;
+            });
+
+            setInterval(updateMapAssets, 2000);
+        }
+
+        function clamp(value, min, max) {
+            return Math.max(min, Math.min(max, value));
+        }
+
+        function createHotspotIcon(critical) {
+            return window.L.divIcon({
+                className: 'map-hotspot-icon',
+                html: `<span class="map-hotspot-dot${critical ? ' hot' : ''}"></span>`,
+                iconSize: [10, 10],
+                iconAnchor: [5, 5]
+            });
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function createAssetIcon(asset) {
+            return window.L.divIcon({
+                className: 'map-asset-icon',
+                html:
+                    `<span class="map-asset-marker ${escapeHtml(asset.type)}">` +
+                        `<span class="asset-icon">${escapeHtml(asset.icon)}</span>` +
+                        `<span class="asset-label">${escapeHtml(asset.label)}</span>` +
+                    '</span>',
+                iconSize: [0, 0],
+                iconAnchor: [0, 0]
+            });
+        }
+
+        function updateMapAssets() {
+            mapAssetState.forEach(asset => {
+                asset.lat += asset.dLat;
+                asset.lon += asset.dLon;
+
+                if (asset.lat <= asset.minLat || asset.lat >= asset.maxLat) {
+                    asset.dLat *= -1;
+                    asset.lat = clamp(asset.lat, asset.minLat, asset.maxLat);
+                }
+                if (asset.lon <= asset.minLon || asset.lon >= asset.maxLon) {
+                    asset.dLon *= -1;
+                    asset.lon = clamp(asset.lon, asset.minLon, asset.maxLon);
+                }
+
+                const marker = mapAssetMarkers[asset.id];
+                if (marker) {
+                    marker.setLatLng([asset.lat, asset.lon]);
+                }
+            });
+        }
+
+        function initLiveNews() {
+            const seeds = [
+                { tag: '속보', source: 'Desk', headline: '이란-미국 긴장 고조, 해협 봉쇄 가능성 재부상', summary: '군사적 긴장으로 해상 물류 리스크가 확대되고 있습니다.', ageMin: 0 },
+                { tag: '시장', source: 'Desk', headline: '국제유가 급등에 에너지주 강세 출발', summary: '에너지 민감 업종 중심으로 장 초반 상승폭이 확대되고 있습니다.', ageMin: 2 },
+                { tag: '경보', source: 'Desk', headline: '중동 항로 우회 선박 증가, 운임 추가 상승', summary: '우회 운항 증가로 운송비와 인도 지연 우려가 커지고 있습니다.', ageMin: 5 },
+                { tag: '시장', source: 'Desk', headline: '금값 온스당 2,450달러 상회', summary: '안전자산 선호 심리로 금 가격이 상승세를 유지하고 있습니다.', ageMin: 7 },
+                { tag: '경보', source: 'Desk', headline: '한국은행 상황 점검회의 개최', summary: '환율 및 원자재 급등 대응 논의를 위한 긴급 점검이 진행 중입니다.', ageMin: 10 },
+                { tag: '속보', source: 'Desk', headline: '건설 원자재 단가 상승 압력 확대', summary: '철강과 시멘트 가격 상승으로 원가 부담 확대가 예상됩니다.', ageMin: 13 }
+            ];
+
+            liveNewsItems = seeds.map(item => ({
+                tag: item.tag,
+                source: item.source,
+                headline: item.headline,
+                summary: item.summary,
+                link: '',
+                time: new Date(Date.now() - item.ageMin * 60000)
+            }));
+
+            liveNewsItems.sort((a, b) => b.time - a.time);
+            renderLiveNewsFeed();
+            renderNewsTicker();
+        }
+
+        function inferNewsTag(source, headline) {
+            const text = `${source} ${headline}`.toLowerCase();
+            if (/war|conflict|strike|military|missile|attack|sanction|risk|경보|전쟁|충돌/.test(text)) {
+                return '경보';
+            }
+            if (/market|price|oil|stocks|bond|fx|bloomberg|reuters|ft|dow|nasdaq|sp500|시장|환율/.test(text)) {
+                return '시장';
+            }
+            return '속보';
+        }
+
+        function normalizeNewsItem(item) {
+            const published = new Date(item?.publishedAt || item?.time || Date.now());
+            return {
+                tag: item?.tag || inferNewsTag(item?.source || '', item?.title || item?.headline || ''),
+                source: String(item?.source || 'News'),
+                headline: String(item?.title || item?.headline || '').trim(),
+                summary: String(item?.summary || '').trim(),
+                link: String(item?.link || '').trim(),
+                time: Number.isNaN(published.getTime()) ? new Date() : published
+            };
+        }
+
+        function scheduleLocalNewsFallback() {
+            if (liveNewsFallbackTimer !== null) {
+                return;
+            }
+            liveNewsFallbackTimer = window.setInterval(pushLiveNews, 7000);
+        }
+
+        function stopLocalNewsFallback() {
+            if (liveNewsFallbackTimer === null) {
+                return;
+            }
+            window.clearInterval(liveNewsFallbackTimer);
+            liveNewsFallbackTimer = null;
+        }
+
+        async function refreshLiveNews() {
+            try {
+                const response = await fetch(DASHBOARD_NEWS_API_URL, { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const payload = await response.json();
+                const items = Array.isArray(payload.items) ? payload.items : [];
+                const normalized = items
+                    .map(normalizeNewsItem)
+                    .filter(item => item.headline.length > 0);
+
+                if (normalized.length === 0) {
+                    throw new Error('empty news payload');
+                }
+
+                liveNewsItems = normalized.slice(0, 20);
+                liveNewsItems.sort((a, b) => b.time - a.time);
+                newsWarningMessage = Array.isArray(payload.warnings) && payload.warnings.length > 0
+                    ? 'NEWS 경고: ' + payload.warnings.slice(0, 2).join(', ')
+                    : '';
+                stopLocalNewsFallback();
+                renderLiveNewsFeed();
+                renderNewsTicker();
+            } catch (error) {
+                newsWarningMessage = `NEWS 연동 실패(기본 피드 사용): ${NEWS_SOURCES.length}개 소스`;
+                scheduleLocalNewsFallback();
+            }
+            renderHeaderWarnings();
+        }
+
+        function pushLiveNews() {
+            const picked = liveNewsPool[Math.floor(Math.random() * liveNewsPool.length)];
+            liveNewsItems.unshift({
+                tag: picked.tag,
+                source: picked.source,
+                headline: picked.headline,
+                summary: picked.summary,
+                link: '',
+                time: new Date()
+            });
+
+            if (liveNewsItems.length > 14) {
+                liveNewsItems.pop();
+            }
+
+            renderLiveNewsFeed();
+            renderNewsTicker();
+        }
+
+        function getNewsBadgeClass(tag) {
+            if (tag === '경보') {
+                return 'news-badge alert';
+            }
+            if (tag === '시장') {
+                return 'news-badge market';
+            }
+            return 'news-badge';
+        }
+
+        function formatNewsTime(date) {
+            return date.toLocaleTimeString('ko-KR', {
+                timeZone: KST_TIMEZONE,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+        }
+
+        function formatNewsDateTime(date) {
+            return date.toLocaleString('ko-KR', {
+                timeZone: KST_TIMEZONE,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+        }
+
+        function renderLiveNewsFeed() {
+            const feed = document.getElementById('liveNewsFeed');
+            if (!feed) {
+                return;
+            }
+
+            feed.innerHTML = '';
+            liveNewsItems.slice(0, 8).forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'live-news-item';
+                row.title = `${item.source} | ${formatNewsDateTime(item.time)} KST`;
+                row.tabIndex = 0;
+                row.setAttribute('role', 'button');
+                row.setAttribute('aria-label', `뉴스 상세 보기: ${item.headline}`);
+                row.addEventListener('click', () => showNewsDetail(item));
+                row.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        showNewsDetail(item);
+                    }
+                });
+
+                const badge = document.createElement('span');
+                badge.className = getNewsBadgeClass(item.tag);
+                badge.textContent = item.tag;
+
+                const headline = document.createElement('span');
+                headline.className = 'news-headline';
+                headline.textContent = `[${item.source}] ${item.headline}`;
+
+                const time = document.createElement('span');
+                time.className = 'news-time';
+                time.textContent = formatNewsTime(item.time);
+
+                row.appendChild(badge);
+                row.appendChild(headline);
+                row.appendChild(time);
+                feed.appendChild(row);
+            });
+        }
+
+        function renderNewsTicker() {
+            const ticker = document.getElementById('newsTicker');
+            if (!ticker) {
+                return;
+            }
+
+            const sourceItems = liveNewsItems.slice(0, 6);
+            const doubled = [...sourceItems, ...sourceItems];
+            ticker.innerHTML = '';
+
+            doubled.forEach(item => {
+                const span = document.createElement('span');
+                span.className = 'ticker-item';
+                span.textContent = `${item.tag} [${item.source}] ${item.headline}`;
+                ticker.appendChild(span);
+            });
+        }
+
+        function showNewsDetail(item) {
+            const modal = document.getElementById('newsDetailModal');
+            const title = document.getElementById('newsModalTitle');
+            const meta = document.getElementById('newsModalMeta');
+            const summary = document.getElementById('newsModalSummary');
+            const link = document.getElementById('newsModalLink');
+            if (!modal || !title || !meta || !summary || !link) {
+                return;
+            }
+
+            title.textContent = item.headline;
+            meta.innerHTML = '';
+            [
+                `출처: ${item.source}`,
+                `분류: ${item.tag}`,
+                `시각(KST): ${formatNewsDateTime(item.time)}`
+            ].forEach(text => {
+                const chip = document.createElement('span');
+                chip.textContent = text;
+                meta.appendChild(chip);
+            });
+
+            summary.textContent = item.summary || '요약 정보가 없어 제목만 제공합니다.';
+            if (item.link) {
+                link.href = item.link;
+                link.style.display = 'inline-flex';
+            } else {
+                link.removeAttribute('href');
+                link.style.display = 'none';
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeNewsModal() {
+            const modal = document.getElementById('newsDetailModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('timestamp').textContent =
+                `Last Update (KST): ${now.toLocaleString('ko-KR', {
+                    timeZone: KST_TIMEZONE,
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                })}`;
+        }
+
+        function parseMetricValue(text) {
+            const normalized = String(text || '').replace(/,/g, '').trim();
+            const value = parseFloat(normalized);
+            return Number.isFinite(value) ? value : 0;
+        }
+
+        function initChartFallbacks() {
+            ['energyChart', 'financeChart'].forEach(id => {
+                drawChartPlaceholder(id, '차트 로딩 실패');
+            });
+        }
+
+        function drawChartPlaceholder(canvasId, message) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                return;
+            }
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                return;
+            }
+
+            const rect = canvas.getBoundingClientRect();
+            const width = Math.max(120, Math.floor(rect.width || canvas.width || 300));
+            const height = Math.max(80, Math.floor(rect.height || canvas.height || 150));
+
+            canvas.width = width;
+            canvas.height = height;
+
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = '#091019';
+            ctx.fillRect(0, 0, width, height);
+            ctx.strokeStyle = '#2b3d57';
+            ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
+            ctx.fillStyle = '#7ec8ff';
+            ctx.font = '12px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(message, width / 2, height / 2);
+        }
+
+        function updateMarketData() {
+            const cardIndicators = ['wti', 'brent', 'gas', 'lng', 'gold', 'steel', 'cement'];
+            const headerIndicators = ['kbfin', 'shinhan', 'hanafin', 'hyundaie', 'daewooec', 'dlenc'];
+
+            function tickIndicator(id, changeClass) {
+                const element = document.getElementById(id);
+                if (!element) return;
+                const current = parseMetricValue(element.textContent);
+                const change = (Math.random() - 0.5) * 2;
+                element.textContent = (current + change).toFixed(2);
+                const changeElement = document.getElementById(id + '-change');
+                if (changeElement) {
+                    const pctChange = current !== 0 ? ((change / current) * 100).toFixed(1) : '0.0';
+                    changeElement.textContent = (change >= 0 ? '+' : '') + pctChange + '%';
+                    changeElement.className = changeClass + ' ' + (change >= 0 ? 'up' : 'down');
+                }
+            }
+
+            cardIndicators.forEach(id => tickIndicator(id, 'market-change'));
+            headerIndicators.forEach(id => tickIndicator(id, 'header-stock-change'));
+
+            // Update charts
+            if (chartLibraryAvailable) {
+                updateChartData();
+            }
+        }
+
+        function initCharts() {
+            // Energy Chart
+            const energyCanvas = document.getElementById('energyChart');
+            if (energyCanvas) {
+                const energyCtx = energyCanvas.getContext('2d');
+                charts.energy = new Chart(energyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: generateTimeLabels(24),
+                        datasets: [{
+                            label: 'WTI',
+                            data: generateRandomData(24, 72, 82),
+                            borderColor: '#ff6b00',
+                            backgroundColor: 'rgba(255, 107, 0, 0.1)',
+                            tension: 0.4,
+                            borderWidth: 2
+                        }, {
+                            label: 'Brent',
+                            data: generateRandomData(24, 76, 86),
+                            borderColor: '#00c853',
+                            backgroundColor: 'rgba(0, 200, 83, 0.1)',
+                            tension: 0.4,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: getChartOptions('')
+                });
+            }
+
+            // Finance Chart
+            const financeCanvas = document.getElementById('financeChart');
+            if (financeCanvas) {
+                const financeCtx = financeCanvas.getContext('2d');
+                charts.finance = new Chart(financeCtx, {
+                    type: 'line',
+                    data: {
+                        labels: generateTimeLabels(24),
+                        datasets: [{
+                            label: 'USD/KRW',
+                            data: generateRandomData(24, 1300, 1350),
+                            borderColor: '#2196f3',
+                            backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            yAxisID: 'y'
+                        }, {
+                            label: '금',
+                            data: generateRandomData(24, 2400, 2500),
+                            borderColor: '#ffc107',
+                            backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            yAxisID: 'y1'
+                        }, {
+                            label: '은',
+                            data: generateRandomData(24, 28, 36),
+                            borderColor: '#cfd8dc',
+                            backgroundColor: 'rgba(207, 216, 220, 0.1)',
+                            tension: 0.35,
+                            borderWidth: 2,
+                            yAxisID: 'y2'
+                        }]
+                    },
+                    options: {
+                        ...getChartOptions(''),
+                        scales: {
+                            y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            ticks: { color: '#95a8c6', font: { size: 9 }, maxTicksLimit: 4 },
+                            grid: { color: '#25354c' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            ticks: { color: '#95a8c6', font: { size: 9 }, maxTicksLimit: 4 },
+                            grid: { display: false }
+                        },
+                            y2: {
+                                type: 'linear',
+                                display: false,
+                            position: 'right',
+                            min: 20,
+                            max: 40,
+                            grid: { display: false }
+                        },
+                        x: {
+                            ticks: { color: '#95a8c6', font: { size: 9 }, maxTicksLimit: 5 },
+                            grid: { color: '#25354c' }
+                        }
+                    }
+                }
+            });
+            }
+        }
+
+        function getChartOptions(title = '') {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#b7c8e4', font: { size: 9 }, boxWidth: 10, padding: 8 }
+                    },
+                    title: {
+                        display: Boolean(title),
+                        text: title,
+                        color: '#92a6c5',
+                        font: { size: 10 }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: { color: '#95a8c6', font: { size: 9 }, maxTicksLimit: 4 },
+                        grid: { color: '#25354c' }
+                    },
+                    x: {
+                        ticks: { color: '#95a8c6', font: { size: 9 }, maxTicksLimit: 5 },
+                        grid: { color: '#25354c' }
+                    }
+                }
+            };
+        }
+
+        function generateTimeLabels(hours) {
+            const labels = [];
+            for (let i = hours; i >= 0; i--) {
+                const date = new Date(Date.now() - i * 60 * 60 * 1000);
+                labels.push(date.toLocaleTimeString('ko-KR', {
+                    timeZone: KST_TIMEZONE,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                }));
+            }
+            return labels;
+        }
+
+        function generateRandomData(length, min, max) {
+            const data = [];
+            let current = (min + max) / 2;
+            for (let i = 0; i < length; i++) {
+                current += (Math.random() - 0.5) * (max - min) * 0.1;
+                current = Math.max(min, Math.min(max, current));
+                data.push(current.toFixed(2));
+            }
+            return data;
+        }
+
+        function updateChartData() {
+            Object.keys(charts).forEach(key => {
+                const chart = charts[key];
+                if (chart.data.datasets[0].data.length > 0) {
+                    // Shift data and add new point
+                    chart.data.datasets.forEach(dataset => {
+                        dataset.data.shift();
+                        const lastValue = parseFloat(dataset.data[dataset.data.length - 1]);
+                        const newValue = lastValue + (Math.random() - 0.5) * 5;
+                        dataset.data.push(newValue.toFixed(2));
+                    });
+                    chart.update('none');
+                }
+            });
+        }
+
+        function initCorrelationMatrix() {
+            const matrix = [
+                [1.00, 0.65, 0.82, 0.91, -0.45],
+                [0.65, 1.00, 0.73, 0.58, -0.62],
+                [0.82, 0.73, 1.00, 0.76, -0.51],
+                [0.91, 0.58, 0.76, 1.00, -0.38],
+                [-0.45, -0.62, -0.51, -0.38, 1.00]
+            ];
+
+            const container = document.getElementById('correlationMatrix');
+            matrix.forEach((row, i) => {
+                row.forEach((value, j) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'corr-cell';
+                    cell.textContent = value.toFixed(2);
+                    
+                    // Color based on correlation strength
+                    const absValue = Math.abs(value);
+                    if (value > 0) {
+                        cell.style.background = `rgba(0, 200, 83, ${absValue})`;
+                    } else {
+                        cell.style.background = `rgba(220, 53, 69, ${absValue})`;
+                    }
+                    
+                    cell.onclick = () => showCorrelationDetail(i, j, value);
+                    container.appendChild(cell);
+                });
+            });
+        }
+
+        function showCorrelationDetail(i, j, correlation) {
+            const labels = ['유가', '금리', '환율', '건설자재', '부동산'];
+            alert(`${labels[i]} vs ${labels[j]}\n상관계수: ${correlation.toFixed(2)}\n\n` +
+                  `${Math.abs(correlation) > 0.7 ? '강한' : Math.abs(correlation) > 0.4 ? '중간' : '약한'} ` +
+                  `${correlation > 0 ? '양의' : '음의'} 상관관계`);
+        }
+
+        function showDetails(indicator) {
+            const modal = document.getElementById('detailModal');
+            const titles = {
+                'wti': 'WTI 유가',
+                'brent': 'Brent 유가',
+                'gas': '천연가스',
+                'lng': 'LNG',
+                'fedfunds': 'Fed 기준금리',
+                'bok': '한국 기준금리',
+                'libor': 'US LIBOR (3M)',
+                'usd': 'USD/KRW 환율',
+                'gold': '금 가격',
+                'kospi': 'KOSPI',
+                'kosdaq': 'KOSDAQ',
+                'nasdaq': 'NASDAQ',
+                'dow': 'DOW',
+                'sp500': 'S&P500',
+                'steel': '철근 가격',
+                'cement': '시멘트 가격',
+                'reindex': '부동산 지수',
+                'construction': '건설 지수',
+                'kbfin': 'KB금융',
+                'shinhan': '신한지주',
+                'hanafin': '하나금융',
+                'hyundaie': '현대건설',
+                'daewooec': '대우건설',
+                'dlenc': 'DL이앤씨'
+            };
+
+            const title = titles[indicator] || indicator.toUpperCase();
+            document.getElementById('modalTitle').textContent = title + ' 상세 분석';
+            
+            // Generate mock statistics
+            const current = parseMetricValue(document.getElementById(indicator).textContent);
+            document.getElementById('modalCurrent').textContent = current.toFixed(2);
+            document.getElementById('modalChange').textContent = '+' + (Math.random() * 10).toFixed(2) + '%';
+            document.getElementById('modalHigh').textContent = (current * 1.15).toFixed(2);
+            document.getElementById('modalLow').textContent = (current * 0.85).toFixed(2);
+            document.getElementById('modalAvg').textContent = current.toFixed(2);
+            document.getElementById('modalVol').textContent = (Math.random() * 5 + 2).toFixed(2) + '%';
+
+            // Create detailed chart
+            if (chartLibraryAvailable) {
+                if (modalChart) {
+                    modalChart.destroy();
+                }
+
+                const ctx = document.getElementById('modalChart').getContext('2d');
+                modalChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: generateTimeLabels(48),
+                        datasets: [{
+                            label: title,
+                            data: generateRandomData(48, current * 0.9, current * 1.1),
+                            borderColor: '#ff6b00',
+                            backgroundColor: 'rgba(255, 107, 0, 0.1)',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            fill: true
+                        }]
+                    },
+                    options: getChartOptions('48시간 추이')
+                });
+            } else {
+                drawChartPlaceholder('modalChart', '상세 차트 로딩 실패');
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('active');
+        }
+
+        function openSimulationPopup() {
+            document.getElementById('simulationPopup').classList.add('active');
+        }
+
+        function closeSimulationPopup() {
+            document.getElementById('simulationPopup').classList.remove('active');
+        }
+
+        function runSimulation() {
+            const oilChange = parseFloat(document.getElementById('oilChange').value);
+            const warIntensity = parseFloat(document.getElementById('warIntensity').value);
+            const duration = parseFloat(document.getElementById('duration').value);
+
+            // Calculate impacts
+            const costIncrease = (oilChange * 0.8 + warIntensity * 2).toFixed(1);
+            const reChange = (-oilChange * 0.3 - warIntensity * 0.5).toFixed(1);
+            const revenueImpact = (-oilChange * 0.5 - warIntensity * 1.5).toFixed(1);
+            const riskLevel = warIntensity > 7 ? 'CRITICAL' : warIntensity > 4 ? 'HIGH' : 'MODERATE';
+
+            document.getElementById('simCost').textContent = '+' + costIncrease + '%';
+            document.getElementById('simRE').textContent = reChange + '%';
+            document.getElementById('simRevenue').textContent = revenueImpact + '%';
+            const simRiskEl = document.getElementById('simRisk');
+            simRiskEl.textContent = riskLevel;
+            simRiskEl.className = 'sim-metric-value ' +
+                (riskLevel === 'CRITICAL' ? 'down' : riskLevel === 'HIGH' ? 'warn' : 'up');
+
+            document.getElementById('simResults').classList.add('active');
+
+            // Create simulation chart
+            if (chartLibraryAvailable) {
+                if (simulationChartObj) {
+                    simulationChartObj.destroy();
+                }
+
+                const ctx = document.getElementById('simulationChart').getContext('2d');
+                simulationChartObj = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: Array.from({length: duration}, (_, i) => `M${i+1}`),
+                        datasets: [{
+                            label: '건설비용',
+                            data: Array.from({length: duration}, (_, i) => parseFloat(costIncrease) * (i + 1) / duration),
+                            borderColor: '#dc3545',
+                            tension: 0.4,
+                            borderWidth: 2
+                        }, {
+                            label: '매출',
+                            data: Array.from({length: duration}, (_, i) => parseFloat(revenueImpact) * (i + 1) / duration),
+                            borderColor: '#ff6b00',
+                            tension: 0.4,
+                            borderWidth: 2
+                        }, {
+                            label: '부동산',
+                            data: Array.from({length: duration}, (_, i) => parseFloat(reChange) * (i + 1) / duration),
+                            borderColor: '#00c853',
+                            tension: 0.4,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: getChartOptions('시나리오별 영향도 추이')
+                });
+            } else {
+                drawChartPlaceholder('simulationChart', '시뮬레이션 차트 로딩 실패');
+            }
+        }
+
+        // Close modal on outside click
+        document.getElementById('detailModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        document.getElementById('newsDetailModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeNewsModal();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                closeNewsModal();
+                closeSimulationPopup();
+            }
+        });
+
+        document.querySelectorAll('.header-stock-item[role="button"]').forEach(item => {
+            item.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
