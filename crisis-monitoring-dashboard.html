@@ -1585,7 +1585,7 @@
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('lng')">
-                    <div class="market-label">LNG</div>
+                    <div class="market-label">LNG(Henry Hub)</div>
                     <div class="market-value">
                         <span id="lng">--</span>
                         <span class="market-change" id="lng-change">--%</span>
@@ -2034,9 +2034,21 @@
                 applySectorStockPayload(payload.sectorStocks);
             }
 
-            // Commodities → energy chart update
+            // Commodities → energy chart update + steel, lng
             if (payload.commodities && typeof payload.commodities === 'object') {
                 applyCommodityData(payload.commodities);
+            }
+
+            // Real estate index from ECOS
+            if (payload.reindex) {
+                applyValueWithPct('reindex', payload.reindex.value, 'reindex-change', payload.reindex.changePct);
+            }
+            if (payload.constructionIndex) {
+                applyValueWithPct('construction', payload.constructionIndex.value, 'construction-change', payload.constructionIndex.changePct);
+            }
+            if (payload.sectorStocks?.cement) {
+                const c = payload.sectorStocks.cement;
+                applyValueWithPct('cement', c.value, 'cement-change', c.changePct);
             }
 
             // Update finance chart with USD/KRW, gold, silver
@@ -2090,8 +2102,8 @@
         }
 
         function applyCommodityData(commodities) {
-            // Update individual energy indicators
-            ['wti', 'brent', 'gas'].forEach(key => {
+            // Update individual energy indicators + steel, lng
+            ['wti', 'brent', 'gas', 'steel', 'lng'].forEach(key => {
                 const point = commodities[key];
                 if (!point || !Number.isFinite(point.value)) return;
                 applyValueWithPct(key, point.value, key + '-change', point.changePct);

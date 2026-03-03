@@ -72,7 +72,8 @@ const YAHOO_SECTOR_SYMBOLS = {
     hanafin: '086790.KS',
     hyundaie: '000720.KS',
     daewooec: '047040.KS',
-    dlenc: '375500.KS'
+    dlenc: '375500.KS',
+    cement: '004980.KS'        // 성신양회 (시멘트 대표주)
 };
 
 const YAHOO_COMMODITY_SYMBOLS = {
@@ -80,7 +81,9 @@ const YAHOO_COMMODITY_SYMBOLS = {
     brent: 'BZ%3DF',
     gas: 'NG%3DF',
     gold: 'GC%3DF',
-    silver: 'SI%3DF'
+    silver: 'SI%3DF',
+    steel: 'HRC%3DF',
+    lng: 'NG%3DF'          // Henry Hub Natural Gas (same underlying as gas)
 };
 
 const YAHOO_FX_SYMBOLS = {
@@ -100,6 +103,42 @@ let newsCache = { expiresAt: 0, payload: null };
 let militaryCache = { expiresAt: 0, payload: null };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
+
+// ─── Translation (Google Translate free endpoint) ───────────────────────────
+
+async function translateToKorean(text) {
+    if (!text || text.length === 0) return text;
+    // Skip if already Korean
+    if (/[\uAC00-\uD7AF]/.test(text)) return text;
+    try {
+        const encoded = encodeURIComponent(text.slice(0, 500));
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=${encoded}`;
+        const resp = await fetch(url, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+        });
+        if (!resp.ok) return text;
+        const data = await resp.json();
+        const translated = (data?.[0] || []).map(s => s?.[0] || '').join('');
+        return translated || text;
+    } catch {
+        return text;
+    }
+}
+
+async function translateNewsItems(items) {
+    // Translate in parallel, max 10 at a time to avoid rate limits
+    const batch = items.slice(0, 24);
+    const translated = await Promise.all(
+        batch.map(async (item) => {
+            const [title, summary] = await Promise.all([
+                translateToKorean(item.title),
+                translateToKorean(item.summary || '')
+            ]);
+            return { ...item, title, summary };
+        })
+    );
+    return translated;
+}
 
 function toNumber(value) {
     const normalized = String(value ?? '').replace(/,/g, '').trim();
@@ -157,7 +196,8 @@ async function fetchText(url) {
 // ─── Yahoo Finance (FREE, no API key) ───────────────────────────────────────
 
 async function fetchYahooQuote(encodedSymbol) {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodedSymbol}?interval=1d&range=5d&includePrePost=false`;
+    // range=1d ensures chartPreviousClose = yesterday's close (not 5 days ago)
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodedSymbol}?interval=1d&range=1d&includePrePost=false`;
     const data = await fetchJson(url);
 
     const result = data?.chart?.result?.[0];
@@ -167,7 +207,8 @@ async function fetchYahooQuote(encodedSymbol) {
 
     const meta = result.meta;
     const price = toNumber(meta?.regularMarketPrice);
-    const prevClose = toNumber(meta?.chartPreviousClose ?? meta?.previousClose);
+    // previousClose is the actual previous trading day close
+    const prevClose = toNumber(meta?.previousClose ?? meta?.chartPreviousClose);
 
     if (price === null) {
         return null;
@@ -251,6 +292,40 @@ async function fetchBokBaseRate() {
         }
     }
     return null;
+}
+
+// ─── ECOS Housing Price Index (주택매매가격지수) ────────────────────────────
+
+async function fetchEcosHousingIndex() {
+    if (!ECOS_API_KEY) return null;
+
+    const now = new Date();
+    const endYear = now.getFullYear();
+    const endMonth = String(now.getMonth() + 1).padStart(2, '0');
+    const end = `${endYear}${endMonth}`;
+    const start = `${endYear - 2}01`;
+
+    // 901Y009: 주택가격동향조사, H01: 전국 주택매매가격지수, M: 월간
+    const url =
+        `https://ecos.bok.or.kr/api/StatisticSearch/${ECOS_API_KEY}/json/kr/1/120/` +
+        `901Y009/M/${start}/${end}/H01`;
+
+    const data = await fetchJson(url);
+    const rows = data?.StatisticSearch?.row;
+    if (!Array.isArray(rows) || rows.length === 0) return null;
+
+    // Latest value
+    let latest = null, prev = null;
+    for (let i = rows.length - 1; i >= 0; i--) {
+        const v = toNumber(rows[i]?.DATA_VALUE);
+        if (v !== null) {
+            if (latest === null) { latest = v; }
+            else if (prev === null) { prev = v; break; }
+        }
+    }
+    if (latest === null) return null;
+    const changePct = (prev !== null && prev !== 0) ? ((latest - prev) / prev) * 100 : null;
+    return { value: latest, changePct };
 }
 
 // ─── FastForex (USD/KRW fallback) ───────────────────────────────────────────
@@ -669,16 +744,16 @@ function getFallbackNewsItems() {
     return [
         {
             source: 'System',
-            title: 'Live RSS feeds are unavailable. Showing fallback headlines.',
+            title: 'RSS 뉴스 피드를 가져올 수 없습니다.',
             link: '',
-            summary: 'Unable to fetch remote RSS sources from this environment.',
+            summary: '인터넷 연결 상태를 확인해 주세요.',
             publishedAt: new Date(now).toISOString()
         },
         {
             source: 'System',
-            title: 'Run the dashboard server with outbound internet access to enable live news.',
+            title: '서버를 인터넷이 연결된 환경에서 실행해 주세요.',
             link: '',
-            summary: 'The /api/news endpoint aggregates Reuters, BBC, NYT, Bloomberg, and other sources.',
+            summary: 'Reuters, BBC, NYT, Bloomberg 등 6개 소스에서 뉴스를 수집합니다.',
             publishedAt: new Date(now - 5 * 60 * 1000).toISOString()
         }
     ];
@@ -721,13 +796,21 @@ async function buildNewsPayload() {
         return right - left;
     });
 
-    const items = deduped.slice(0, MAX_NEWS_ITEMS);
+    let items = deduped.slice(0, MAX_NEWS_ITEMS);
     if (items.length === 0) {
         warnings.push('no live news items');
+        items = getFallbackNewsItems();
+    }
+
+    // Translate to Korean
+    try {
+        items = await translateNewsItems(items);
+    } catch (err) {
+        warnings.push(`번역 실패: ${err.message}`);
     }
 
     return {
-        items: items.length > 0 ? items : getFallbackNewsItems(),
+        items,
         timestamp: new Date().toISOString(),
         warnings
     };
@@ -808,15 +891,32 @@ async function buildIndicatorsPayload() {
         );
     }
 
-    // 5) Sector stocks
+    // 5) Sector stocks (includes cement proxy: 쌍용C&E)
     const sectorStocks = { ...yahooSectors };
 
-    // 6) Commodities
+    // 6) Commodities (includes steel HRC, lng Henry Hub)
     const commodities = { ...yahooCommodities };
 
     // 7) Gold
     const gold = yahooCommodities.gold?.value ?? null;
     const goldChangePct = yahooCommodities.gold?.changePct ?? null;
+
+    // 8) Real estate index from ECOS
+    const reindex = await fetchEcosHousingIndex().catch((err) => {
+        warnings.push(`부동산지수: ${err.message}`);
+        return null;
+    });
+
+    // 9) Construction index: weighted average of 3 construction stocks change %
+    let constructionIndex = null;
+    const constKeys = ['hyundaie', 'daewooec', 'dlenc'];
+    const constChanges = constKeys
+        .map(k => sectorStocks[k]?.changePct)
+        .filter(v => Number.isFinite(v));
+    if (constChanges.length > 0) {
+        const avgChange = constChanges.reduce((a, b) => a + b, 0) / constChanges.length;
+        constructionIndex = { value: 100 + avgChange, changePct: avgChange };
+    }
 
     // Source tracking
     const sources = [];
@@ -825,6 +925,7 @@ async function buildIndicatorsPayload() {
     if (Object.keys(yahooCommodities).length > 0) sources.push('Yahoo Finance(원자재)');
     if (fedfunds !== null) sources.push('FRED');
     if (bok !== null) sources.push('ECOS');
+    if (reindex !== null) sources.push('ECOS(부동산)');
     if (sources.length === 0) sources.push('fallback defaults');
 
     return {
@@ -837,13 +938,16 @@ async function buildIndicatorsPayload() {
         usdkrwChangePct,
         // Stock indices
         stockIndices,
-        // Sector stocks: { kbfin: {value, changePct}, shinhan: ... }
+        // Sector stocks: { kbfin, shinhan, hanafin, hyundaie, daewooec, dlenc, cement }
         sectorStocks,
-        // Commodities: { wti: {value, changePct}, brent: ..., gas: ..., gold: ... }
+        // Commodities: { wti, brent, gas, gold, silver, steel, lng }
         commodities,
         // Standalone gold for finance card
         gold,
         goldChangePct,
+        // Construction & Real Estate
+        reindex,
+        constructionIndex,
         // Meta
         timestamp: new Date().toISOString(),
         sources,
