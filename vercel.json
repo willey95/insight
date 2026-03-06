@@ -4,9 +4,6 @@
   ],
   "functions": {
     "api/**/*.js": {
-      "maxDuration": 30
-    },
-    "api/correlation.js": {
       "maxDuration": 60
     }
   }
