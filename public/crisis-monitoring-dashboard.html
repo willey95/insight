@@ -738,22 +738,6 @@
             letter-spacing: 0.25px;
         }
 
-        .market-unit {
-            font-size: 8px;
-            color: #5d7494;
-            font-weight: 400;
-            margin-left: 2px;
-            letter-spacing: 0;
-        }
-
-        .card-timestamp {
-            font-size: 8px;
-            color: #5a7090;
-            font-family: 'IBM Plex Mono', Consolas, monospace;
-            letter-spacing: 0.2px;
-            white-space: nowrap;
-        }
-
         .market-value {
             font-family: Consolas, 'Roboto Mono', monospace;
             font-size: 14px;
@@ -1145,188 +1129,6 @@
             margin-top: 3px;
         }
 
-        /* ─── Mechanism Diagram ─────────────────────────────────── */
-        .mech-container {
-            padding: 2px 0;
-        }
-
-        .mech-origins {
-            display: flex;
-            justify-content: center;
-            gap: 32px;
-            margin-bottom: 10px;
-        }
-
-        .mech-node {
-            background: rgba(15, 22, 36, 0.95);
-            border: 1px solid #2a3a52;
-            border-radius: 6px;
-            padding: 5px 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            min-width: 80px;
-            flex-shrink: 0;
-        }
-
-        .mech-node:hover {
-            border-color: var(--accent-cool);
-            box-shadow: 0 0 10px rgba(78, 201, 255, 0.2);
-        }
-
-        .mech-node-trigger {
-            border-color: rgba(255, 77, 109, 0.6);
-            background: rgba(255, 77, 109, 0.06);
-            min-width: 110px;
-            padding: 8px 14px;
-        }
-
-        .mech-node-trigger .mech-node-icon {
-            font-size: 16px;
-            margin-bottom: 1px;
-        }
-
-        .mech-node-end {
-            border-color: rgba(255, 179, 71, 0.5);
-            background: rgba(255, 179, 71, 0.06);
-        }
-
-        .mech-node-negative {
-            border-color: rgba(255, 77, 109, 0.5);
-            background: rgba(255, 77, 109, 0.06);
-        }
-
-        .mech-node-label {
-            font-size: 9px;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            white-space: nowrap;
-        }
-
-        .mech-node-value {
-            font-family: 'IBM Plex Mono', Consolas, monospace;
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--text);
-            margin-top: 1px;
-        }
-
-        .mech-val-impact {
-            color: var(--accent);
-            font-size: 12px;
-        }
-
-        .mech-pathways {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .mech-path {
-            background: rgba(10, 15, 24, 0.6);
-            border: 1px solid #1a2536;
-            border-radius: 5px;
-            padding: 5px 10px;
-        }
-
-        .mech-path-header {
-            font-size: 8px;
-            font-weight: 700;
-            color: var(--accent-cool);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-            font-family: 'IBM Plex Mono', Consolas, monospace;
-        }
-
-        .mech-chain {
-            display: flex;
-            align-items: center;
-            gap: 0;
-            overflow-x: auto;
-        }
-
-        .mech-link {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-width: 44px;
-            flex: 1;
-            padding: 0 2px;
-        }
-
-        .mech-arrow {
-            width: 100%;
-            height: 2px;
-            background: #2a3d56;
-            position: relative;
-            margin: 3px 0 1px;
-        }
-
-        .mech-arrow::after {
-            content: '';
-            position: absolute;
-            right: -1px;
-            top: 50%;
-            transform: translateY(-50%);
-            border-top: 4px solid transparent;
-            border-bottom: 4px solid transparent;
-            border-left: 6px solid #2a3d56;
-        }
-
-        .mech-link.positive .mech-arrow { background: var(--up); }
-        .mech-link.positive .mech-arrow::after { border-left-color: var(--up); }
-        .mech-link.negative .mech-arrow { background: var(--down); }
-        .mech-link.negative .mech-arrow::after { border-left-color: var(--down); }
-        .mech-link.beta .mech-arrow { background: var(--accent); }
-        .mech-link.beta .mech-arrow::after { border-left-color: var(--accent); }
-
-        .mech-link.strong .mech-arrow { height: 4px; }
-        .mech-link.moderate .mech-arrow { height: 3px; }
-        .mech-link.weak .mech-arrow { height: 1px; opacity: 0.5; }
-
-        .mech-link-coeff {
-            font-family: 'IBM Plex Mono', Consolas, monospace;
-            font-size: 8px;
-            color: #5a7494;
-            white-space: nowrap;
-        }
-
-        .mech-summary {
-            display: flex;
-            gap: 16px;
-            margin-top: 8px;
-            padding: 6px 12px;
-            background: rgba(15, 22, 36, 0.8);
-            border: 1px solid #1a2536;
-            border-radius: 5px;
-            justify-content: center;
-        }
-
-        .mech-summary-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .mech-summary-label {
-            font-size: 9px;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-
-        .mech-summary-value {
-            font-family: 'IBM Plex Mono', Consolas, monospace;
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text);
-        }
-
-        .mech-summary-value.down { color: var(--down); }
-        .mech-summary-value.up { color: var(--up); }
-
         /* Modal */
         .modal {
             display: none;
@@ -1596,10 +1398,7 @@
                     <div class="card-title">CRISIS INTENSITY RISK</div>
                     <div class="card-subtitle">전쟁상황모니터링</div>
                 </div>
-                <div>
-                    <div class="card-timestamp" id="tsCrisis">기준: --</div>
-                    <div class="loading"></div>
-                </div>
+                <div class="loading"></div>
             </div>
             <div class="threat-level">
                 <div class="threat-indicator">
@@ -1674,39 +1473,38 @@
                     <div class="card-title">FX & MACRO PRESSURE</div>
                     <div class="card-subtitle">금융지표</div>
                 </div>
-                <div class="card-timestamp" id="tsFinance">기준: --</div>
             </div>
             <div class="market-grid">
                 <div class="market-item" onclick="showDetails('fedfunds')">
-                    <div class="market-label">Fed 기준금리 <span class="market-unit">%</span></div>
+                    <div class="market-label">Fed 기준금리</div>
                     <div class="market-value">
                         <span id="fedfunds">--</span>
                         <span class="market-change">%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('bok')">
-                    <div class="market-label">한국 기준금리 <span class="market-unit">%</span></div>
+                    <div class="market-label">한국 기준금리</div>
                     <div class="market-value">
                         <span id="bok">--</span>
                         <span class="market-change">%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('libor')">
-                    <div class="market-label">US LIBOR (3M) <span class="market-unit">%</span></div>
+                    <div class="market-label">US LIBOR (3M)</div>
                     <div class="market-value">
                         <span id="libor">--</span>
                         <span class="market-change" id="libor-change">--%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('usd')">
-                    <div class="market-label">USD/KRW <span class="market-unit">₩/$</span></div>
+                    <div class="market-label">USD/KRW</div>
                     <div class="market-value">
                         <span id="usd">--</span>
                         <span class="market-change" id="usd-change">--%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('gold')">
-                    <div class="market-label">금 <span class="market-unit">$/oz</span></div>
+                    <div class="market-label">금 (oz)</div>
                     <div class="market-value">
                         <span id="gold">--</span>
                         <span class="market-change" id="gold-change">--%</span>
@@ -1722,32 +1520,31 @@
                     <div class="card-title">CONSTRUCTION / REAL ESTATE</div>
                     <div class="card-subtitle">건설/부동산</div>
                 </div>
-                <div class="card-timestamp" id="tsConstruction">기준: --</div>
             </div>
             <div class="market-grid">
                 <div class="market-item" onclick="showDetails('steel')">
-                    <div class="market-label">철근 가격 <span class="market-unit">$/t</span></div>
+                    <div class="market-label">철근 가격</div>
                     <div class="market-value">
                         <span id="steel">--</span>
                         <span class="market-change" id="steel-change">--%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('cement')">
-                    <div class="market-label">시멘트 가격 <span class="market-unit">₩</span></div>
+                    <div class="market-label">시멘트 가격</div>
                     <div class="market-value">
                         <span id="cement">--</span>
                         <span class="market-change" id="cement-change">--%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('reindex')">
-                    <div class="market-label">부동산 지수 <span class="market-unit">pt</span></div>
+                    <div class="market-label">부동산 지수</div>
                     <div class="market-value">
                         <span id="reindex">--</span>
                         <span class="market-change" id="reindex-change">--%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('construction')">
-                    <div class="market-label">건설 지수 <span class="market-unit">pt</span></div>
+                    <div class="market-label">건설 지수</div>
                     <div class="market-value">
                         <span id="construction">--</span>
                         <span class="market-change" id="construction-change">--%</span>
@@ -1764,32 +1561,31 @@
                     <div class="card-title">ENERGY SHOCK BETA</div>
                     <div class="card-subtitle">에너지 시장</div>
                 </div>
-                <div class="card-timestamp" id="tsEnergy">기준: --</div>
             </div>
             <div class="market-grid">
                 <div class="market-item" onclick="showDetails('wti')">
-                    <div class="market-label">WTI 원유 <span class="market-unit">$/bbl</span></div>
+                    <div class="market-label">WTI 원유</div>
                     <div class="market-value">
                         <span id="wti">--</span>
                         <span class="market-change" id="wti-change">--%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('brent')">
-                    <div class="market-label">Brent 원유 <span class="market-unit">$/bbl</span></div>
+                    <div class="market-label">Brent 원유</div>
                     <div class="market-value">
                         <span id="brent">--</span>
                         <span class="market-change" id="brent-change">--%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('gas')">
-                    <div class="market-label">천연가스 <span class="market-unit">$/MMBtu</span></div>
+                    <div class="market-label">천연가스</div>
                     <div class="market-value">
                         <span id="gas">--</span>
                         <span class="market-change" id="gas-change">--%</span>
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('lng')">
-                    <div class="market-label">LNG(Henry Hub) <span class="market-unit">$/MMBtu</span></div>
+                    <div class="market-label">LNG(Henry Hub)</div>
                     <div class="market-value">
                         <span id="lng">--</span>
                         <span class="market-change" id="lng-change">--%</span>
@@ -1829,7 +1625,7 @@
             <div class="card-header">
                 <div>
                     <div class="card-title">CROSS-METRIC CORRELATION</div>
-                    <div class="card-subtitle">지표 간 상관관계 분석 <span id="corrDataInfo" class="card-timestamp"></span></div>
+                    <div class="card-subtitle">지표 간 상관관계 분석</div>
                 </div>
             </div>
             <div class="correlation-layout correlation-layout-top">
@@ -1881,7 +1677,6 @@
                     <button class="sim-tab active" onclick="switchSimTab('params')">파라미터 설정</button>
                     <button class="sim-tab" onclick="switchSimTab('sensitivity')">민감도 분석</button>
                     <button class="sim-tab" onclick="switchSimTab('montecarlo')">Monte Carlo</button>
-                    <button class="sim-tab" onclick="switchSimTab('mechanism')">전달 메커니즘</button>
                 </div>
                 <!-- Tab: Parameters -->
                 <div class="sim-tab-content active" id="simTabParams">
@@ -1965,184 +1760,6 @@
                     <button class="sim-button" onclick="runMonteCarlo()" style="width: 100%; margin-top: 6px; background: linear-gradient(90deg, #0d7377 0%, #14919b 100%);">Monte Carlo 실행</button>
                     <div id="monteCarloResult" style="margin-top: 8px;"></div>
                 </div>
-
-                <!-- Mechanism Tab -->
-                <div class="sim-tab-content" id="simTabMechanism">
-                    <div class="mech-container">
-                        <!-- Trigger Nodes -->
-                        <div class="mech-origins">
-                            <div class="mech-node mech-node-trigger" onclick="mechShowDetail('wti')">
-                                <div class="mech-node-icon">⚔</div>
-                                <div class="mech-node-label">전쟁/분쟁 → 유가</div>
-                                <div class="mech-node-value" id="mechValWar">--</div>
-                            </div>
-                            <div class="mech-node mech-node-trigger" onclick="mechShowDetail('fedfunds')">
-                                <div class="mech-node-icon">%</div>
-                                <div class="mech-node-label">LIBOR 3M / 기준금리</div>
-                                <div class="mech-node-value" id="mechValLibor">--</div>
-                            </div>
-                        </div>
-
-                        <div class="mech-pathways">
-                            <!-- Path 1: Energy Cost -->
-                            <div class="mech-path">
-                                <div class="mech-path-header">PATH 1 — 에너지 비용 경로</div>
-                                <div class="mech-chain">
-                                    <div class="mech-node mech-node-mid" onclick="mechShowDetail('wti')">
-                                        <div class="mech-node-label">유가 급등</div>
-                                        <div class="mech-node-value" id="mechValWti">--</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink1a">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff1a">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-mid">
-                                        <div class="mech-node-label">에너지 비용 ↑</div>
-                                        <div class="mech-node-value">직접전가</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink1b">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff1b">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-mid" onclick="mechShowDetail('construction')">
-                                        <div class="mech-node-label">건설자재 비용 ↑</div>
-                                        <div class="mech-node-value" id="mechValSteel">--</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink1c">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff1c">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-end">
-                                        <div class="mech-node-label">건설공사비 ↑</div>
-                                        <div class="mech-node-value mech-val-impact" id="mechImpact1">--</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Path 2: Supply Chain -->
-                            <div class="mech-path">
-                                <div class="mech-path-header">PATH 2 — 공급망 차질 경로</div>
-                                <div class="mech-chain">
-                                    <div class="mech-node mech-node-mid">
-                                        <div class="mech-node-label">공급망 차질</div>
-                                        <div class="mech-node-value" id="mechValSupply">--</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink2a">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff2a">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-mid">
-                                        <div class="mech-node-label">원자재 부족</div>
-                                        <div class="mech-node-value">수급불균형</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink2b">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff2b">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-mid" onclick="mechShowDetail('construction')">
-                                        <div class="mech-node-label">자재 가격 ↑</div>
-                                        <div class="mech-node-value" id="mechValMat2">--</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink2c">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff2c">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-end">
-                                        <div class="mech-node-label">건설공사비 ↑</div>
-                                        <div class="mech-node-value mech-val-impact" id="mechImpact2">--</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Path 3: Financing Cost -->
-                            <div class="mech-path">
-                                <div class="mech-path-header">PATH 3 — 금융비용 경로</div>
-                                <div class="mech-chain">
-                                    <div class="mech-node mech-node-mid" onclick="mechShowDetail('fedfunds')">
-                                        <div class="mech-node-label">조달금리 ↑</div>
-                                        <div class="mech-node-value" id="mechValFed">--</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink3a">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff3a">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-mid">
-                                        <div class="mech-node-label">PF 대출금리 ↑</div>
-                                        <div class="mech-node-value">+스프레드</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink3b">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff3b">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-mid">
-                                        <div class="mech-node-label">사업비 ↑</div>
-                                        <div class="mech-node-value" id="mechValProjCost">금융비용</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink3c">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff3c">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-end">
-                                        <div class="mech-node-label">건설공사비 ↑</div>
-                                        <div class="mech-node-value mech-val-impact" id="mechImpact3">--</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Path 4: Demand Contraction -->
-                            <div class="mech-path">
-                                <div class="mech-path-header">PATH 4 — 수요 위축 경로</div>
-                                <div class="mech-chain">
-                                    <div class="mech-node mech-node-mid">
-                                        <div class="mech-node-label">대출금리 ↑</div>
-                                        <div class="mech-node-value" id="mechValMort">--</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink4a">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff4a">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-mid" onclick="mechShowDetail('realestate')">
-                                        <div class="mech-node-label">주택수요 ↓</div>
-                                        <div class="mech-node-value" id="mechValDemand">--</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink4b">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff4b">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-mid">
-                                        <div class="mech-node-label">분양률 ↓</div>
-                                        <div class="mech-node-value">미분양증가</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink4c">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff4c">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-end mech-node-negative">
-                                        <div class="mech-node-label">사업성 ↓</div>
-                                        <div class="mech-node-value mech-val-impact" id="mechImpact4">--</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Summary -->
-                        <div class="mech-summary">
-                            <div class="mech-summary-item">
-                                <span class="mech-summary-label">총 건설비 영향</span>
-                                <span class="mech-summary-value down" id="mechTotalCost">--</span>
-                            </div>
-                            <div class="mech-summary-item">
-                                <span class="mech-summary-label">총 수요 영향</span>
-                                <span class="mech-summary-value down" id="mechTotalDemand">--</span>
-                            </div>
-                            <div class="mech-summary-item">
-                                <span class="mech-summary-label">상관분석 기간</span>
-                                <span class="mech-summary-value" id="mechDataRange">--</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Results -->
                 <div class="sim-results" id="simResults">
                     <h3 class="sim-results-title">분석 결과</h3>
@@ -2264,23 +1881,6 @@
             { url: 'https://www.ft.com/?format=rss', name: 'Financial Times' }
         ];
         const externalIndicatorState = {};
-
-        function setCardTimestamp(elementId, isoString) {
-            const el = document.getElementById(elementId);
-            if (!el) return;
-            try {
-                const d = new Date(isoString);
-                if (isNaN(d.getTime())) { el.textContent = '기준: --'; return; }
-                const formatted = d.toLocaleString('ko-KR', {
-                    timeZone: 'Asia/Seoul',
-                    month: '2-digit', day: '2-digit',
-                    hour: '2-digit', minute: '2-digit',
-                    hour12: false
-                });
-                el.textContent = '기준 ' + formatted;
-            } catch { el.textContent = '기준: --'; }
-        }
-
         const MAP_BBOX = Object.freeze({
             minLon: 32.0,
             minLat: 10.0,
@@ -2399,12 +1999,6 @@
         function applyExternalIndicators(payload) {
             if (!payload || typeof payload !== 'object') {
                 return;
-            }
-
-            if (payload.timestamp) {
-                setCardTimestamp('tsFinance', payload.timestamp);
-                setCardTimestamp('tsConstruction', payload.timestamp);
-                setCardTimestamp('tsEnergy', payload.timestamp);
             }
 
             // Interest rates
@@ -2789,8 +2383,6 @@
                 if (data.aircraft) renderLiveAircraft(data.aircraft);
                 if (data.vessels) renderLiveVessels(data.vessels);
                 if (data.conflicts) renderLiveConflicts(data.conflicts);
-
-                if (data.timestamp) setCardTimestamp('tsCrisis', data.timestamp);
 
                 // Update threat indicators with real counts
                 updateThreatFromMilitary(data);
@@ -3359,75 +2951,80 @@
             // No-op: chart data updated by applyCommodityData() and applyFinanceChartData()
         }
 
-        // 5-Year historical correlation data (loaded from /api/correlation)
-        let correlationPayload = null;
+        // Rolling data for real-time correlation computation
         const correlationHistory = { wti: [], fedfunds: [], usdkrw: [], construction: [], realestate: [] };
-        let correlationMonths = [];
+        const CORR_MAX_POINTS = 30;
 
         function recordCorrelationPoint() {
-            // No-op: correlation now uses historical 5Y data from API
+            const s = externalIndicatorState;
+            if (Number.isFinite(s.wti)) correlationHistory.wti.push(s.wti);
+            if (Number.isFinite(s.fedfunds)) correlationHistory.fedfunds.push(s.fedfunds);
+            if (Number.isFinite(s.usdkrw)) correlationHistory.usdkrw.push(s.usdkrw);
+            // Use Hyundai E&C as construction proxy
+            if (Number.isFinite(s.hyundaie)) correlationHistory.construction.push(s.hyundaie);
+            // Use KB Financial as real estate proxy
+            if (Number.isFinite(s.kbfin)) correlationHistory.realestate.push(s.kbfin);
+            // Trim to max window
+            Object.values(correlationHistory).forEach(arr => {
+                while (arr.length > CORR_MAX_POINTS) arr.shift();
+            });
         }
 
-        async function fetchHistoricalCorrelation() {
-            try {
-                const resp = await fetch('/api/correlation', { cache: 'no-store' });
-                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                correlationPayload = await resp.json();
-
-                // Populate correlationHistory from server data for detail charts
-                const keys = correlationPayload.keys || [];
-                const history = correlationPayload.history || {};
-                correlationMonths = correlationPayload.months || [];
-                keys.forEach(k => {
-                    if (history[k]) correlationHistory[k] = history[k];
-                });
-
-                const infoEl = document.getElementById('corrDataInfo');
-                if (infoEl) {
-                    const n = correlationPayload.dataPoints || 0;
-                    const range = correlationMonths.length > 0
-                        ? `${correlationMonths[0]} ~ ${correlationMonths[correlationMonths.length - 1]}`
-                        : '';
-                    infoEl.textContent = `| 5Y 월간 ${n}개월 (${range})`;
-                }
-
-                renderCorrelationMatrix();
-            } catch (err) {
-                const infoEl = document.getElementById('corrDataInfo');
-                if (infoEl) infoEl.textContent = '| API 연동 실패';
+        function pearsonCorrelation(x, y) {
+            const n = Math.min(x.length, y.length);
+            if (n < 3) return null;
+            const xs = x.slice(-n), ys = y.slice(-n);
+            const meanX = xs.reduce((a, b) => a + b, 0) / n;
+            const meanY = ys.reduce((a, b) => a + b, 0) / n;
+            let num = 0, denX = 0, denY = 0;
+            for (let i = 0; i < n; i++) {
+                const dx = xs[i] - meanX, dy = ys[i] - meanY;
+                num += dx * dy;
+                denX += dx * dx;
+                denY += dy * dy;
             }
+            const den = Math.sqrt(denX * denY);
+            return den === 0 ? 0 : num / den;
+        }
+
+        function computeCorrelationMatrix() {
+            const keys = ['wti', 'fedfunds', 'usdkrw', 'construction', 'realestate'];
+            const matrix = [];
+            for (let i = 0; i < 5; i++) {
+                const row = [];
+                for (let j = 0; j < 5; j++) {
+                    if (i === j) { row.push(1.00); continue; }
+                    const r = pearsonCorrelation(correlationHistory[keys[i]], correlationHistory[keys[j]]);
+                    row.push(r);
+                }
+                matrix.push(row);
+            }
+            return matrix;
         }
 
         function initCorrelationMatrix() {
             renderCorrelationMatrix();
-            if (window.location.protocol !== 'file:') {
-                fetchHistoricalCorrelation();
-            }
         }
 
         function renderCorrelationMatrix() {
             const container = document.getElementById('correlationMatrix');
             if (!container) return;
             container.innerHTML = '';
-
-            const matrix = correlationPayload?.matrix || buildFallbackMatrix();
-
+            const matrix = computeCorrelationMatrix();
             matrix.forEach((row, i) => {
                 row.forEach((value, j) => {
                     const cell = document.createElement('div');
                     cell.className = 'corr-cell';
                     if (value === null) {
-                        cell.textContent = '···';
-                        cell.style.background = 'rgba(100, 120, 150, 0.2)';
+                        cell.textContent = 'N/A';
+                        cell.style.background = 'rgba(100, 120, 150, 0.3)';
                     } else {
                         cell.textContent = value.toFixed(2);
                         const absValue = Math.abs(value);
-                        if (i === j) {
-                            cell.style.background = 'rgba(78, 201, 255, 0.15)';
-                        } else if (value > 0) {
-                            cell.style.background = `rgba(0, 200, 83, ${absValue * 0.7})`;
+                        if (value > 0) {
+                            cell.style.background = `rgba(0, 200, 83, ${absValue})`;
                         } else {
-                            cell.style.background = `rgba(220, 53, 69, ${absValue * 0.7})`;
+                            cell.style.background = `rgba(220, 53, 69, ${absValue})`;
                         }
                     }
                     cell.onclick = () => showCorrelationDetail(i, j, value);
@@ -3436,100 +3033,15 @@
             });
         }
 
-        function buildFallbackMatrix() {
-            return Array.from({ length: 5 }, (_, i) =>
-                Array.from({ length: 5 }, (_, j) => i === j ? 1.0 : null)
-            );
-        }
-
         function showCorrelationDetail(i, j, correlation) {
-            const labels = correlationPayload?.labels || ['유가', '금리', '환율', '건설자재', '부동산'];
-            const keys = correlationPayload?.keys || ['wti', 'fedfunds', 'usdkrw', 'construction', 'realestate'];
-
+            const labels = ['유가', '금리', '환율', '건설자재', '부동산'];
             if (correlation === null) {
-                alert(`${labels[i]} vs ${labels[j]}\n데이터 로딩 중...`);
+                alert(`${labels[i]} vs ${labels[j]}\n데이터 수집 중 (최소 3개 데이터 포인트 필요)`);
                 return;
             }
-
-            const strength = Math.abs(correlation) > 0.7 ? '강한' : Math.abs(correlation) > 0.4 ? '중간' : '약한';
-            const direction = correlation > 0 ? '양의' : '음의';
-            const nMonths = correlationMonths.length;
-
-            // Build trend comparison chart in the detail modal
-            const modal = document.getElementById('detailModal');
-            if (!modal) {
-                alert(`${labels[i]} vs ${labels[j]}\n상관계수: ${correlation.toFixed(2)} (${strength} ${direction} 상관관계)\n분석 기간: ${nMonths}개월`);
-                return;
-            }
-
-            document.getElementById('modalTitle').textContent = `${labels[i]} vs ${labels[j]} 상관분석`;
-            document.getElementById('modalCurrent').textContent = correlation.toFixed(4);
-            document.getElementById('modalChange').textContent = `${strength} ${direction} 상관관계`;
-            document.getElementById('modalChange').className = correlation > 0 ? 'up' : 'down';
-            document.getElementById('modalHigh').textContent = nMonths + '개월';
-            document.getElementById('modalLow').textContent = correlationMonths[0] || 'N/A';
-            document.getElementById('modalAvg').textContent = correlationMonths[correlationMonths.length - 1] || 'N/A';
-            document.getElementById('modalVol').textContent = `r = ${correlation.toFixed(2)}`;
-
-            if (chartLibraryAvailable) {
-                if (modalChart) modalChart.destroy();
-                const dataI = correlationHistory[keys[i]] || [];
-                const dataJ = correlationHistory[keys[j]] || [];
-                const chartLabels = correlationMonths.map(m => m.slice(2)); // "23-01" format
-
-                const ctx = document.getElementById('modalChart').getContext('2d');
-                modalChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: chartLabels,
-                        datasets: [
-                            {
-                                label: labels[i],
-                                data: dataI,
-                                borderColor: '#ff6b00',
-                                backgroundColor: 'rgba(255, 107, 0, 0.08)',
-                                tension: 0.3,
-                                borderWidth: 1.5,
-                                fill: false,
-                                yAxisID: 'y'
-                            },
-                            {
-                                label: labels[j],
-                                data: dataJ,
-                                borderColor: '#4ec9ff',
-                                backgroundColor: 'rgba(78, 201, 255, 0.08)',
-                                tension: 0.3,
-                                borderWidth: 1.5,
-                                fill: false,
-                                yAxisID: 'y1'
-                            }
-                        ]
-                    },
-                    options: {
-                        ...getChartOptions(`r = ${correlation.toFixed(2)} | ${nMonths}개월`),
-                        scales: {
-                            x: {
-                                ticks: { color: '#6b7fa0', font: { size: 8 }, maxTicksLimit: 12 },
-                                grid: { color: 'rgba(100,130,170,0.1)' }
-                            },
-                            y: {
-                                position: 'left',
-                                ticks: { color: '#ff6b00', font: { size: 8 } },
-                                grid: { color: 'rgba(100,130,170,0.08)' },
-                                title: { display: true, text: labels[i], color: '#ff6b00', font: { size: 9 } }
-                            },
-                            y1: {
-                                position: 'right',
-                                ticks: { color: '#4ec9ff', font: { size: 8 } },
-                                grid: { drawOnChartArea: false },
-                                title: { display: true, text: labels[j], color: '#4ec9ff', font: { size: 9 } }
-                            }
-                        }
-                    }
-                });
-            }
-
-            modal.classList.add('active');
+            alert(`${labels[i]} vs ${labels[j]}\n상관계수: ${correlation.toFixed(2)}\n\n` +
+                  `${Math.abs(correlation) > 0.7 ? '강한' : Math.abs(correlation) > 0.4 ? '중간' : '약한'} ` +
+                  `${correlation > 0 ? '양의' : '음의'} 상관관계`);
         }
 
         function showDetails(indicator) {
@@ -3576,7 +3088,7 @@
             document.getElementById('modalAvg').textContent = current.toFixed(2);
             document.getElementById('modalVol').textContent = 'N/A';
 
-            // Chart: show 5Y history from correlationHistory if available
+            // Chart: show real history from correlationHistory if available, else empty
             if (chartLibraryAvailable) {
                 if (modalChart) {
                     modalChart.destroy();
@@ -3584,37 +3096,23 @@
                 const historyKey = { wti: 'wti', fedfunds: 'fedfunds', usdkrw: 'usdkrw', usd: 'usdkrw',
                     hyundaie: 'construction', kbfin: 'realestate' }[indicator];
                 const histData = historyKey ? (correlationHistory[historyKey] || []) : [];
-                const chartLabels = histData.length > 0 && correlationMonths.length === histData.length
-                    ? correlationMonths.map(m => m.slice(2))
-                    : histData.map((_, i) => 't-' + (histData.length - i));
-                const hasHistory = histData.length > 0;
-
-                // Update high/low/avg from historical data
-                if (hasHistory) {
-                    const high = Math.max(...histData);
-                    const low = Math.min(...histData);
-                    const avg = histData.reduce((a, b) => a + b, 0) / histData.length;
-                    document.getElementById('modalHigh').textContent = high.toLocaleString('en-US', { maximumFractionDigits: 2 });
-                    document.getElementById('modalLow').textContent = low.toLocaleString('en-US', { maximumFractionDigits: 2 });
-                    document.getElementById('modalAvg').textContent = avg.toLocaleString('en-US', { maximumFractionDigits: 2 });
-                }
 
                 const ctx = document.getElementById('modalChart').getContext('2d');
                 modalChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: chartLabels,
+                        labels: histData.map((_, i) => 't-' + (histData.length - i)),
                         datasets: [{
                             label: title,
-                            data: histData,
+                            data: histData.length > 0 ? histData : [],
                             borderColor: '#ff6b00',
                             backgroundColor: 'rgba(255, 107, 0, 0.1)',
-                            tension: 0.3,
-                            borderWidth: 1.5,
+                            tension: 0.4,
+                            borderWidth: 2,
                             fill: true
                         }]
                     },
-                    options: getChartOptions(hasHistory ? `5Y 월간 (${histData.length}개월)` : '데이터 수집 중...')
+                    options: getChartOptions(histData.length > 0 ? '실시간 추이' : '데이터 수집 중...')
                 });
             } else {
                 drawChartPlaceholder('modalChart', '상세 차트 로딩 실패');
@@ -3661,9 +3159,8 @@
             document.querySelectorAll('.sim-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.sim-tab-content').forEach(c => c.classList.remove('active'));
             event.target.classList.add('active');
-            const ids = { params: 'simTabParams', sensitivity: 'simTabSensitivity', montecarlo: 'simTabMonteCarlo', mechanism: 'simTabMechanism' };
+            const ids = { params: 'simTabParams', sensitivity: 'simTabSensitivity', montecarlo: 'simTabMonteCarlo' };
             document.getElementById(ids[tab]).classList.add('active');
-            if (tab === 'mechanism') renderMechanism();
         }
 
         /* Core impact calculation */
@@ -3966,114 +3463,6 @@
             while (u === 0) u = Math.random();
             while (v === 0) v = Math.random();
             return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-        }
-
-        /* ─── Impact Mechanism Diagram ──────────────────────────── */
-
-        function getCorr(i, j) {
-            const matrix = correlationPayload?.matrix;
-            if (!matrix || matrix[i]?.[j] == null) return null;
-            return matrix[i][j];
-        }
-
-        function mechLinkClass(corrValue) {
-            if (corrValue === null) return 'beta moderate';
-            const abs = Math.abs(corrValue);
-            const dir = corrValue >= 0 ? 'positive' : 'negative';
-            const str = abs > 0.6 ? 'strong' : abs > 0.3 ? 'moderate' : 'weak';
-            return `${dir} ${str}`;
-        }
-
-        function setMechLink(linkId, coeffId, corrValue, label) {
-            const linkEl = document.getElementById(linkId);
-            const coeffEl = document.getElementById(coeffId);
-            if (linkEl) linkEl.className = 'mech-link ' + mechLinkClass(corrValue);
-            if (coeffEl) {
-                coeffEl.textContent = label || (corrValue !== null ? `r=${corrValue.toFixed(2)}` : '···');
-                if (corrValue !== null) {
-                    coeffEl.style.color = corrValue >= 0 ? 'var(--up)' : 'var(--down)';
-                } else if (label) {
-                    coeffEl.style.color = '#ffb347';
-                }
-            }
-        }
-
-        function mechSetText(id, text) {
-            const el = document.getElementById(id);
-            if (el) el.textContent = text;
-        }
-
-        function renderMechanism() {
-            const s = externalIndicatorState;
-            // Correlation matrix indices: wti=0, fedfunds=1, usdkrw=2, construction=3, realestate=4
-
-            // ── Trigger nodes ──
-            const wtiVal = s.wti;
-            const liborVal = s.libor ?? s.fedfunds;
-            mechSetText('mechValWar', wtiVal != null ? '$' + wtiVal.toFixed(1) + '/bbl' : 'API 대기');
-            mechSetText('mechValLibor', liborVal != null ? liborVal.toFixed(2) + '%' : 'API 대기');
-
-            // ── Get sim params for impact calculations ──
-            const p = getSimParams();
-
-            // ── PATH 1: Energy Cost ──
-            mechSetText('mechValWti', wtiVal != null ? '$' + wtiVal.toFixed(1) : '--');
-            const corrWtiConst = getCorr(0, 3);  // WTI vs construction
-            setMechLink('mechLink1a', 'mechCoeff1a', corrWtiConst);
-            setMechLink('mechLink1b', 'mechCoeff1b', null, 'β=0.60');
-            setMechLink('mechLink1c', 'mechCoeff1c', corrWtiConst);
-            const steelVal = s.steel;
-            mechSetText('mechValSteel', steelVal != null ? '$' + steelVal.toFixed(0) + '/t' : '--');
-            mechSetText('mechImpact1', '+' + (p.oil * 0.6).toFixed(1) + '%');
-
-            // ── PATH 2: Supply Chain ──
-            mechSetText('mechValSupply', p.supply + '/10');
-            setMechLink('mechLink2a', 'mechCoeff2a', null, 'β=1.20');
-            setMechLink('mechLink2b', 'mechCoeff2b', null, '공급부족');
-            setMechLink('mechLink2c', 'mechCoeff2c', corrWtiConst);
-            mechSetText('mechValMat2', steelVal != null ? '$' + steelVal.toFixed(0) : '--');
-            mechSetText('mechImpact2', '+' + (p.supply * 1.2).toFixed(1) + '%');
-
-            // ── PATH 3: Financing Cost ──
-            const fedVal = s.fedfunds;
-            mechSetText('mechValFed', fedVal != null ? fedVal.toFixed(2) + '%' : '--');
-            const corrFedConst = getCorr(1, 3);  // Fed vs construction
-            setMechLink('mechLink3a', 'mechCoeff3a', corrFedConst);
-            setMechLink('mechLink3b', 'mechCoeff3b', null, 'β=0.02');
-            setMechLink('mechLink3c', 'mechCoeff3c', corrFedConst);
-            mechSetText('mechImpact3', '+' + (p.rate * 0.02).toFixed(1) + '%');
-
-            // ── PATH 4: Demand Contraction ──
-            mechSetText('mechValMort', fedVal != null ? (fedVal + 1.5).toFixed(1) + '%' : '--');
-            const corrFedRE = getCorr(1, 4);  // Fed vs realestate
-            setMechLink('mechLink4a', 'mechCoeff4a', corrFedRE);
-            const corrUsdRE = getCorr(2, 4);  // USD/KRW vs realestate
-            setMechLink('mechLink4b', 'mechCoeff4b', corrUsdRE);
-            setMechLink('mechLink4c', 'mechCoeff4c', null, 'β=-0.30');
-            const reVal = s.kbfin || s.reindex;
-            mechSetText('mechValDemand', reVal != null ? reVal.toLocaleString() : '--');
-            const demandImpact = (-p.oil * 0.25 - p.war * 0.4 - p.supply * 0.3).toFixed(1);
-            mechSetText('mechImpact4', demandImpact + '%');
-
-            // ── Summary ──
-            const r = calcImpacts(p.oil, p.war, p.dur, p.rate, p.fx, p.supply);
-            mechSetText('mechTotalCost', '+' + r.costInc + '%');
-            mechSetText('mechTotalDemand', r.reChg + '%');
-            const range = correlationMonths.length > 0
-                ? `${correlationMonths[0]} ~ ${correlationMonths[correlationMonths.length - 1]}`
-                : 'N/A';
-            mechSetText('mechDataRange', range);
-        }
-
-        function mechShowDetail(indicator) {
-            const indexMap = { wti: 0, fedfunds: 1, usdkrw: 2, construction: 3, realestate: 4 };
-            const corrKey = { war: 'wti', libor: 'fedfunds', energy: 'wti', supply: 'wti' }[indicator] || indicator;
-            const i = indexMap[corrKey];
-            const j = corrKey === 'construction' ? 4 : 3;
-            if (i !== undefined) {
-                const corr = getCorr(i, j);
-                showCorrelationDetail(i, j, corr);
-            }
         }
 
         // Close modal on outside click

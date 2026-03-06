@@ -1,5 +1,13 @@
 {
   "rewrites": [
     { "source": "/", "destination": "/crisis-monitoring-dashboard.html" }
-  ]
+  ],
+  "functions": {
+    "api/**/*.js": {
+      "maxDuration": 30
+    },
+    "api/correlation.js": {
+      "maxDuration": 60
+    }
+  }
 }
