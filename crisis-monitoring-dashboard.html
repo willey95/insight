@@ -2289,7 +2289,7 @@
                 </div>
                 <!-- Layer Control (top-right) -->
                 <div class="map-layer-ctrl" id="mapLayerCtrl">
-                    <div class="map-layer-ctrl-title">LAYERS</div>
+                    <div class="map-layer-ctrl-title" style="display:flex;justify-content:space-between;align-items:center;">LAYERS <button onclick="toggleAllLayers()" id="layerToggleBtn" style="font-size:7px;padding:1px 5px;background:rgba(78,201,255,0.12);border:1px solid #2a3a52;border-radius:3px;color:#8ea9cc;cursor:pointer;">ALL OFF</button></div>
                     <label><input type="checkbox" checked data-layer="aircraft"> Aircraft <span class="layer-dot" style="background:#4ec9ff"></span></label>
                     <label><input type="checkbox" checked data-layer="vessels"> Vessels <span class="layer-dot" style="background:#00d084"></span></label>
                     <label><input type="checkbox" checked data-layer="conflicts"> Conflicts <span class="layer-dot" style="background:#ff2d55"></span></label>
@@ -3141,10 +3141,10 @@
                 const baseGr = ardlModel.intercept + inertia * 0.3;
                 let shockGr = 0;
                 Object.entries(shocks).forEach(([key, val]) => {
-                    // Sum cumulative IRF: shock persists, so we aggregate lag responses
-                    let cumIRF = 0;
-                    for (let l = 0; l <= Math.min(h, ardlModel.maxLag); l++) cumIRF += ardlIRF(ardlModel, key, l);
-                    shockGr += val * cumIRF * 0.1;
+                    // Only apply the IRF coefficient for the current lag h (impulse at t=0)
+                    // For h > maxLag, the impulse response has decayed — no further contribution
+                    const irfAtH = ardlIRF(ardlModel, key, h);
+                    shockGr += val * irfAtH * 0.1;
                 });
                 baseIdx *= 1 + baseGr / 100;
                 scIdx *= 1 + (baseGr + shockGr) / 100;
@@ -3981,6 +3981,22 @@
             initMapLayerControls();
 
             setInterval(updateMapAssets, 2000);
+        }
+
+        let allLayersOn = true;
+        function toggleAllLayers() {
+            const ctrl = document.getElementById('mapLayerCtrl');
+            const btn = document.getElementById('layerToggleBtn');
+            if (!ctrl) return;
+            allLayersOn = !allLayersOn;
+            ctrl.querySelectorAll('input[data-layer]').forEach(cb => {
+                cb.checked = allLayersOn;
+                const layer = mapLayers[cb.dataset.layer];
+                if (!layer || !geoMap) return;
+                if (allLayersOn) geoMap.addLayer(layer);
+                else geoMap.removeLayer(layer);
+            });
+            if (btn) btn.textContent = allLayersOn ? 'ALL OFF' : 'ALL ON';
         }
 
         function initMapLayerControls() {
@@ -5509,12 +5525,16 @@
         /* Core: read shock sliders */
         function getSimShocks() {
             const v = id => { const el = document.getElementById(id); return el ? parseFloat(el.value) : 0; };
+            const fx = v('shockFx'), oil = v('shockOil'), ppi = v('shockPpi');
+            const labor = v('shockLabor'), rate = v('shockRate');
+            // Derive secondary drivers from primary shocks
+            const importPrice = fx * 0.45 + oil * 0.35 + ppi * 0.20;
+            const steel = importPrice * 0.40 + ppi * 0.35 + oil * 0.15;
+            const cement = ppi * 0.55 + oil * 0.25;
             return {
-                fx:         v('shockFx'),
-                oil:        v('shockOil'),
-                ppi:        v('shockPpi'),
-                labor:      v('shockLabor'),
-                policyRate: v('shockRate')
+                fx, oil, ppi, labor, policyRate: rate,
+                importPrice, steel, cement,
+                vix: 0, us10y: 0
             };
         }
 
@@ -6136,10 +6156,10 @@
             let html = '';
             PF_GRADES.forEach(pf => {
                 const currentPfRate = baseRate + pf.baseSpread;
-                const costImpact = delta12 * 0.15;
+                const costImpact = delta12 * 0.15; // construction cost risk premium
                 const riskPremium = delta12 > 0 ? delta12 * pf.baseSpread * 0.08 : delta12 * pf.baseSpread * 0.03;
                 const rateImpact = rateShock;
-                const totalDelta = rateImpact + riskPremium;
+                const totalDelta = rateImpact + riskPremium + costImpact;
                 const newPfRate = currentPfRate + totalDelta;
                 const impactColor = totalDelta > 0 ? '#ff6b00' : totalDelta < 0 ? '#22c55e' : '#5a7a9a';
                 const barW = Math.min(100, Math.round(Math.abs(totalDelta) / 2.0 * 100));
