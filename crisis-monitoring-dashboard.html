@@ -4810,6 +4810,137 @@
             if (el) el.textContent = text;
         }
 
+        const PYEONG_TYPES = {
+            apt: {
+                simKey: 'residentialUnit', label: '아파트', baseline: 780,
+                materialPct: 42, laborPct: 33, overheadPct: 25,
+                materials: { steel: 12, concrete: 18, finishing: 20, equipment: 18, other: 32 },
+                laborSensitivity: 1.05, steelHeavy: false
+            },
+            officetel: {
+                simKey: 'hospitalityUnit', label: '오피스텔', baseline: 850,
+                materialPct: 44, laborPct: 31, overheadPct: 25,
+                materials: { steel: 10, concrete: 16, finishing: 22, equipment: 22, other: 30 },
+                laborSensitivity: 0.98, steelHeavy: false
+            },
+            commercial: {
+                simKey: 'infraUnit', label: '상가', baseline: 680,
+                materialPct: 40, laborPct: 34, overheadPct: 26,
+                materials: { steel: 14, concrete: 18, finishing: 16, equipment: 14, other: 38 },
+                laborSensitivity: 1.08, steelHeavy: false
+            },
+            office: {
+                simKey: 'officeUnit', label: '오피스', baseline: 950,
+                materialPct: 46, laborPct: 30, overheadPct: 24,
+                materials: { steel: 22, concrete: 12, finishing: 14, equipment: 22, other: 30 },
+                laborSensitivity: 0.92, steelHeavy: true
+            },
+            knowledge: {
+                simKey: 'advancedUnit', label: '지산센터', baseline: 520,
+                materialPct: 45, laborPct: 30, overheadPct: 25,
+                materials: { steel: 20, concrete: 16, finishing: 12, equipment: 15, other: 37 },
+                laborSensitivity: 0.90, steelHeavy: true
+            },
+            logistics: {
+                simKey: 'logisticsUnit', label: '물류센터', baseline: 380,
+                materialPct: 52, laborPct: 25, overheadPct: 23,
+                materials: { steel: 38, concrete: 6, finishing: 6, equipment: 11, other: 39 },
+                laborSensitivity: 0.75, steelHeavy: true
+            }
+        };
+
+        function showPyeongDetail(typeKey) {
+            const cfg = PYEONG_TYPES[typeKey];
+            if (!cfg) return;
+            const series = loadMacroHistory();
+            if (!series || series.length < 2) return;
+            const vals = series.map(r => Math.round(r[cfg.simKey] || cfg.baseline));
+            const months = series.map(r => r.month);
+            const latest = vals[vals.length - 1];
+            const high = Math.max(...vals);
+            const low = Math.min(...vals);
+            const avg = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+            const m = cfg.materials || {};
+            document.getElementById('modalTitle').textContent = cfg.label + ' 평당 공사비 상세';
+            document.getElementById('modalCurrent').textContent = latest.toLocaleString() + '만원/평';
+            const totalChg = ((latest - vals[0]) / vals[0] * 100).toFixed(1);
+            document.getElementById('modalChange').textContent = (totalChg >= 0 ? '+' : '') + totalChg + '% (5Y)';
+            document.getElementById('modalChange').className = totalChg >= 0 ? 'up' : 'down';
+            document.getElementById('modalHigh').textContent = high.toLocaleString() + '만원';
+            document.getElementById('modalLow').textContent = low.toLocaleString() + '만원';
+            document.getElementById('modalAvg').textContent = avg.toLocaleString() + '만원';
+            document.getElementById('modalVol').textContent =
+                '재료 ' + cfg.materialPct + '% / 노무 ' + cfg.laborPct + '% / 경비 ' + (cfg.overheadPct || 25) + '%';
+            const corrSection = document.getElementById('modalCorrelationSection');
+            if (corrSection) {
+                corrSection.style.display = 'block';
+                const titleEl = corrSection.querySelector('div');
+                if (titleEl) titleEl.textContent = '원가 구성 및 재료비 세부 비중';
+                const barsEl = document.getElementById('modalCorrBars');
+                if (barsEl) {
+                    const matColors = { steel: '#38bdf8', concrete: '#a78bfa', finishing: '#f59e0b', equipment: '#22c55e', other: '#6b7280' };
+                    const matLabels = { steel: '철강·철근', concrete: '콘크리트·시멘트', finishing: '마감재', equipment: '설비(전기·기계)', other: '기타' };
+                    let html = '<div style="width:100%">';
+                    html += '<div style="font-size:9px;color:#8ea9cc;margin-bottom:4px;">직접공사비 구성</div>';
+                    html += '<div style="display:flex;height:18px;border-radius:4px;overflow:hidden;margin-bottom:8px;">';
+                    html += '<div style="width:' + cfg.materialPct + '%;background:#38bdf8;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#0a0f18;">재료 ' + cfg.materialPct + '%</div>';
+                    html += '<div style="width:' + cfg.laborPct + '%;background:#f59e0b;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#0a0f18;">노무 ' + cfg.laborPct + '%</div>';
+                    html += '<div style="width:' + (cfg.overheadPct || 25) + '%;background:#6b7280;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#e5eefc;">경비 ' + (cfg.overheadPct || 25) + '%</div>';
+                    html += '</div>';
+                    html += '<div style="font-size:9px;color:#8ea9cc;margin-bottom:4px;">재료비 세부 구성 (재료비 ' + cfg.materialPct + '% 중)</div>';
+                    Object.entries(m).forEach(([k, pct]) => {
+                        const c = matColors[k] || '#6b7280';
+                        html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">';
+                        html += '<span style="font-size:8px;color:#8ea9cc;min-width:80px;">' + (matLabels[k] || k) + '</span>';
+                        html += '<div style="flex:1;height:12px;background:rgba(255,255,255,0.04);border-radius:3px;overflow:hidden;">';
+                        html += '<div style="width:' + pct + '%;height:100%;background:' + c + ';border-radius:3px;"></div></div>';
+                        html += '<span style="font-size:9px;font-weight:700;color:' + c + ';min-width:28px;text-align:right;">' + pct + '%</span>';
+                        html += '</div>';
+                    });
+                    html += '<div style="margin-top:8px;padding:6px 8px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:5px;font-size:9px;color:#d4a86a;">';
+                    html += '<strong>노무비 민감도 ' + (cfg.laborSensitivity || 1.0).toFixed(2) + '×</strong> — ';
+                    if (cfg.laborSensitivity > 1.0) {
+                        html += '마감공정 多, 다공종 투입 → 노임 상승에 <span style="color:#ff4d6d">민감</span>';
+                    } else if (cfg.laborSensitivity < 0.85) {
+                        html += '철골조립 위주, 공종 단순 → 노임 영향 <span style="color:#00d084">상대적 적음</span>';
+                    } else {
+                        html += '표준 수준의 노무비 민감도';
+                    }
+                    html += '<br>5년간 건설노임 연평균 +4.1% 상승 (보통인부 +22.8%, 형틀목공 +26.3%)';
+                    html += '</div>';
+                    html += '</div>';
+                    barsEl.innerHTML = html;
+                }
+            }
+            if (chartLibraryAvailable) {
+                const canvas = document.getElementById('modalChart');
+                if (modalChart) modalChart.destroy();
+                modalChart = new Chart(canvas, {
+                    type: 'line',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: cfg.label + ' (만원/평)',
+                            data: vals,
+                            borderColor: '#4ec9ff',
+                            backgroundColor: 'rgba(78, 201, 255, 0.08)',
+                            borderWidth: 2, fill: true, tension: 0.3,
+                            pointRadius: 0, pointHoverRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { ticks: { color: '#6a829f', font: { size: 10 }, maxTicksLimit: 10 }, grid: { color: 'rgba(255,255,255,0.04)' } },
+                            y: { ticks: { color: '#6a829f', font: { size: 10 }, callback: v => v.toLocaleString() }, grid: { color: 'rgba(255,255,255,0.04)' } }
+                        }
+                    }
+                });
+            }
+            document.getElementById('detailModal').classList.add('active');
+        }
+
         function renderReImpact() {
             const container = document.getElementById('simReImpact');
             if (!container) return;
