@@ -366,27 +366,160 @@
             max-height: 98vh;
             z-index: 2100;
             overflow: hidden;
-            box-shadow: 0 0 0 9999px rgba(4, 8, 14, 0.82), 0 18px 38px rgba(0, 0, 0, 0.5);
-            border-color: #465472;
+            box-shadow: 0 0 0 9999px rgba(2, 4, 8, 0.88), 0 24px 64px rgba(0, 0, 0, 0.6);
+            border: 1px solid #2a3a52;
+            background: linear-gradient(180deg, #0a1220 0%, #070d17 100%);
+            animation: simPopupIn 0.25s ease-out;
+        }
+
+        @keyframes simPopupIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.97); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
 
         .simulation-card.active {
             display: flex;
         }
 
-        /* Sim popup top bar */
+        /* ── Sim Header ── */
+        .sim-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 14px;
+            background: linear-gradient(90deg, rgba(14,26,42,0.95) 0%, rgba(8,16,28,0.95) 100%);
+            border-bottom: 1px solid #1e3050;
+            position: relative;
+        }
+        .sim-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(56,189,248,0.3), transparent);
+        }
+        .sim-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sim-header-icon {
+            font-size: 18px;
+            color: #38bdf8;
+            text-shadow: 0 0 12px rgba(56,189,248,0.4);
+            animation: simIconPulse 3s ease-in-out infinite;
+        }
+        @keyframes simIconPulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        .sim-header-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #e2ecf8;
+            letter-spacing: 1.5px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .sim-header-sub {
+            font-size: 9px;
+            color: #5a7a9a;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-top: 1px;
+        }
+        .sim-header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sim-header-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 9px;
+            font-weight: 700;
+            color: #22c55e;
+            letter-spacing: 1px;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 3px 10px;
+            background: rgba(34,197,94,0.06);
+            border: 1px solid rgba(34,197,94,0.15);
+            border-radius: 3px;
+        }
+        .sim-status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 6px rgba(34,197,94,0.5);
+            animation: simDotBlink 2s ease-in-out infinite;
+        }
+        @keyframes simDotBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .sim-btn-report {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #ecfdf5;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+        .sim-btn-report:hover {
+            background: linear-gradient(135deg, #14b8a6, #2dd4bf);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(20,184,166,0.3);
+        }
+        .sim-btn-close {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid #2a3a52;
+            border-radius: 4px;
+            color: #6a829f;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .sim-btn-close:hover {
+            background: rgba(239,68,68,0.12);
+            border-color: rgba(239,68,68,0.3);
+            color: #fca5a5;
+        }
+
+        /* ── Sim Top Bar ── */
         .sim-top-bar {
             display: flex;
-            gap: 6px;
+            gap: 8px;
             align-items: stretch;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
         .sim-top-controls {
             display: flex;
             flex-direction: column;
             gap: 4px;
-            min-width: 260px;
+            min-width: 240px;
             flex-shrink: 0;
+        }
+        .sim-control-group {
+            background: rgba(10,16,28,0.6);
+            border: 1px solid #182840;
+            border-radius: 4px;
+            padding: 4px 6px;
         }
         .sim-top-kpis {
             display: grid;
@@ -395,38 +528,62 @@
             flex: 1;
         }
         .sim-kpi-card {
-            background: rgba(12, 20, 32, 0.8);
-            border: 1px solid #1f2f46;
-            border-radius: 4px;
-            padding: 4px 8px;
+            background: rgba(8, 14, 24, 0.9);
+            border: 1px solid #1a2a42;
+            border-radius: 5px;
+            padding: 6px 8px;
             text-align: center;
-            transition: border-color 0.2s;
+            transition: all 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+        .sim-kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: attr(data-accent);
+            background: var(--kpi-accent, #38bdf8);
+        }
+        .sim-kpi-card[data-accent="#f59e0b"] { --kpi-accent: #f59e0b; }
+        .sim-kpi-card[data-accent="#fb7185"] { --kpi-accent: #fb7185; }
+        .sim-kpi-card[data-accent="#ef4444"] { --kpi-accent: #ef4444; }
+        .sim-kpi-card[data-accent="#38bdf8"] { --kpi-accent: #38bdf8; }
+        .sim-kpi-card:hover {
+            border-color: var(--kpi-accent, #38bdf8);
+            box-shadow: 0 0 12px rgba(56,189,248,0.08);
         }
         .sim-kpi-card.active-kpi { border-color: var(--accent-cool); }
         .sim-kpi-label {
             font-size: 8px;
-            color: #7f93ad;
+            color: #5d7a9a;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
-            margin-bottom: 1px;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+            font-family: 'JetBrains Mono', monospace;
         }
         .sim-kpi-value {
-            font-size: 14px;
-            font-weight: 700;
+            font-size: 15px;
+            font-weight: 800;
             font-family: 'JetBrains Mono', monospace;
             color: var(--text);
+            line-height: 1.2;
         }
         .sim-kpi-sub {
             font-size: 7px;
-            color: #5a7a9a;
-            margin-top: 1px;
+            color: #3d5570;
+            margin-top: 2px;
+            letter-spacing: 1px;
+            font-family: 'JetBrains Mono', monospace;
         }
 
-        /* Sim 3-column body */
+        /* ── Sim 3-Column Body ── */
         .sim-body-3col {
             display: grid;
-            grid-template-columns: 300px 1fr 300px;
-            gap: 4px;
+            grid-template-columns: 280px 1fr 280px;
+            gap: 6px;
             flex: 1;
             min-height: 0;
             overflow: hidden;
@@ -434,55 +591,74 @@
         .sim-col {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 5px;
             min-height: 0;
             overflow-y: auto;
         }
         .sim-col::-webkit-scrollbar { width: 3px; }
         .sim-col::-webkit-scrollbar-track { background: transparent; }
-        .sim-col::-webkit-scrollbar-thumb { background: rgba(78,201,255,0.15); border-radius: 2px; }
+        .sim-col::-webkit-scrollbar-thumb { background: rgba(78,201,255,0.12); border-radius: 2px; }
         .sim-col-section {
-            background: rgba(8, 13, 22, 0.7);
-            border: 1px solid #1a2a42;
-            border-radius: 4px;
-            padding: 5px 6px;
+            background: rgba(6, 10, 18, 0.75);
+            border: 1px solid #162540;
+            border-radius: 5px;
+            padding: 8px 8px;
+            position: relative;
         }
         .sim-col-section-title {
             font-size: 9px;
             font-weight: 700;
-            color: #8ea9cc;
+            color: #6d8db0;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
             margin-bottom: 6px;
-            padding-bottom: 4px;
-            border-bottom: 1px solid #1a2a42;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #162540;
             font-family: 'JetBrains Mono', monospace;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
+        .sim-col-section-title::before {
+            content: '▪';
+            color: #38bdf8;
+            font-size: 8px;
+        }
+
+        /* ── Accordion ── */
         .sim-accordion-title {
             font-size: 9px;
             font-weight: 700;
-            color: #8ea9cc;
+            color: #6d8db0;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 6px 0 4px;
-            border-bottom: 1px solid #1a2a42;
+            letter-spacing: 0.8px;
+            padding: 6px 0 5px;
+            border-bottom: 1px solid #162540;
             font-family: 'JetBrains Mono', monospace;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
             user-select: none;
+            transition: color 0.2s;
         }
-        .sim-accordion-title:hover { color: #b8d4f0; }
+        .sim-accordion-title::before {
+            content: '▪';
+            color: #38bdf8;
+            font-size: 8px;
+            margin-right: 6px;
+        }
+        .sim-accordion-title:hover { color: #a8c8e8; }
         .sim-accordion-title::after {
             content: '▾';
-            font-size: 10px;
-            transition: transform 0.2s;
+            font-size: 9px;
+            color: #3d5570;
+            transition: transform 0.25s ease;
         }
         .sim-accordion-title.collapsed::after { transform: rotate(-90deg); }
         .sim-accordion-body {
             overflow: hidden;
-            transition: max-height 0.25s ease, opacity 0.2s ease;
+            transition: max-height 0.3s ease, opacity 0.2s ease;
             max-height: 2000px;
             opacity: 1;
         }
@@ -491,33 +667,109 @@
             opacity: 0;
         }
 
+        /* ── Center Panel: Results ── */
+        .sim-center-panel {
+            border-left: 2px solid rgba(56,189,248,0.15);
+            border-right: 2px solid rgba(56,189,248,0.15);
+        }
+        .sim-result-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .sim-pressure-badge {
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            padding: 3px 10px;
+            border-radius: 3px;
+            border: 1px solid #2a3a52;
+            background: rgba(14,24,40,0.6);
+            color: #5d7a9a;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .sim-pressure-summary {
+            font-size: 10px;
+            color: #5d7a9a;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .sim-method-desc {
+            padding: 4px 8px;
+            background: rgba(56,189,248,0.04);
+            border: 1px solid #13304d;
+            border-radius: 3px;
+            margin-bottom: 6px;
+            font-size: 9px;
+            color: #5d7a9a;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.2px;
+        }
+        .sim-attribution-wrap {
+            max-height: 80px;
+            overflow-y: auto;
+            margin-bottom: 4px;
+        }
+        .sim-attribution-table {
+            width: 100%;
+            font-size: 10px;
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .sim-attribution-table thead tr {
+            color: #4a6a8a;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 8px;
+        }
+        .sim-attribution-table th {
+            padding: 3px 5px;
+            border-bottom: 1px solid #162540;
+            font-weight: 600;
+        }
+        .sim-attribution-table td {
+            padding: 2px 5px;
+            border-bottom: 1px solid rgba(22,37,64,0.4);
+        }
+        .sim-chart-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 5px;
+            flex: 1;
+            min-height: 0;
+        }
+
         /* Right column: RE impact cards */
         .re-impact-card {
             display: flex;
             align-items: center;
-            gap: 4px;
-            padding: 3px 4px;
-            background: rgba(10, 15, 24, 0.5);
-            border: 1px solid #1a2a42;
-            border-radius: 5px;
+            gap: 6px;
+            padding: 5px 6px;
+            background: rgba(6, 10, 18, 0.6);
+            border: 1px solid #162540;
+            border-radius: 4px;
             margin-bottom: 4px;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
             cursor: pointer;
+            position: relative;
         }
-        .re-impact-card:hover { border-color: #3b6ea1; }
+        .re-impact-card:hover {
+            border-color: rgba(56,189,248,0.25);
+            background: rgba(56,189,248,0.03);
+        }
         .re-impact-icon { font-size: 14px; flex-shrink: 0; }
         .re-impact-info { flex: 1; min-width: 0; }
-        .re-impact-name { font-size: 10px; color: #8ea9cc; font-weight: 600; }
-        .re-impact-baseline { font-size: 9px; color: #5a7a9a; }
+        .re-impact-name { font-size: 10px; color: #8cb8e0; font-weight: 700; letter-spacing: 0.2px; }
+        .re-impact-baseline { font-size: 8px; color: #3d5570; font-family: 'JetBrains Mono', monospace; }
         .re-impact-delta {
             font-size: 12px;
-            font-weight: 700;
+            font-weight: 800;
             font-family: 'JetBrains Mono', monospace;
             text-align: right;
             flex-shrink: 0;
         }
-        .re-impact-bar-wrap { height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; margin-top: 3px; }
-        .re-impact-bar { height: 100%; border-radius: 2px; transition: width 0.5s; }
+        .re-impact-bar-wrap { height: 2px; background: rgba(255,255,255,0.04); border-radius: 1px; margin-top: 3px; }
+        .re-impact-bar { height: 100%; border-radius: 1px; transition: width 0.6s ease-out; }
 
         .threat-level {
             display: grid;
@@ -1005,38 +1257,42 @@
         .popup-launch {
             margin-top: 5px;
             width: 100%;
-            border: 1px solid #37537a;
-            background: rgba(24, 47, 75, 0.45);
-            color: #cce5ff;
-            border-radius: 5px;
+            border: 1px solid #1e3050;
+            background: rgba(14, 24, 40, 0.7);
+            color: #8cb8e0;
+            border-radius: 4px;
             font-size: 10px;
-            font-weight: 600;
+            font-weight: 700;
             padding: 6px 7px;
             text-align: center;
             cursor: pointer;
-            letter-spacing: 0.25px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.2s;
         }
 
         .popup-launch:hover {
-            background: rgba(36, 72, 112, 0.58);
-            border-color: #5f8ac6;
+            background: rgba(56,189,248,0.08);
+            border-color: rgba(56,189,248,0.3);
+            color: #a8d8f8;
         }
 
         .sim-popup-close {
-            border: 1px solid #3a4d6a;
-            background: rgba(31, 46, 70, 0.52);
-            color: #d8e7fc;
-            font-size: 12px;
-            border-radius: 5px;
-            padding: 4px 10px;
+            border: 1px solid #2a3a52;
+            background: rgba(255,255,255,0.04);
+            color: #6a829f;
+            font-size: 14px;
+            border-radius: 4px;
+            padding: 4px 8px;
             cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
+            transition: all 0.2s;
         }
 
         .sim-popup-close:hover {
-            background: rgba(46, 66, 98, 0.7);
+            background: rgba(239,68,68,0.12);
+            border-color: rgba(239,68,68,0.3);
+            color: #fca5a5;
         }
 
         .chart-container-large {
@@ -1082,13 +1338,13 @@
 
         /* Simulation Panel */
         .simulation-panel {
-            background: rgba(8, 13, 22, 0.86);
-            border: 1px solid #22324a;
-            padding: 10px;
-            border-radius: 7px;
-            margin-top: 6px;
+            background: rgba(5, 9, 16, 0.6);
+            padding: 8px 10px;
+            border-radius: 0;
+            margin-top: 0;
             min-height: 0;
             overflow: auto;
+            flex: 1;
         }
 
         .sim-controls {
@@ -1099,12 +1355,13 @@
         }
 
         .sim-control-label {
-            font-size: 11px;
-            color: #8ea3c1;
+            font-size: 10px;
+            color: #6d8db0;
             display: block;
-            margin-bottom: 4px;
-            letter-spacing: 0.3px;
+            margin-bottom: 3px;
+            letter-spacing: 0.4px;
             text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .sim-action-wrap {
@@ -1113,40 +1370,48 @@
         }
 
         .sim-input {
-            background: rgba(7, 12, 20, 0.95);
-            border: 1px solid #334461;
-            color: #dce8fb;
-            padding: 7px;
-            border-radius: 5px;
-            font-size: 13px;
+            background: rgba(4, 8, 16, 0.95);
+            border: 1px solid #1e3050;
+            color: #c8daf0;
+            padding: 6px;
+            border-radius: 4px;
+            font-size: 12px;
             width: 100%;
-            font-family: 'IBM Plex Mono', Consolas, monospace;
+            font-family: 'JetBrains Mono', monospace;
+            transition: border-color 0.2s;
+        }
+        .sim-input:focus {
+            outline: none;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 1px rgba(56,189,248,0.15);
         }
 
         .sim-button {
-            background: linear-gradient(90deg, #2767af 0%, #2f8fc9 100%);
-            color: #ecf5ff;
+            background: linear-gradient(135deg, #1e5a9e 0%, #2878c2 100%);
+            color: #e8f4ff;
             border: none;
-            padding: 8px 10px;
-            border-radius: 5px;
-            font-weight: 600;
+            padding: 7px 10px;
+            border-radius: 4px;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
-            font-size: 13px;
-            letter-spacing: 0.3px;
+            font-size: 11px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .sim-button:hover {
-            background: linear-gradient(90deg, #2f79cc 0%, #3ea7e6 100%);
-            transform: translateY(-2px);
+            background: linear-gradient(135deg, #2878c2 0%, #3a9ae8 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(40,120,194,0.25);
         }
 
         .sim-results {
-            background: rgba(12, 22, 35, 0.82);
+            background: rgba(8, 14, 24, 0.6);
             padding: 10px;
             border-radius: 5px;
-            border-left: 3px solid var(--accent-cool);
+            border-left: 2px solid #38bdf8;
             display: none;
         }
 
@@ -1155,83 +1420,89 @@
         }
 
         .sim-results-title {
-            font-size: 14px;
-            margin-bottom: 9px;
-            color: #a9d9ff;
-            letter-spacing: 0.35px;
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: #8cb8e0;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .sim-results-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
+            gap: 8px;
         }
 
         .sim-metric-label {
-            font-size: 11px;
-            color: #8599b6;
-            letter-spacing: 0.25px;
+            font-size: 10px;
+            color: #5d7a9a;
+            letter-spacing: 0.3px;
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .sim-metric-value {
-            font-size: 19px;
+            font-size: 18px;
             font-weight: 700;
-            font-family: Consolas, 'Roboto Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             margin-top: 2px;
         }
 
         .sim-metric-value.warn {
-            color: #ffc56f;
+            color: #fbbf24;
         }
 
         .sim-preset-btn {
-            background: rgba(30, 45, 68, 0.7);
-            border: 1px solid #2c4060;
-            color: #8ea9cc;
-            padding: 5px 12px;
-            border-radius: 5px;
-            font-size: 12px;
+            background: rgba(14, 24, 40, 0.8);
+            border: 1px solid #1e3050;
+            color: #6d8db0;
+            padding: 4px 10px;
+            border-radius: 3px;
+            font-size: 10px;
             cursor: pointer;
             transition: all 0.2s;
-            font-weight: 500;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.3px;
         }
 
         .sim-preset-btn:hover,
         .sim-preset-btn.active {
-            background: rgba(39, 103, 175, 0.35);
-            border-color: #4a88c7;
-            color: #c0dcff;
+            background: rgba(56,189,248,0.1);
+            border-color: rgba(56,189,248,0.35);
+            color: #a8d8f8;
         }
 
         .sim-tabs {
             display: flex;
-            gap: 3px;
+            gap: 0;
             margin-bottom: 8px;
-            border-bottom: 1px solid #1f2f46;
+            border-bottom: 1px solid #162540;
         }
 
         .sim-tab {
             background: none;
             border: none;
-            color: #6a829f;
-            padding: 6px 17px;
-            font-size: 12px;
+            color: #4a6a8a;
+            padding: 5px 14px;
+            font-size: 10px;
             cursor: pointer;
             border-bottom: 2px solid transparent;
             transition: all 0.2s;
-            font-weight: 600;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.3px;
             letter-spacing: 0.3px;
             text-transform: uppercase;
         }
 
         .sim-tab:hover {
-            color: #a2bede;
+            color: #8cb8e0;
         }
 
         .sim-tab.active {
-            color: #4ec9ff;
-            border-bottom-color: #4ec9ff;
+            color: #38bdf8;
+            border-bottom-color: #38bdf8;
         }
 
         .sim-tab-content {
@@ -1717,9 +1988,9 @@
             }
 
             .simulation-card {
-                top: 18px;
+                top: 50%;
                 width: min(1180px, 96vw);
-                max-height: 92vh;
+                max-height: 94vh;
             }
         }
 
@@ -2111,21 +2382,29 @@
 
         <!-- Simulation Panel -->
         <div class="card simulation-card" id="simulationPopup">
-            <div class="card-header">
-                <div>
-                    <div class="card-title">IMPACT SIMULATION ENGINE</div>
-                    <div class="card-subtitle">다차원 시나리오 분석</div>
+            <div class="sim-header">
+                <div class="sim-header-left">
+                    <div class="sim-header-icon">◈</div>
+                    <div>
+                        <div class="sim-header-title">IMPACT SIMULATION ENGINE</div>
+                        <div class="sim-header-sub">Multi-Factor Scenario Analysis</div>
+                    </div>
                 </div>
-                <div style="display:flex;gap:6px;align-items:center;">
-                    <button class="sim-button" onclick="generateLLMReport()" style="padding:4px 10px;font-size:10px;background:linear-gradient(90deg,#0d9488,#14b8a6);" id="btnReport">AI 리포트</button>
-                    <button class="sim-popup-close" onclick="closeSimulationPopup()">닫기</button>
+                <div class="sim-header-right">
+                    <div class="sim-header-status" id="simStatusIndicator">
+                        <span class="sim-status-dot"></span>READY
+                    </div>
+                    <button class="sim-btn-report" onclick="generateLLMReport()" id="btnReport">
+                        <span style="font-size:11px;">⚡</span> AI 리포트
+                    </button>
+                    <button class="sim-btn-close" onclick="closeSimulationPopup()">✕</button>
                 </div>
             </div>
             <div class="simulation-panel">
                 <div class="sim-top-bar">
                     <div class="sim-top-controls">
-                        <div>
-                            <label class="sim-control-label" style="font-size:9px;margin-bottom:2px;">분석기간</label>
+                        <div class="sim-control-group">
+                            <label class="sim-control-label" style="font-size:8px;margin-bottom:2px;opacity:0.6;">PERIOD</label>
                             <select class="sim-input" id="analysisPeriod" onchange="onPeriodChange()" style="padding:5px;font-size:11px;">
                                 <option value="warEra">우크라 전쟁기 (22.02~23.08)</option>
                                 <option value="postWar">전쟁 후 안정기 (23.09~24.06)</option>
@@ -2133,8 +2412,8 @@
                                 <option value="full" selected>전체 (21.01~25.12)</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="sim-control-label" style="font-size:9px;margin-bottom:2px;">분석방법론</label>
+                        <div class="sim-control-group">
+                            <label class="sim-control-label" style="font-size:8px;margin-bottom:2px;opacity:0.6;">METHOD</label>
                             <select class="sim-input" id="simMethod" onchange="onMethodChange()" style="padding:5px;font-size:11px;">
                                 <option value="all" selected>전체 비교 (3-Method)</option>
                                 <option value="gaussian">Gaussian IRF</option>
@@ -2144,25 +2423,25 @@
                         </div>
                     </div>
                     <div class="sim-top-kpis">
-                        <div class="sim-kpi-card">
+                        <div class="sim-kpi-card" data-accent="#f59e0b">
                             <div class="sim-kpi-label">3M 추가압력</div>
                             <div class="sim-kpi-value down" id="simDelta3M">--</div>
-                            <div class="sim-kpi-sub">단기 충격</div>
+                            <div class="sim-kpi-sub">SHORT-TERM</div>
                         </div>
-                        <div class="sim-kpi-card">
+                        <div class="sim-kpi-card" data-accent="#fb7185">
                             <div class="sim-kpi-label">6M 추가압력</div>
                             <div class="sim-kpi-value down" id="simDelta6M">--</div>
-                            <div class="sim-kpi-sub">중기 누적</div>
+                            <div class="sim-kpi-sub">MID-TERM</div>
                         </div>
-                        <div class="sim-kpi-card">
+                        <div class="sim-kpi-card" data-accent="#ef4444">
                             <div class="sim-kpi-label">12M 추가압력</div>
                             <div class="sim-kpi-value down" id="simDelta12M">--</div>
-                            <div class="sim-kpi-sub">장기 전망</div>
+                            <div class="sim-kpi-sub">LONG-TERM</div>
                         </div>
-                        <div class="sim-kpi-card">
+                        <div class="sim-kpi-card" data-accent="#38bdf8">
                             <div class="sim-kpi-label">핵심 전달경로</div>
                             <div class="sim-kpi-value" style="color:#38bdf8;font-size:13px;" id="simTopRoute">--</div>
-                            <div class="sim-kpi-sub">최대 기여</div>
+                            <div class="sim-kpi-sub">TOP DRIVER</div>
                         </div>
                     </div>
                 </div>
@@ -2224,27 +2503,27 @@
                         </div>
                     </div>
                     <div class="sim-col">
-                        <div class="sim-col-section" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+                        <div class="sim-col-section sim-center-panel" style="flex:1;display:flex;flex-direction:column;min-height:0;">
                             <div class="sim-col-section-title">분석결과</div>
                             <div id="simResults" class="sim-results" style="display:block;border:none;padding:0;background:none;">
-                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                                    <span style="font-size:11px;font-weight:700;letter-spacing:0.4px;padding:3px 10px;border-radius:4px;border:1px solid;" id="simPressureBadge">대기중</span>
-                                    <span style="font-size:10px;color:#8ea3c1;" id="simPressureSummary">시뮬레이션을 실행하세요</span>
+                                <div class="sim-result-header">
+                                    <span class="sim-pressure-badge" id="simPressureBadge">STANDBY</span>
+                                    <span class="sim-pressure-summary" id="simPressureSummary">시뮬레이션을 실행하세요</span>
                                 </div>
-                                <div id="periodMethodDesc" style="padding:4px 6px;background:rgba(56,189,248,0.06);border:1px solid #13304d;border-radius:4px;margin-bottom:6px;font-size:9px;color:#7f93ad;">전체 60개월 데이터로 3가지 방법론의 전망을 비교합니다.</div>
-                                <div style="max-height:80px;overflow-y:auto;margin-bottom:4px;">
-                                    <table style="width:100%;font-size:10px;border-collapse:collapse;">
-                                        <thead><tr style="color:#8ea3c1;text-transform:uppercase;letter-spacing:0.3px;">
-                                            <th style="text-align:left;padding:3px 5px;border-bottom:1px solid #22324a;">변수</th>
-                                            <th style="text-align:right;padding:3px 5px;border-bottom:1px solid #22324a;">변화</th>
-                                            <th style="text-align:right;padding:3px 5px;border-bottom:1px solid #22324a;">기여도</th>
-                                            <th style="text-align:right;padding:3px 5px;border-bottom:1px solid #22324a;">시차</th>
-                                            <th style="text-align:left;padding:3px 5px;border-bottom:1px solid #22324a;">경로</th>
+                                <div id="periodMethodDesc" class="sim-method-desc">전체 60개월 데이터로 3가지 방법론의 전망을 비교합니다.</div>
+                                <div class="sim-attribution-wrap">
+                                    <table class="sim-attribution-table">
+                                        <thead><tr>
+                                            <th style="text-align:left;">변수</th>
+                                            <th style="text-align:right;">변화</th>
+                                            <th style="text-align:right;">기여도</th>
+                                            <th style="text-align:right;">시차</th>
+                                            <th style="text-align:left;">경로</th>
                                         </tr></thead>
                                         <tbody id="simAttributionBody"></tbody>
                                     </table>
                                 </div>
-                                <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:4px;flex:1;min-height:0;">
+                                <div class="sim-chart-grid">
                                     <div class="chart-container" style="height:160px;"><canvas id="simulationChart"></canvas></div>
                                     <div class="chart-container" style="height:160px;"><canvas id="simulationChart2"></canvas></div>
                                 </div>
