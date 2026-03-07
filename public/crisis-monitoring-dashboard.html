@@ -3414,6 +3414,10 @@
             }
 
             initCorrelationMatrix();
+            // Fetch full 5Y history for all indicators
+            if (window.location.protocol !== 'file:') {
+                fetchFullHistory();
+            }
         });
 
         function renderHeaderWarnings() {
@@ -4687,7 +4691,7 @@
         }
 
         // 5-Year historical correlation data (loaded from /api/correlation)
-        const CORR_CACHE_KEY = 'insight-correlation-5y-v2';
+        const CORR_CACHE_KEY = 'insight-correlation-5y-v3';
         const CORR_CACHE_TTL = 3600000; // 1 hour
         let correlationPayload = null;
         const correlationHistory = { wti: [], fedfunds: [], usdkrw: [], construction: [], realestate: [], vix: [], us10y: [] };
@@ -4751,30 +4755,89 @@
         }
 
         function populateHistoricalRanges() {
-            // Map correlation keys to dashboard element IDs
-            const mapping = {
+            // Map correlation keys to dashboard element IDs (from correlation payload)
+            const corrMapping = {
                 wti: ['hist-wti'],
                 usdkrw: ['hist-usd'],
                 construction: ['hist-construction'],
                 realestate: ['hist-reindex']
             };
-            const corrKeys = correlationPayload?.keys || [];
-            const corrLabels = correlationPayload?.labels || [];
-            for (const [corrKey, elIds] of Object.entries(mapping)) {
+            for (const [corrKey, elIds] of Object.entries(corrMapping)) {
                 const data = correlationHistory[corrKey];
                 if (!data || data.length < 2) continue;
-                const high = Math.max(...data);
-                const low = Math.min(...data);
-                const first = data[0];
-                const last = data[data.length - 1];
-                const change5y = ((last - first) / first * 100).toFixed(1);
-                const fmt = v => v >= 1000 ? v.toLocaleString('en-US', { maximumFractionDigits: 0 }) : v.toFixed(1);
-                for (const elId of elIds) {
-                    const el = document.getElementById(elId);
-                    if (el) {
-                        el.innerHTML = `5Y: ${fmt(low)} ~ ${fmt(high)} <span style="color:${change5y >= 0 ? '#00c853' : '#dc3545'}">(${change5y >= 0 ? '+' : ''}${change5y}%)</span>`;
+                fillHistRange(data, elIds);
+            }
+        }
+
+        function fillHistRange(data, elIds) {
+            if (!data || data.length < 2) return;
+            const values = data.map(d => typeof d === 'object' ? d.value : d).filter(v => v != null);
+            if (values.length < 2) return;
+            const high = Math.max(...values);
+            const low = Math.min(...values);
+            const first = values[0];
+            const last = values[values.length - 1];
+            const change5y = first !== 0 ? ((last - first) / first * 100).toFixed(1) : '0.0';
+            const fmt = v => v >= 1000 ? v.toLocaleString('en-US', { maximumFractionDigits: 0 }) : v.toFixed(1);
+            for (const elId of elIds) {
+                const el = document.getElementById(elId);
+                if (el) {
+                    el.innerHTML = `5Y: ${fmt(low)} ~ ${fmt(high)} <span style="color:${change5y >= 0 ? '#00c853' : '#dc3545'}">(${change5y >= 0 ? '+' : ''}${change5y}%)</span>`;
+                }
+            }
+        }
+
+        /* ── Full 5Y History Fetch (all indicators) ── */
+        const HISTORY_CACHE_KEY = 'insight-history-5y-v1';
+        const HISTORY_CACHE_TTL = 3600000; // 1 hour
+        let historyPayload = null;
+
+        async function fetchFullHistory() {
+            // Try cache first
+            try {
+                const raw = localStorage.getItem(HISTORY_CACHE_KEY);
+                if (raw) {
+                    const cached = JSON.parse(raw);
+                    if (Date.now() - cached._savedAt < HISTORY_CACHE_TTL) {
+                        historyPayload = cached;
+                        applyHistoryToUI(cached);
+                        return;
                     }
                 }
+            } catch {}
+
+            try {
+                const resp = await fetch('/api/history', { cache: 'no-store' });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                historyPayload = await resp.json();
+                historyPayload._savedAt = Date.now();
+                try { localStorage.setItem(HISTORY_CACHE_KEY, JSON.stringify(historyPayload)); } catch {}
+                applyHistoryToUI(historyPayload);
+            } catch (err) {
+                // Silent fail — correlation ranges will still work as fallback
+            }
+        }
+
+        function applyHistoryToUI(payload) {
+            const series = payload?.series || {};
+
+            // Map series keys → hist-* element IDs
+            const histMapping = {
+                wti: ['hist-wti'],
+                brent: ['hist-brent'],
+                usdkrw: ['hist-usd'],
+                vix: ['hist-vix'],
+                us10y: ['hist-us10y'],
+                gold: ['hist-gold'],
+                steel: ['hist-steel'],
+                cementProxy: ['hist-cement'],
+                realestate: ['hist-reindex'],
+                constructionAvg: ['hist-construction']
+            };
+
+            for (const [key, elIds] of Object.entries(histMapping)) {
+                const data = series[key];
+                if (data) fillHistRange(data, elIds);
             }
         }
 

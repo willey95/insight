@@ -2,6 +2,14 @@
   "rewrites": [
     { "source": "/", "destination": "/crisis-monitoring-dashboard.html" }
   ],
+  "headers": [
+    {
+      "source": "/(.*).html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, must-revalidate" }
+      ]
+    }
+  ],
   "functions": {
     "api/**/*.js": {
       "maxDuration": 60

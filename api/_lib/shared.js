@@ -1030,12 +1030,16 @@ async function buildHistoryPayload() {
     // Fetch all in parallel
     const [
         wti, brent, gas, gold, silver, steel,
-        fedfunds, libor,
+        fedfunds, libor, sofr,
         usdkrw,
         kospi, kosdaq, nasdaq, sp500, dow,
         vix, us10y, us2y,
         realestate,
         bok, housingIdx,
+        // ECOS Korean indicators
+        ppi, importPrice, constructionCostIdx, laborIdx,
+        // Cement proxy (쌍용C&E stock)
+        cementProxy,
         ...constStocks
     ] = await Promise.all([
         // Commodities
@@ -1048,6 +1052,7 @@ async function buildHistoryPayload() {
         // Rates
         safe(fetchFredMonthly('FEDFUNDS'), 'FedFunds'),
         safe(fetchFredMonthly('USD3MTD156N'), 'LIBOR'),
+        safe(fetchFredMonthly('SOFR'), 'SOFR'),
         // FX
         safe(fetchYahooMonthly('USDKRW%3DX'), 'USD/KRW'),
         // Indices
@@ -1065,6 +1070,13 @@ async function buildHistoryPayload() {
         // ECOS
         safe(fetchEcosMonthly('722Y001', '0101000'), 'BOK기준금리'),
         safe(fetchEcosMonthly('901Y009', 'H01'), '주택매매가격'),
+        // ECOS — Korean macro indicators
+        safe(fetchEcosMonthly('404Y014', 'AA00'), '생산자물가(총지수)'),
+        safe(fetchEcosMonthly('401Y015', '*AA'), '수입물가(총지수)'),
+        safe(fetchEcosMonthly('901Y062', 'I16AA'), '건설공사비지수'),
+        safe(fetchEcosMonthly('901Y062', 'I16BA'), '건설노임지수'),
+        // Cement price proxy (쌍용C&E 004980.KS)
+        safe(fetchYahooMonthly('004980.KS'), '쌍용C&E'),
         // Construction stocks (individual)
         ...Object.entries(constTickers).map(([name, ticker]) =>
             safe(fetchYahooMonthly(ticker), name)
@@ -1098,11 +1110,13 @@ async function buildHistoryPayload() {
 
     const series = {
         wti, brent, gas, lng, gold, silver, steel,
-        fedfunds, libor, bok,
+        fedfunds, libor, sofr, bok,
         usdkrw,
         kospi, kosdaq, nasdaq, sp500, dow,
         vix, us10y, us2y,
         realestate, housingIdx,
+        ppi, importPrice, constructionCostIdx, laborIdx,
+        cementProxy,
         constructionAvg
     };
 
