@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>분석 방법론 가이드 — Construction Cost Simulation Engine v2</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+        onload="renderMathInElement(document.body, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: #06111f; color: #cbd5e1;
+    font-family: 'IBM Plex Sans KR', 'Noto Sans KR', 'Segoe UI', sans-serif;
+    line-height: 1.75; padding: 0;
+}
+
+/* ── Nav ── */
+.top-nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(6,17,31,0.92); backdrop-filter: blur(8px);
+    border-bottom: 1px solid #13304d;
+    display: flex; align-items: center; gap: 18px;
+    padding: 10px 28px;
+}
+.top-nav a {
+    color: #7f93ad; text-decoration: none; font-size: 12px;
+    letter-spacing: 0.15em; text-transform: uppercase; transition: color 0.2s;
+}
+.top-nav a:hover, .top-nav a.active { color: #38bdf8; }
+.top-nav .brand { color: #38bdf8; font-weight: 700; font-size: 14px; margin-right: auto; letter-spacing: 0.08em; }
+
+/* ── Layout ── */
+.page { max-width: 1100px; margin: 0 auto; padding: 40px 28px 80px; }
+h1 { font-size: 28px; font-weight: 700; color: #e2e8f0; margin-bottom: 8px; letter-spacing: -0.5px; }
+h1 span { color: #38bdf8; }
+.lead { font-size: 15px; color: #7f93ad; max-width: 820px; margin-bottom: 40px; }
+
+/* ── Section ── */
+.section {
+    background: #081728; border: 1px solid #13304d; border-radius: 18px;
+    padding: 32px; margin-bottom: 28px;
+    box-shadow: 0 12px 30px rgba(2,8,23,0.35);
+}
+.section h2 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.25em;
+    margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+}
+.section h2 .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.section h3 { font-size: 16px; color: #e2e8f0; margin: 20px 0 10px; font-weight: 600; }
+
+/* ── Method Card ── */
+.method-card {
+    background: #0a1b2f; border: 1px solid #13304d; border-radius: 14px;
+    padding: 24px; margin-bottom: 16px; position: relative; overflow: hidden;
+}
+.method-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 4px; border-radius: 4px 0 0 4px;
+}
+.method-card.m1::before { background: #38bdf8; }
+.method-card.m2::before { background: #f59e0b; }
+.method-card.m3::before { background: #a78bfa; }
+
+.method-card .tag {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 4px; margin-bottom: 12px;
+}
+.method-card.m1 .tag { background: rgba(56,189,248,0.12); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); }
+.method-card.m2 .tag { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+.method-card.m3 .tag { background: rgba(167,139,250,0.12); color: #a78bfa; border: 1px solid rgba(167,139,250,0.3); }
+
+.method-title { font-size: 20px; font-weight: 700; color: #e2e8f0; margin-bottom: 6px; }
+.method-subtitle { font-size: 13px; color: #7f93ad; margin-bottom: 16px; }
+
+/* ── Formula Box ── */
+.formula-box {
+    background: #060e1a; border: 1px solid #1a2840; border-radius: 10px;
+    padding: 16px 20px; margin: 14px 0; font-size: 15px;
+    overflow-x: auto; text-align: center;
+}
+.formula-box .katex { font-size: 1.1em; }
+
+/* ── Pros/Cons ── */
+.pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+.pros, .cons {
+    padding: 14px; border-radius: 10px; font-size: 13px;
+}
+.pros { background: rgba(52,211,153,0.06); border: 1px solid rgba(52,211,153,0.2); }
+.cons { background: rgba(251,113,133,0.06); border: 1px solid rgba(251,113,133,0.2); }
+.pros h4 { color: #34d399; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 8px; }
+.cons h4 { color: #fb7185; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 8px; }
+.pros li, .cons li { margin-left: 16px; margin-bottom: 4px; line-height: 1.6; }
+
+/* ── When to use ── */
+.when-box {
+    background: rgba(56,189,248,0.04); border: 1px solid #13304d; border-radius: 10px;
+    padding: 14px 18px; margin: 10px 0; font-size: 13px;
+}
+.when-box strong { color: #38bdf8; }
+
+/* ── Comparison Table ── */
+table.cmp {
+    width: 100%; border-collapse: collapse; font-size: 12px; margin: 16px 0;
+}
+table.cmp th {
+    text-align: left; padding: 10px 12px; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.15em;
+    color: #7f93ad; border-bottom: 2px solid #1a2840;
+}
+table.cmp td {
+    padding: 10px 12px; border-bottom: 1px solid #0f2742; color: #cbd5e1;
+}
+table.cmp tr:hover td { background: rgba(56,189,248,0.03); }
+.star { color: #f59e0b; }
+
+/* ── Period Section ── */
+.period-card {
+    display: grid; grid-template-columns: 140px 1fr; gap: 16px;
+    background: #0a1b2f; border: 1px solid #13304d; border-radius: 12px;
+    padding: 18px; margin-bottom: 10px;
+}
+.period-badge {
+    font-size: 12px; font-weight: 700; color: #e2e8f0;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px; text-align: center; padding: 8px;
+}
+.period-badge.war { background: rgba(251,113,133,0.12); border: 1px solid rgba(251,113,133,0.3); color: #fb7185; }
+.period-badge.post { background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); color: #f59e0b; }
+.period-badge.recent { background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.3); color: #38bdf8; }
+.period-badge.full { background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3); color: #34d399; }
+
+/* ── Mermaid ── */
+.mermaid { display: flex; justify-content: center; margin: 16px 0; }
+.mermaid svg { max-width: 100%; height: auto; }
+
+/* ── Step list ── */
+.steps { counter-reset: step; list-style: none; padding: 0; }
+.steps li {
+    counter-increment: step; padding: 10px 0 10px 44px; position: relative;
+    border-left: 2px solid #1a2840; margin-left: 14px; font-size: 13px;
+}
+.steps li::before {
+    content: counter(step); position: absolute; left: -15px; top: 8px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #0a1b2f; border: 2px solid #38bdf8; color: #38bdf8;
+    font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+}
+.steps li:last-child { border-left-color: transparent; }
+
+/* ── Misc ── */
+code { font-family: 'IBM Plex Mono', Consolas, monospace; font-size: 0.9em; color: #38bdf8; }
+a { color: #38bdf8; text-decoration: none; }
+a:hover { text-decoration: underline; }
+.text-muted { color: #4a6382; font-size: 12px; }
+.badge-sm {
+    display: inline-block; font-size: 10px; padding: 2px 8px;
+    border-radius: 4px; font-weight: 600;
+}
+.badge-sm.blue { background: rgba(56,189,248,0.12); color: #38bdf8; }
+.badge-sm.amber { background: rgba(245,158,11,0.12); color: #f59e0b; }
+.badge-sm.violet { background: rgba(167,139,250,0.12); color: #a78bfa; }
+
+@media (max-width: 768px) {
+    .page { padding: 20px 14px 60px; }
+    .section { padding: 20px; }
+    .pros-cons { grid-template-columns: 1fr; }
+    .period-card { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+    <span class="brand">INSIGHT</span>
+    <a href="crisis-monitoring-dashboard.html">Dashboard</a>
+    <a href="macro-cost-system-dynamics.html">System Dynamics</a>
+    <a href="methodology-guide.html" class="active">Methodology</a>
+</nav>
+
+<div class="page">
+
+<h1>분석 방법론 <span>가이드</span></h1>
+<p class="lead">
+    건설공사비 시뮬레이션 엔진 v2는 3가지 계량경제 방법론을 지원합니다.<br>
+    각 방법론의 수학적 기반, 장단점, 적합한 사용 시점을 설명합니다.
+</p>
+
+<!-- ═══════════════════════════════════════════════
+     Overview
+     ═══════════════════════════════════════════════ -->
+<div class="section">
+    <h2><span class="dot" style="background: #38bdf8;"></span> 전체 구조 — 왜 3가지 방법이 필요한가</h2>
+
+    <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#0a1b2f', 'primaryTextColor': '#e2e8f0', 'lineColor': '#38bdf8'}}}%%
+flowchart LR
+    SHOCK["거시경제 충격<br/>(환율, 유가, 금리 등)"]
+    subgraph ENGINE["Simulation Engine v2"]
+        direction TB
+        G["Method 1<br/>Gaussian IRF"]
+        A["Method 2<br/>ARDL-OLS"]
+        L["Method 3<br/>Local Projections"]
+    end
+    FORECAST["12M 건설공사비<br/>전망 경로"]
+    SHOCK --> G & A & L
+    G & A & L --> FORECAST
+    style G fill:#0f2742,stroke:#38bdf8,stroke-width:2px,color:#e2e8f0
+    style A fill:#2a1f0f,stroke:#f59e0b,stroke-width:2px,color:#e2e8f0
+    style L fill:#1a0f2e,stroke:#a78bfa,stroke-width:2px,color:#e2e8f0
+    style ENGINE fill:#081728,stroke:#13304d,stroke-width:1px
+    </pre>
+
+    <p style="margin-top: 12px;">
+        하나의 충격에 대해 세 가지 방법론이 <strong>서로 다른 전망</strong>을 내놓습니다.
+        단일 방법론의 한계를 보완하기 위해 비교 분석을 지원합니다.
+    </p>
+
+    <table class="cmp">
+        <thead>
+            <tr>
+                <th>기준</th>
+                <th><span class="badge-sm blue">Gaussian IRF</span></th>
+                <th><span class="badge-sm amber">ARDL-OLS</span></th>
+                <th><span class="badge-sm violet">Local Projections</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>계수 추정</td>
+                <td>수기 입력 (고정)</td>
+                <td>OLS 데이터 추정</td>
+                <td>OLS 데이터 추정</td>
+            </tr>
+            <tr>
+                <td>IRF 형태</td>
+                <td>Gaussian (가정)</td>
+                <td>시차별 계수 (자유)</td>
+                <td>horizon별 직접 추정</td>
+            </tr>
+            <tr>
+                <td>비선형 충격 대응</td>
+                <td>취약</td>
+                <td>보통</td>
+                <td><span class="star">&#9733;&#9733;&#9733;</span> 강건</td>
+            </tr>
+            <tr>
+                <td>소표본 안정성</td>
+                <td><span class="star">&#9733;&#9733;&#9733;</span></td>
+                <td>보통</td>
+                <td>취약 (h 증가 시)</td>
+            </tr>
+            <tr>
+                <td>변수 상호작용</td>
+                <td>독립 가정</td>
+                <td>시차별 포착</td>
+                <td>동시점 포착</td>
+            </tr>
+            <tr>
+                <td>오차 누적</td>
+                <td>없음 (공식 기반)</td>
+                <td>재귀 누적</td>
+                <td>없음 (직접 추정)</td>
+            </tr>
+            <tr>
+                <td>전쟁 시나리오 적합도</td>
+                <td>낮음</td>
+                <td>보통</td>
+                <td><span class="star">&#9733;&#9733;&#9733;</span> 최적</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     Method 1: Gaussian IRF
+     ═══════════════════════════════════════════════ -->
+<div class="section">
+    <h2><span class="dot" style="background: #38bdf8;"></span> Method 1 — Gaussian IRF</h2>
+
+    <div class="method-card m1">
+        <div class="tag">Gaussian Impulse Response Function</div>
+        <div class="method-title">고정 가중치 + Gaussian 형태 충격반응함수</div>
+        <div class="method-subtitle">
+            각 거시변수에 대해 사전 지정된 가중치(weight), 최대 반응 시점(peakLag), 확산폭(width)을 사용하여
+            충격의 시간별 전파를 모델링합니다.
+        </div>
+
+        <h3>수학적 정의</h3>
+        <div class="formula-box">
+            $$\Delta CC_h = \sum_{k} \text{shock}_k \times w_k \times \exp\!\left(-\frac{(h - \mu_k)^2}{2\sigma_k^2}\right) \times 0.1$$
+        </div>
+        <p>
+            여기서 $w_k$는 드라이버 $k$의 전달 가중치, $\mu_k$는 peak lag(최대 반응 시점),
+            $\sigma_k$는 확산폭입니다. 관성 감쇠는 별도로 적용됩니다:
+        </p>
+        <div class="formula-box">
+            $$\text{inertia}(h) = \max\!\big(0.1,\; \overline{\Delta CC}_{MoM} \cdot e^{-h/10}\big)$$
+        </div>
+
+        <h3>작동 원리</h3>
+        <ol class="steps">
+            <li>각 드라이버(환율, 유가 등)에 대해 <strong>고정된 3개 파라미터</strong>(weight, peakLag, width)를 사전 설정</li>
+            <li>사용자가 입력한 충격(shock %)에 가중치를 곱하고, Gaussian 커널로 시간별 반응 크기를 계산</li>
+            <li>12개월간 기준성장률 + 충격성장률을 누적하여 전망 경로를 생성</li>
+        </ol>
+
+        <div class="pros-cons">
+            <div class="pros">
+                <h4>장점</h4>
+                <ul>
+                    <li>데이터 없이도 작동 (파라미터만 설정)</li>
+                    <li>소표본에서도 안정적</li>
+                    <li>직관적이고 설명이 쉬움</li>
+                    <li>계산 즉시 완료</li>
+                </ul>
+            </div>
+            <div class="cons">
+                <h4>한계</h4>
+                <ul>
+                    <li>가중치가 <strong>추정이 아닌 가정</strong> — 실제와 괴리 가능</li>
+                    <li>IRF 형태가 항상 Gaussian — 실제 반응은 비대칭일 수 있음</li>
+                    <li>변수 간 상호작용 미반영 (환율↑→수입물가↑ 연쇄 무시)</li>
+                    <li>구조 변화(전쟁, 정책 전환)에 적응 불가</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="when-box">
+            <strong>적합한 사용 시점:</strong>
+            데이터가 부족하거나, 빠른 직관적 판단이 필요할 때.
+            "대략적인 방향과 규모"를 파악하는 초기 스크리닝에 적합합니다.
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     Method 2: ARDL-OLS
+     ═══════════════════════════════════════════════ -->
+<div class="section">
+    <h2><span class="dot" style="background: #f59e0b;"></span> Method 2 — ARDL-OLS</h2>
+
+    <div class="method-card m2">
+        <div class="tag">Autoregressive Distributed Lag</div>
+        <div class="method-title">데이터 기반 시차 계수 추정 (OLS)</div>
+        <div class="method-subtitle">
+            선택한 분석 기간의 실제 데이터로 각 드라이버의 시차별 영향 계수를 OLS로 추정합니다.
+            "이 기간에 환율 1% 상승이 2개월 후 건설공사비에 실제로 얼마나 영향을 미쳤는가"를 데이터가 답합니다.
+        </div>
+
+        <h3>수학적 정의</h3>
+        <div class="formula-box">
+            $$\Delta CC_t = \alpha + \sum_{k=1}^{K} \sum_{l=0}^{L} \beta_{k,l} \cdot \Delta X_{k,t-l} + \varepsilon_t$$
+        </div>
+        <p>
+            여기서 $\Delta CC_t$는 건설공사비의 월별 변화율, $\Delta X_{k,t-l}$은 드라이버 $k$의 $l$개월 전 변화율입니다.
+            계수 $\beta_{k,l}$은 OLS로 추정됩니다:
+        </p>
+        <div class="formula-box">
+            $$\hat{\boldsymbol{\beta}} = (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'\mathbf{y}$$
+        </div>
+        <p>
+            $R^2$로 모델의 설명력을 검증합니다. 현재 구현에서는 $K=8$ (8개 드라이버), $L=4$ (최대 4개월 시차)로
+            총 $8 \times 5 + 1 = 41$개 계수를 추정합니다.
+        </p>
+
+        <h3>작동 원리</h3>
+        <ol class="steps">
+            <li>선택된 분석 기간의 시계열을 <strong>월별 변화율(Δ%)</strong>로 변환</li>
+            <li>각 관측치에 대해 8개 드라이버 × (lag 0~4) = 40개 설명변수 + 상수항으로 X 행렬을 구성</li>
+            <li><strong>OLS 회귀</strong>: $\mathbf{X}$ 전치 → 곱셈 → 역행렬 → 계수 벡터 $\hat{\beta}$ 산출</li>
+            <li>추정된 시차별 계수로 IRF를 구성 — Gaussian 가정 없이 <strong>데이터가 결정한 형태</strong></li>
+            <li>충격 입력 시 추정 계수를 누적 적용하여 12개월 전망 생성</li>
+        </ol>
+
+        <h3>Gaussian IRF와의 핵심 차이</h3>
+        <pre class="mermaid">
+%%{init: {'theme': 'dark'}}%%
+flowchart LR
+    subgraph GAUSS["Gaussian IRF"]
+        G1["weight = 0.13<br/>(수기 입력)"] --> G2["Gaussian 커널<br/>(형태 가정)"]
+        G2 --> G3["IRF 출력"]
+    end
+    subgraph ARDL["ARDL-OLS"]
+        A1["과거 데이터<br/>(선택 기간)"] --> A2["OLS 추정<br/>β = (X'X)⁻¹X'y"]
+        A2 --> A3["시차별 β<br/>(데이터 결정)"]
+        A3 --> A4["IRF 출력"]
+    end
+    style GAUSS fill:#0f2742,stroke:#38bdf8
+    style ARDL fill:#2a1f0f,stroke:#f59e0b
+        </pre>
+
+        <div class="pros-cons">
+            <div class="pros">
+                <h4>장점</h4>
+                <ul>
+                    <li><strong>데이터 기반</strong> — 주관적 파라미터 제거</li>
+                    <li>시차별 비대칭 반응 포착 가능</li>
+                    <li>R² 제공 — 모델 적합도 정량 검증</li>
+                    <li>분석 기간 변경 시 계수가 자동 재추정</li>
+                    <li>변수 간 간접 상호작용을 시차 구조로 포착</li>
+                </ul>
+            </div>
+            <div class="cons">
+                <h4>한계</h4>
+                <ul>
+                    <li>표본 크기가 작으면 계수 추정이 불안정 (과적합 위험)</li>
+                    <li>41개 계수 vs ~20개 관측치 → 전쟁기 단독 추정 시 주의</li>
+                    <li>재귀 전망 시 오차가 누적될 수 있음</li>
+                    <li>구조 변화를 추정 기간 내에서만 반영</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="when-box">
+            <strong>적합한 사용 시점:</strong>
+            충분한 관측치(30+)가 있는 기간에서 변수별 영향 크기를 정량적으로 파악하고 싶을 때.
+            "전체 기간"이나 "최근 12개월" 설정에서 가장 안정적입니다.
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     Method 3: Local Projections
+     ═══════════════════════════════════════════════ -->
+<div class="section">
+    <h2><span class="dot" style="background: #a78bfa;"></span> Method 3 — Local Projections (Jordà, 2005)</h2>
+
+    <div class="method-card m3">
+        <div class="tag">Local Projections &mdash; Direct Impulse Response</div>
+        <div class="method-title">각 시점(horizon)에서 직접 추정하는 충격반응</div>
+        <div class="method-subtitle">
+            Oscar Jordà(2005)가 제안한 방법론으로, VAR/ARDL의 재귀적 IRF 대신
+            <strong>각 예측 시점 h에서 별도의 회귀를 실행</strong>합니다.
+            전쟁 같은 대형·비선형 충격에 가장 강건한 방법론입니다.
+        </div>
+
+        <h3>수학적 정의</h3>
+        <p>각 horizon $h = 1, 2, \ldots, 12$에 대해 독립적인 회귀를 실행합니다:</p>
+        <div class="formula-box">
+            $$y_{t+h} - y_t = \alpha_h + \sum_{k=1}^{K} \beta_{h,k} \cdot \Delta X_{k,t} + \varepsilon_{t+h}$$
+        </div>
+        <p>
+            여기서 좌변은 시점 $t$부터 $t+h$까지의 <strong>누적 변화</strong>이고,
+            $\beta_{h,k}$는 "드라이버 $k$가 1단위 변화했을 때, $h$개월 후까지의 누적 영향"을 직접 추정합니다.
+        </p>
+        <p>
+            핵심은 <strong>12개의 별도 OLS 회귀</strong>를 실행한다는 점입니다.
+            ARDL은 1개 회귀의 계수를 재귀적으로 누적하지만, LP는 각 시점의 영향을 독립적으로 추정합니다.
+        </p>
+
+        <h3>왜 전쟁 시나리오에 더 적합한가</h3>
+
+        <pre class="mermaid">
+%%{init: {'theme': 'dark'}}%%
+flowchart TB
+    subgraph PROBLEM["VAR/ARDL의 문제"]
+        direction LR
+        P1["1개월 추정"] -->|"오차 포함"| P2["2개월 추정"]
+        P2 -->|"오차 누적"| P3["3개월 추정"]
+        P3 -->|"오차 폭발"| P4["12개월 추정<br/>❌ 신뢰구간 확대"]
+    end
+    subgraph SOLUTION["LP의 해결"]
+        direction LR
+        S1["h=1 OLS"] ~~~ S2["h=2 OLS"] ~~~ S3["h=3 OLS"] ~~~ S4["h=12 OLS"]
+    end
+    NOTE["각 h에서 독립 추정<br/>→ 오차 비누적<br/>→ 대형 충격에 강건"]
+    SOLUTION --> NOTE
+    style PROBLEM fill:#2a0f1a,stroke:#fb7185
+    style SOLUTION fill:#1a0f2e,stroke:#a78bfa
+    style NOTE fill:#0a1b2f,stroke:#34d399
+        </pre>
+
+        <p style="margin-top: 12px;">
+            전쟁·금융위기 같은 대형 충격은 기존 선형 관계를 깨뜨립니다.
+            VAR/ARDL은 "평상시 관계"를 가정하고 재귀 적용하므로 극단 시나리오에서 오차가 폭발합니다.
+            LP는 <strong>각 시점에서 독립적으로 추정</strong>하므로 비선형 반응도 포착하고 오차가 누적되지 않습니다.
+        </p>
+
+        <div class="pros-cons">
+            <div class="pros">
+                <h4>장점</h4>
+                <ul>
+                    <li><strong>오차 비누적</strong> — 장기 전망에서도 신뢰구간이 폭발하지 않음</li>
+                    <li><strong>비선형 반응 포착</strong> — 전쟁 충격의 비대칭적 전파 반영</li>
+                    <li>모델 misspecification에 강건 (VAR 차수 선택 오류 영향 없음)</li>
+                    <li>직관적 해석: "$\beta_{6,\text{oil}}$은 유가 1% 충격의 6개월 후 누적 영향"</li>
+                </ul>
+            </div>
+            <div class="cons">
+                <h4>한계</h4>
+                <ul>
+                    <li>h가 커질수록 유효 표본이 줄어 추정 정밀도 하락</li>
+                    <li>소표본(< 20)에서 불안정 — 전쟁기 단독 사용 시 주의</li>
+                    <li>Newey-West 표준오차 등 추가 보정이 이상적 (현재 미구현)</li>
+                    <li>단기(1~3M) 추정은 ARDL보다 효율성이 낮을 수 있음</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="when-box">
+            <strong>적합한 사용 시점:</strong>
+            전쟁, 금융위기, 공급망 붕괴 등 <strong>대형 비선형 충격</strong>의 전파를 분석할 때.
+            특히 "전쟁기 데이터로 추정 + LP 방법론"이 가장 의미 있는 조합입니다.
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     Analysis Periods
+     ═══════════════════════════════════════════════ -->
+<div class="section">
+    <h2><span class="dot" style="background: #34d399;"></span> 분석 기간 선택 — 왜 기간이 중요한가</h2>
+
+    <p style="margin-bottom: 16px;">
+        <strong>같은 방법론이라도 어떤 기간의 데이터로 추정했느냐에 따라 결과가 완전히 달라집니다.</strong>
+        전쟁기에 추정하면 유가·환율 계수가 크게 나오고, 안정기에 추정하면 노무비·금리가 지배적입니다.
+    </p>
+
+    <div class="period-card">
+        <div class="period-badge war">우크라 전쟁기<br/>22.02 ~ 23.08</div>
+        <div>
+            <strong style="color: #fb7185;">구조적 충격 최대 구간</strong> (idx 13~31, 19개월)<br>
+            유가 $130 급등 → 수입물가 → 철강·자재 → 건설공사비로의 전파가 실시간 진행.
+            이 기간으로 추정하면 <code>oil</code>, <code>fx</code>, <code>importPrice</code> 계수가 비정상적으로 큼.<br>
+            <span class="text-muted">소표본 주의: ARDL 41개 계수 vs 19개 관측치 → LP 권장</span>
+        </div>
+    </div>
+
+    <div class="period-card">
+        <div class="period-badge post">전쟁 후 안정기<br/>23.09 ~ 24.06</div>
+        <div>
+            <strong style="color: #f59e0b;">충격 소화 + 금리 고점 구간</strong> (idx 32~41, 10개월)<br>
+            원자재 가격 안정화, 금리 고점 지속. 금리·노무비가 공사비 변동의 주요 축으로 전환.
+            구조 전환기 분석에 유용하지만 표본 크기가 작아 추정 불안정.<br>
+            <span class="text-muted">Gaussian IRF가 가장 안정적인 구간</span>
+        </div>
+    </div>
+
+    <div class="period-card">
+        <div class="period-badge recent">최근 12개월</div>
+        <div>
+            <strong style="color: #38bdf8;">현재 추세 반영</strong> (idx 48~59, 12개월)<br>
+            현재 시점에서 가장 가까운 데이터로 추정. "지금 이 순간의 구조"를 반영하지만
+            특정 충격(전쟁 등)의 영향은 이미 소멸된 상태일 수 있음.<br>
+            <span class="text-muted">ARDL은 표본 부족 위험, LP는 단기 시점만 신뢰 가능</span>
+        </div>
+    </div>
+
+    <div class="period-card">
+        <div class="period-badge full">전체<br/>21.01 ~ 25.12</div>
+        <div>
+            <strong style="color: #34d399;">장기 구조 추정에 최적</strong> (idx 0~59, 60개월)<br>
+            전쟁 전·중·후를 모두 포함. 평균적인 전파 구조를 추정하며 ARDL/LP 모두 안정적.
+            단, 전쟁기의 극단적 반응이 평균에 희석됨.<br>
+            <span class="text-muted">가장 안정적인 추정 — 기본값으로 권장</span>
+        </div>
+    </div>
+
+    <h3>권장 조합</h3>
+    <table class="cmp">
+        <thead>
+            <tr><th>분석 목적</th><th>기간</th><th>방법론</th><th>이유</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>전쟁 재발 시나리오</td>
+                <td><span class="badge-sm" style="background:rgba(251,113,133,0.12);color:#fb7185;">전쟁기</span></td>
+                <td><span class="badge-sm violet">LP</span></td>
+                <td>소표본 + 대형 충격 → LP가 유일하게 강건</td>
+            </tr>
+            <tr>
+                <td>현재 추세 기반 전망</td>
+                <td><span class="badge-sm" style="background:rgba(56,189,248,0.12);color:#38bdf8;">최근 12M</span></td>
+                <td><span class="badge-sm amber">ARDL</span> + <span class="badge-sm blue">Gaussian</span></td>
+                <td>현재 구조 반영, 두 방법 교차 검증</td>
+            </tr>
+            <tr>
+                <td>장기 구조 분석</td>
+                <td><span class="badge-sm" style="background:rgba(52,211,153,0.12);color:#34d399;">전체</span></td>
+                <td><span class="badge-sm amber">ARDL</span></td>
+                <td>충분한 표본, R² 검증 가능</td>
+            </tr>
+            <tr>
+                <td>전체 비교 (보고용)</td>
+                <td><span class="badge-sm" style="background:rgba(52,211,153,0.12);color:#34d399;">전체</span></td>
+                <td>3-Method 비교</td>
+                <td>방법론 간 일치/괴리 확인 → 신뢰도 판단</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     Implementation Details
+     ═══════════════════════════════════════════════ -->
+<div class="section">
+    <h2><span class="dot" style="background: #f59e0b;"></span> 구현 세부사항</h2>
+
+    <h3>OLS 행렬 연산 (순수 JavaScript)</h3>
+    <p>외부 라이브러리 없이 행렬 전치, 곱셈, 역행렬(가우스-조르단 소거법)을 구현합니다:</p>
+    <div class="formula-box" style="text-align: left; font-size: 13px;">
+        <code>matTranspose(A)</code> — $m \times n \to n \times m$<br>
+        <code>matMul(A, B)</code> — $A_{m \times p} \cdot B_{p \times n} \to C_{m \times n}$<br>
+        <code>matInvert(M)</code> — Gauss-Jordan elimination, partial pivoting<br>
+        <code>olsEstimate(X, y)</code> — $\hat{\beta} = (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'\mathbf{y}$, $R^2$ 계산 포함
+    </div>
+
+    <h3>모델 캐싱</h3>
+    <p>
+        ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 <code>_modelCache</code>에 저장됩니다.
+        기간을 변경하면 캐시가 초기화되고 재추정됩니다. 충격(shock) 값 변경 시에는 재추정 없이
+        기존 계수를 적용합니다.
+    </p>
+
+    <h3>ARDL 파라미터</h3>
+    <table class="cmp">
+        <thead><tr><th>파라미터</th><th>값</th><th>설명</th></tr></thead>
+        <tbody>
+            <tr><td>K (드라이버 수)</td><td>8</td><td>fx, oil, ppi, importPrice, labor, steel, cement, policyRate</td></tr>
+            <tr><td>L (최대 시차)</td><td>4</td><td>0~4개월 시차 포함</td></tr>
+            <tr><td>계수 수</td><td>41</td><td>8 × 5 + 1 (상수항)</td></tr>
+            <tr><td>최소 관측치</td><td>10</td><td>이하이면 Gaussian 폴백</td></tr>
+        </tbody>
+    </table>
+
+    <h3>LP 파라미터</h3>
+    <table class="cmp">
+        <thead><tr><th>파라미터</th><th>값</th><th>설명</th></tr></thead>
+        <tbody>
+            <tr><td>최대 horizon</td><td>12</td><td>12개월 전방까지 추정</td></tr>
+            <tr><td>회귀 수</td><td>12</td><td>각 h에서 독립 OLS</td></tr>
+            <tr><td>계수 수/회귀</td><td>9</td><td>8 드라이버 + 상수항</td></tr>
+            <tr><td>최소 유효 관측치</td><td>8</td><td>이하이면 해당 h 스킵</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     References
+     ═══════════════════════════════════════════════ -->
+<div class="section">
+    <h2><span class="dot" style="background: #94a3b8;"></span> 참고 문헌</h2>
+    <ul style="font-size: 13px; list-style: none; padding: 0;">
+        <li style="padding: 6px 0; border-bottom: 1px solid #0f2742;">
+            <strong>Jordà, Ò. (2005).</strong> "Estimation and Inference of Impulse Responses by Local Projections."
+            <em>American Economic Review</em>, 95(1), 161–182.
+            <span class="text-muted">— LP 방법론의 원논문</span>
+        </li>
+        <li style="padding: 6px 0; border-bottom: 1px solid #0f2742;">
+            <strong>Pesaran, M. H. & Shin, Y. (1999).</strong> "An Autoregressive Distributed Lag Modelling Approach to Cointegration Analysis."
+            <em>Econometrics and Economic Theory in the 20th Century</em>.
+            <span class="text-muted">— ARDL 방법론의 이론적 기초</span>
+        </li>
+        <li style="padding: 6px 0; border-bottom: 1px solid #0f2742;">
+            <strong>Ramey, V. A. (2016).</strong> "Macroeconomic Shocks and Their Propagation."
+            <em>Handbook of Macroeconomics</em>, Vol. 2.
+            <span class="text-muted">— 충격 전파 분석 방법론 종합 서베이</span>
+        </li>
+        <li style="padding: 6px 0;">
+            <strong>Plagborg-Møller, M. & Wolf, C. K. (2021).</strong> "Local Projections and VARs Estimate the Same Impulse Responses."
+            <em>Econometrica</em>, 89(2), 955–980.
+            <span class="text-muted">— LP와 VAR의 수학적 동치 관계 증명</span>
+        </li>
+    </ul>
+</div>
+
+<p class="text-muted" style="text-align: center; margin-top: 30px;">
+    Construction Cost Simulation Engine v2 — Methodology Guide<br>
+    <a href="crisis-monitoring-dashboard.html">Dashboard</a> &nbsp;|&nbsp;
+    <a href="macro-cost-system-dynamics.html">System Dynamics</a>
+</p>
+
+</div>
+
+<script>
+mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose',
+    flowchart: { curve: 'basis', padding: 20 } });
+</script>
+</body>
+</html>

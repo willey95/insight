@@ -1864,16 +1864,40 @@
                 <button class="sim-popup-close" onclick="closeSimulationPopup()">닫기</button>
             </div>
             <div class="simulation-panel">
+                <!-- Analysis Period & Method Selection -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                    <div>
+                        <label class="sim-control-label" style="margin-bottom: 4px;">분석 기간 (추정 구간)</label>
+                        <select class="sim-input" id="analysisPeriod" onchange="onPeriodChange()">
+                            <option value="warEra">우크라 전쟁기 (22.02~23.08)</option>
+                            <option value="postWar">전쟁 후 안정기 (23.09~24.06)</option>
+                            <option value="recent">최근 12개월</option>
+                            <option value="full" selected>전체 (21.01~25.12)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="sim-control-label" style="margin-bottom: 4px;">분석 방법론</label>
+                        <select class="sim-input" id="simMethod" onchange="onMethodChange()">
+                            <option value="all" selected>전체 비교 (3-Method)</option>
+                            <option value="gaussian">Gaussian IRF (고정 가중치)</option>
+                            <option value="ardl">ARDL-OLS (데이터 추정)</option>
+                            <option value="lp">Local Projections (Jordà)</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="padding: 6px 8px; background: rgba(56,189,248,0.06); border: 1px solid #13304d; border-radius: 5px; margin-bottom: 8px; font-size: 10px; color: #7f93ad;" id="periodMethodDesc">
+                    전체 60개월 데이터로 ARDL·LP 계수를 추정합니다. 3가지 방법론의 전망을 비교합니다.
+                </div>
                 <!-- Scenario Presets -->
                 <div style="margin-bottom: 8px;">
                     <label class="sim-control-label" style="margin-bottom: 4px;">시나리오 프리셋</label>
                     <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                        <button class="sim-preset-btn" onclick="loadPreset('mild')">경미한 긴장</button>
-                        <button class="sim-preset-btn" onclick="loadPreset('moderate')">중간 충돌</button>
-                        <button class="sim-preset-btn active" onclick="loadPreset('severe')">심각한 전쟁</button>
-                        <button class="sim-preset-btn" onclick="loadPreset('extreme')">전면전 시나리오</button>
-                        <button class="sim-preset-btn" onclick="loadPreset('sanctions')">경제제재 강화</button>
-                        <button class="sim-preset-btn" onclick="loadPreset('hormuz')">호르무즈 봉쇄</button>
+                        <button class="sim-preset-btn" onclick="loadPreset('baseline')">기준 시나리오</button>
+                        <button class="sim-preset-btn" onclick="loadPreset('fxShock')">환율 급등</button>
+                        <button class="sim-preset-btn active" onclick="loadPreset('oilSpike')">유가 급등</button>
+                        <button class="sim-preset-btn" onclick="loadPreset('laborCrunch')">노무비 압박</button>
+                        <button class="sim-preset-btn" onclick="loadPreset('rateHike')">금리 인상</button>
+                        <button class="sim-preset-btn" onclick="loadPreset('allShock')">복합 충격</button>
                     </div>
                 </div>
                 <!-- Tab Navigation -->
@@ -1883,37 +1907,61 @@
                     <button class="sim-tab" onclick="switchSimTab('montecarlo')">Monte Carlo</button>
                     <button class="sim-tab" onclick="switchSimTab('mechanism')">전달 메커니즘</button>
                 </div>
-                <!-- Tab: Parameters -->
+                <!-- Tab: Parameters — Macro Driver Sliders -->
                 <div class="sim-tab-content active" id="simTabParams">
-                    <div class="sim-controls" style="grid-template-columns: repeat(3, 1fr);">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <div>
-                            <label class="sim-control-label">유가 변동 (%)</label>
-                            <input type="number" class="sim-input" id="oilChange" value="30" step="5">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                                <label class="sim-control-label">환율 충격 (%)</label>
+                                <span class="sim-control-label" id="sliderValFx" style="color: #38bdf8;">+5.0%</span>
+                            </div>
+                            <input type="range" id="shockFx" min="-10" max="15" step="0.5" value="5"
+                                   oninput="updateSliderLabel('Fx')" style="width:100%; accent-color: #38bdf8;">
                         </div>
                         <div>
-                            <label class="sim-control-label">전쟁 강도 (1-10)</label>
-                            <input type="number" class="sim-input" id="warIntensity" value="7" min="1" max="10">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                                <label class="sim-control-label">유가 충격 (%)</label>
+                                <span class="sim-control-label" id="sliderValOil" style="color: #22c55e;">+8.0%</span>
+                            </div>
+                            <input type="range" id="shockOil" min="-10" max="50" step="1" value="8"
+                                   oninput="updateSliderLabel('Oil')" style="width:100%; accent-color: #22c55e;">
                         </div>
                         <div>
-                            <label class="sim-control-label">기간 (개월)</label>
-                            <input type="number" class="sim-input" id="duration" value="6" min="1" max="24">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                                <label class="sim-control-label">PPI 충격 (%)</label>
+                                <span class="sim-control-label" id="sliderValPpi" style="color: #a78bfa;">+2.0%</span>
+                            </div>
+                            <input type="range" id="shockPpi" min="-10" max="10" step="0.5" value="2"
+                                   oninput="updateSliderLabel('Ppi')" style="width:100%; accent-color: #a78bfa;">
                         </div>
                         <div>
-                            <label class="sim-control-label">금리 변동 (bp)</label>
-                            <input type="number" class="sim-input" id="rateChange" value="50" step="25">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                                <label class="sim-control-label">노무비 충격 (%)</label>
+                                <span class="sim-control-label" id="sliderValLabor" style="color: #f59e0b;">+1.5%</span>
+                            </div>
+                            <input type="range" id="shockLabor" min="-2" max="10" step="0.5" value="1.5"
+                                   oninput="updateSliderLabel('Labor')" style="width:100%; accent-color: #f59e0b;">
                         </div>
-                        <div>
-                            <label class="sim-control-label">환율 변동 (%)</label>
-                            <input type="number" class="sim-input" id="fxChange" value="5" step="1">
-                        </div>
-                        <div>
-                            <label class="sim-control-label">공급망 차질 (1-10)</label>
-                            <input type="number" class="sim-input" id="supplyDisruption" value="5" min="1" max="10">
+                        <div style="grid-column: span 2;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                                <label class="sim-control-label">금리 변화 (%p)</label>
+                                <span class="sim-control-label" id="sliderValRate" style="color: #fb7185;">+0.5%p</span>
+                            </div>
+                            <input type="range" id="shockRate" min="-2" max="2" step="0.25" value="0.5"
+                                   oninput="updateSliderLabel('Rate')" style="width:100%; accent-color: #fb7185;">
                         </div>
                     </div>
-                    <div style="display: flex; gap: 6px; margin-top: 6px;">
+                    <div style="display: flex; gap: 6px; margin-top: 8px;">
                         <button class="sim-button" onclick="runSimulation()" style="flex: 1;">시뮬레이션 실행</button>
-                        <button class="sim-button" onclick="runComparison()" style="flex: 1; background: linear-gradient(90deg, #6b3fa0 0%, #8b5cf6 100%);">비교 분석</button>
+                        <button class="sim-button" onclick="runComparison()" style="flex: 1; background: linear-gradient(90deg, #6b3fa0 0%, #8b5cf6 100%);">프리셋 비교</button>
+                    </div>
+                    <div style="margin-top: 6px; padding: 8px; border: 1px dashed #22324a; border-radius: 5px; font-size: 10px; color: #6a829f;" id="modelInfoBox">
+                        <strong>Gaussian IRF</strong>: 고정 가중치 + Gaussian 형태 IRF &nbsp;|&nbsp;
+                        <strong>ARDL-OLS</strong>: β = (X'X)⁻¹X'y 로 추정된 시차별 계수 &nbsp;|&nbsp;
+                        <strong>Local Projections</strong>: y_{t+h} = α + β_h·shock 직접 추정 (Jordà 2005)
+                    </div>
+                    <div style="margin-top: 4px; padding: 6px 8px; border-radius: 5px; font-size: 10px; background: rgba(251,113,133,0.06); border: 1px solid #2a1520;" id="modelStatsBox">
+                        모델 통계: 시뮬레이션 실행 후 표시됩니다.
                     </div>
                 </div>
                 <!-- Tab: Sensitivity Analysis -->
@@ -1922,20 +1970,19 @@
                         <div>
                             <label class="sim-control-label">분석 대상 변수</label>
                             <select class="sim-input" id="sensitivityVar">
-                                <option value="oil">유가</option>
-                                <option value="rate">금리</option>
                                 <option value="fx">환율</option>
-                                <option value="war">전쟁 강도</option>
-                                <option value="supply">공급망</option>
+                                <option value="oil" selected>유가</option>
+                                <option value="ppi">생산자물가</option>
+                                <option value="labor">노무비</option>
+                                <option value="policyRate">기준금리</option>
                             </select>
                         </div>
                         <div>
-                            <label class="sim-control-label">영향 측정 지표</label>
-                            <select class="sim-input" id="sensitivityTarget">
-                                <option value="cost">건설비용</option>
-                                <option value="re">부동산 가격</option>
-                                <option value="revenue">매출</option>
-                                <option value="all">전체</option>
+                            <label class="sim-control-label">영향 측정 시점</label>
+                            <select class="sim-input" id="sensitivityHorizon">
+                                <option value="2">3M</option>
+                                <option value="5">6M</option>
+                                <option value="11" selected>12M</option>
                             </select>
                         </div>
                     </div>
@@ -1954,12 +2001,12 @@
                             </select>
                         </div>
                         <div>
-                            <label class="sim-control-label">유가 변동성 (σ)</label>
-                            <input type="number" class="sim-input" id="mcOilVol" value="15" step="5">
+                            <label class="sim-control-label">유가 변동성 (σ%)</label>
+                            <input type="number" class="sim-input" id="mcOilVol" value="5" step="1">
                         </div>
                         <div>
-                            <label class="sim-control-label">환율 변동성 (σ)</label>
-                            <input type="number" class="sim-input" id="mcFxVol" value="8" step="2">
+                            <label class="sim-control-label">환율 변동성 (σ%)</label>
+                            <input type="number" class="sim-input" id="mcFxVol" value="3" step="1">
                         </div>
                     </div>
                     <button class="sim-button" onclick="runMonteCarlo()" style="width: 100%; margin-top: 6px; background: linear-gradient(90deg, #0d7377 0%, #14919b 100%);">Monte Carlo 실행</button>
@@ -2146,33 +2193,47 @@
                 <!-- Results -->
                 <div class="sim-results" id="simResults">
                     <h3 class="sim-results-title">분석 결과</h3>
-                    <div class="sim-results-grid" style="grid-template-columns: repeat(6, 1fr);">
+                    <!-- Pressure Signal -->
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.5px; padding: 4px 12px; border-radius: 4px; border: 1px solid;" id="simPressureBadge">--</span>
+                        <span style="font-size: 11px; color: #8ea3c1;" id="simPressureSummary">--</span>
+                    </div>
+                    <!-- Key Metrics -->
+                    <div class="sim-results-grid" style="grid-template-columns: repeat(4, 1fr);">
                         <div>
-                            <div class="sim-metric-label">건설비용 증가</div>
-                            <div class="sim-metric-value down" id="simCost">+15.2%</div>
+                            <div class="sim-metric-label">3M 추가압력</div>
+                            <div class="sim-metric-value down" id="simDelta3M">--</div>
                         </div>
                         <div>
-                            <div class="sim-metric-label">부동산 가격</div>
-                            <div class="sim-metric-value up" id="simRE">-3.8%</div>
+                            <div class="sim-metric-label">6M 추가압력</div>
+                            <div class="sim-metric-value down" id="simDelta6M">--</div>
                         </div>
                         <div>
-                            <div class="sim-metric-label">매출 영향</div>
-                            <div class="sim-metric-value down" id="simRevenue">-12.5%</div>
+                            <div class="sim-metric-label">12M 추가압력</div>
+                            <div class="sim-metric-value down" id="simDelta12M">--</div>
                         </div>
                         <div>
-                            <div class="sim-metric-label">금리 영향</div>
-                            <div class="sim-metric-value warn" id="simRate">+50bp</div>
-                        </div>
-                        <div>
-                            <div class="sim-metric-label">환율 영향</div>
-                            <div class="sim-metric-value down" id="simFx">+5.0%</div>
-                        </div>
-                        <div>
-                            <div class="sim-metric-label">리스크 레벨</div>
-                            <div class="sim-metric-value warn" id="simRisk">HIGH</div>
+                            <div class="sim-metric-label">핵심 전달경로</div>
+                            <div class="sim-metric-value" style="color: #38bdf8;" id="simTopRoute">--</div>
                         </div>
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 7px;">
+                    <!-- Attribution Table -->
+                    <div style="margin-top: 8px; max-height: 140px; overflow-y: auto;">
+                        <table style="width: 100%; font-size: 10px; border-collapse: collapse;">
+                            <thead>
+                                <tr style="color: #8ea3c1; text-transform: uppercase; letter-spacing: 0.3px;">
+                                    <th style="text-align: left; padding: 4px 6px; border-bottom: 1px solid #22324a;">핵심 변수</th>
+                                    <th style="text-align: right; padding: 4px 6px; border-bottom: 1px solid #22324a;">변화</th>
+                                    <th style="text-align: right; padding: 4px 6px; border-bottom: 1px solid #22324a;">기여도</th>
+                                    <th style="text-align: right; padding: 4px 6px; border-bottom: 1px solid #22324a;">반영시차</th>
+                                    <th style="text-align: left; padding: 4px 6px; border-bottom: 1px solid #22324a;">전달경로</th>
+                                </tr>
+                            </thead>
+                            <tbody id="simAttributionBody"></tbody>
+                        </table>
+                    </div>
+                    <!-- Charts: Forecast Path + Attribution Bar -->
+                    <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 8px; margin-top: 7px;">
                         <div class="chart-container" style="height: 216px;">
                             <canvas id="simulationChart"></canvas>
                         </div>
@@ -2264,6 +2325,469 @@
             { url: 'https://www.ft.com/?format=rss', name: 'Financial Times' }
         ];
         const externalIndicatorState = {};
+
+        /* ═══════════════════════════════════════════════════════════════════
+         *  Macro Construction Cost Simulation Engine v2
+         *  — Multi-method: Gaussian IRF / ARDL-OLS / Local Projections
+         *  — Configurable analysis periods (war era, post-war, recent, full)
+         * ═══════════════════════════════════════════════════════════════════ */
+
+        const DRIVER_META = {
+            fx:    { label: '원/달러 환율', unit: 'KRW' },
+            oil:   { label: '국제유가',     unit: 'USD/bbl' },
+            ppi:   { label: '생산자물가',   unit: 'index' },
+            importPrice: { label: '수입물가', unit: 'index' },
+            labor:  { label: '건설노임',    unit: 'index' },
+            steel:  { label: '철강 가격',   unit: 'index' },
+            cement: { label: '시멘트 가격', unit: 'index' },
+            policyRate: { label: '기준금리', unit: '%' },
+            constructionCost: { label: '건설공사비', unit: 'index' }
+        };
+
+        const PASS_THROUGH = {
+            fx:          { weight: 0.13, peakLag: 3, width: 1.5 },
+            oil:         { weight: 0.08, peakLag: 2, width: 1.2 },
+            ppi:         { weight: 0.14, peakLag: 2, width: 1.5 },
+            importPrice: { weight: 0.19, peakLag: 3, width: 1.4 },
+            labor:       { weight: 0.20, peakLag: 1, width: 1.1 },
+            steel:       { weight: 0.15, peakLag: 2, width: 1.3 },
+            cement:      { weight: 0.06, peakLag: 1, width: 1.2 },
+            policyRate:  { weight: 0.09, peakLag: 4, width: 1.8 }
+        };
+
+        const ROUTE_BLUEPRINT = {
+            fx:          { path: '환율 → 수입물가 → 자재단가 → 건설공사비', summary: '환율 상승은 수입자재 단가를 통해 공사비에 중기적으로 반영됩니다.' },
+            oil:         { path: '유가 → 에너지·운송비 → 자재비 → 건설공사비', summary: '유가 충격은 물류비와 에너지비를 통해 단기에 작동합니다.' },
+            ppi:         { path: '생산자물가 → 제조원가 → 자재단가 → 건설공사비', summary: '생산자물가 압력은 자재 제조원가를 통해 누적됩니다.' },
+            importPrice: { path: '수입물가 → 수입자재 → 건설공사비', summary: '수입물가 상승은 철강·비철 계열 자재가격에 먼저 반영됩니다.' },
+            labor:       { path: '노무비 → 직접공사비 → 건설공사비', summary: '노무비는 가장 직관적이고 빠르게 단가에 반영되는 축입니다.' },
+            steel:       { path: '철강가격 → 구조재 → 건설공사비', summary: '철강가격은 구조재 비중이 높은 공종에서 영향력이 큽니다.' },
+            cement:      { path: '시멘트가격 → 레미콘·기초자재 → 건설공사비', summary: '시멘트는 짧은 시차로 기초 공사비에 반영됩니다.' },
+            policyRate:  { path: '금리 → 사업성·착공구성 → 공사단가 체감', summary: '금리는 금융비용뿐 아니라 어떤 유형의 프로젝트가 시장에 나오는지까지 바꿉니다.' }
+        };
+
+        const DRIVER_KEYS = ['fx', 'oil', 'ppi', 'importPrice', 'labor', 'steel', 'cement', 'policyRate'];
+
+        /* ─── Analysis Periods ─── */
+        const ANALYSIS_PERIODS = {
+            warEra:   { label: '우크라 전쟁기 (22.02~23.08)', startIdx: 13, endIdx: 31,
+                        desc: '러-우 전쟁 발발~유가 정상화, 공급망 충격 최대 구간' },
+            postWar:  { label: '전쟁 후 안정기 (23.09~24.06)', startIdx: 32, endIdx: 41,
+                        desc: '전쟁 충격 소화, 금리 고점, 원자재 안정화 구간' },
+            recent:   { label: '최근 12개월', startIdx: 48, endIdx: 59,
+                        desc: '가장 최근 12개월 — 현재 추세 반영' },
+            full:     { label: '전체 (21.01~25.12)', startIdx: 0, endIdx: 59,
+                        desc: '60개월 전체 데이터 — 장기 구조 추정에 적합' }
+        };
+        let currentAnalysisPeriod = 'full';
+        let currentSimMethod = 'all';
+
+        function sliceSeries(series, periodKey) {
+            const p = ANALYSIS_PERIODS[periodKey] || ANALYSIS_PERIODS.full;
+            return series.slice(p.startIdx, p.endIdx + 1);
+        }
+
+        const MACRO_SIM_STORAGE_KEY = 'macro-construction-cost-history-5y-v4';
+
+        /* ─── Utilities ─── */
+        function macroRound(v, d = 2) { return Number(v.toFixed(d)); }
+        function macroFmt(v, d = 1) {
+            return new Intl.NumberFormat('ko-KR', { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
+        }
+        function macroMonthLabel(date) {
+            return String(date.getFullYear()).slice(2) + '-' + String(date.getMonth() + 1).padStart(2, '0');
+        }
+        function macroRate(arr, idx, lagN, key) {
+            if (idx - lagN < 0) return 0;
+            return ((arr[idx][key] / arr[idx - lagN][key]) - 1) * 100;
+        }
+        function normalizeShares(raw) {
+            const total = Object.values(raw).reduce((s, v) => s + v, 0);
+            return Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, (v / total) * 100]));
+        }
+
+        /* ─── Data Generation (60M synthetic) ─── */
+        function generateBaseSeries() {
+            const months = [];
+            const start = new Date(2021, 0, 1);
+            for (let i = 0; i < 60; i++) {
+                const d = new Date(start);
+                d.setMonth(start.getMonth() + i);
+                months.push({ month: macroMonthLabel(d), idx: i });
+            }
+            return months.map(({ month, idx }) => {
+                const cycA = Math.sin(idx / 2.6), cycB = Math.cos(idx / 3.8), cycC = Math.sin(idx / 5.1);
+                // 전쟁 충격: idx 13(2022.02) ~ 19(2022.08) 유가·환율·수입물가 급등
+                const warShock = (idx >= 13 && idx <= 19) ? Math.exp(-((idx - 15) ** 2) / 8) : 0;
+                const fx = 1240 + idx * 5.7 + cycA * 20 + cycB * 8 + warShock * 120;
+                const oil = 76 + idx * 0.15 + cycB * 4.6 + cycA * 1.8 + warShock * 45;
+                const ppi = 99 + idx * 0.36 + cycA * 0.8 + cycB * 0.42 + warShock * 3.5;
+                const importPrice = 100 + idx * 0.48 + (fx - 1240) * 0.014 + (oil - 76) * 0.23 + cycA * 0.9 + warShock * 8;
+                const steel = 100 + idx * 0.55 + (importPrice - 100) * 0.33 + cycB * 0.7 + warShock * 12;
+                const cement = 100 + idx * 0.32 + (ppi - 100) * 0.18 + cycC * 0.45 + warShock * 2;
+                const labor = 100 + idx * 0.34 + (idx >= 14 ? 1.0 : 0) + (idx >= 32 ? 0.8 : 0) + cycC * 0.3;
+                const policyRate = 1.25 + (idx > 12 ? Math.min((idx - 12) * 0.18, 2.55) : 0)
+                                       - (idx > 40 ? (idx - 40) * 0.11 : 0) + cycB * 0.05;
+                const shares = normalizeShares({
+                    residential: 37 - (policyRate - 1.25) * 2.7 + cycA * 1.6,
+                    logistics: 11 + idx * 0.04 + cycB * 0.9,
+                    office: 18 + cycA * 0.8 - (policyRate - 1.25) * 0.8,
+                    hospitality: 8 + cycC * 0.5,
+                    advanced: 10 + Math.max(0, idx - 20) * 0.08 + cycB * 0.6,
+                    infra: 16 + cycC * 0.9
+                });
+                const residentialUnit = 710 + (labor - 100) * 7.2 + (cement - 100) * 2.5 + (policyRate - 1.25) * 9;
+                const logisticsUnit = 560 + (steel - 100) * 7.8 + (labor - 100) * 4.1 + (policyRate - 1.25) * 6.5;
+                const officeUnit = 770 + (steel - 100) * 3.2 + (labor - 100) * 5.6 + (importPrice - 100) * 3.8;
+                const hospitalityUnit = 840 + (labor - 100) * 6.3 + (importPrice - 100) * 3.2 + (cement - 100) * 1.6;
+                const advancedUnit = 1010 + (steel - 100) * 3.5 + (labor - 100) * 5.8 + (importPrice - 100) * 4.5;
+                const infraUnit = 645 + (steel - 100) * 4.8 + (cement - 100) * 2.7 + (labor - 100) * 3.4;
+                const weightedPy = residentialUnit * (shares.residential / 100) + logisticsUnit * (shares.logistics / 100)
+                    + officeUnit * (shares.office / 100) + hospitalityUnit * (shares.hospitality / 100)
+                    + advancedUnit * (shares.advanced / 100) + infraUnit * (shares.infra / 100);
+                const constructionCost = 100 + idx * 0.22 + (importPrice - 100) * 0.18 + (steel - 100) * 0.15
+                    + (cement - 100) * 0.08 + (labor - 100) * 0.17 + (policyRate - 1.25) * 0.95 + (weightedPy - 720) * 0.013;
+                return { month, idx, fx: macroRound(fx), oil: macroRound(oil), ppi: macroRound(ppi),
+                    importPrice: macroRound(importPrice), steel: macroRound(steel), cement: macroRound(cement),
+                    labor: macroRound(labor), policyRate: macroRound(policyRate, 2), constructionCost: macroRound(constructionCost),
+                    residentialShare: macroRound(shares.residential, 2), logisticsShare: macroRound(shares.logistics, 2),
+                    officeShare: macroRound(shares.office, 2), hospitalityShare: macroRound(shares.hospitality, 2),
+                    advancedShare: macroRound(shares.advanced, 2), infraShare: macroRound(shares.infra, 2),
+                    residentialUnit: macroRound(residentialUnit), logisticsUnit: macroRound(logisticsUnit),
+                    officeUnit: macroRound(officeUnit), hospitalityUnit: macroRound(hospitalityUnit),
+                    advancedUnit: macroRound(advancedUnit), infraUnit: macroRound(infraUnit) };
+            }).map((row, idx, arr) => ({
+                ...row,
+                costMoM: macroRound(macroRate(arr, idx, 1, 'constructionCost')),
+                costYoY: idx >= 12 ? macroRound(macroRate(arr, idx, 12, 'constructionCost')) : null,
+                fxYoY: idx >= 12 ? macroRound(macroRate(arr, idx, 12, 'fx')) : null,
+                oilYoY: idx >= 12 ? macroRound(macroRate(arr, idx, 12, 'oil')) : null,
+                ppiYoY: idx >= 12 ? macroRound(macroRate(arr, idx, 12, 'ppi')) : null
+            }));
+        }
+
+        function loadMacroHistory() {
+            try {
+                const raw = window.localStorage.getItem(MACRO_SIM_STORAGE_KEY);
+                if (!raw) return generateBaseSeries();
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed) && parsed.length >= 60) return parsed;
+            } catch (e) { console.error('failed to load stored history', e); }
+            return generateBaseSeries();
+        }
+        function persistMacroHistory(data) {
+            try { window.localStorage.setItem(MACRO_SIM_STORAGE_KEY, JSON.stringify(data)); }
+            catch (e) { console.error('failed to persist history', e); }
+        }
+
+        /* ─── Correlation helpers ─── */
+        function macroPearson(xs, ys) {
+            const n = Math.min(xs.length, ys.length);
+            if (n < 3) return 0;
+            const xM = xs.reduce((a, b) => a + b, 0) / n;
+            const yM = ys.reduce((a, b) => a + b, 0) / n;
+            let num = 0, dX = 0, dY = 0;
+            for (let i = 0; i < n; i++) { const dx = xs[i] - xM, dy = ys[i] - yM; num += dx * dy; dX += dx * dx; dY += dy * dy; }
+            return (!dX || !dY) ? 0 : num / Math.sqrt(dX * dY);
+        }
+        function lagCorrelation(series, driverKey, targetKey, maxLag = 12) {
+            const result = [];
+            for (let lag = 0; lag <= maxLag; lag++) {
+                const xs = [], ys = [];
+                for (let i = 0; i < series.length - lag; i++) { xs.push(series[i][driverKey]); ys.push(series[i + lag][targetKey]); }
+                result.push({ lag, corr: macroRound(macroPearson(xs, ys), 3) });
+            }
+            return result;
+        }
+        function bestLagInfo(lagSeries) {
+            return lagSeries.reduce((best, row) => Math.abs(row.corr) > Math.abs(best.corr) ? row : best, lagSeries[0]);
+        }
+
+        /* ═════════════════════════════════════════════════
+         *  METHOD 1: Gaussian IRF (original PASS-THROUGH)
+         * ═════════════════════════════════════════════════ */
+        function gaussianEffect(h, peakLag, width) {
+            return Math.exp(-Math.pow(h - peakLag, 2) / (2 * Math.pow(width, 2)));
+        }
+        function buildForecastGaussian(series, shocks) {
+            const last = series[series.length - 1];
+            const recent = series.slice(-6);
+            const avgMoM = recent.reduce((s, r) => s + r.costMoM, 0) / recent.length;
+            let baseIdx = last.constructionCost, scIdx = last.constructionCost;
+            const forecast = [];
+            for (let h = 1; h <= 12; h++) {
+                const inertia = Math.max(0.1, avgMoM * Math.exp(-h / 10));
+                const baseGr = 0.17 + inertia * 0.46;
+                let shockGr = 0;
+                Object.entries(shocks).forEach(([key, val]) => {
+                    const m = PASS_THROUGH[key];
+                    if (m) shockGr += val * m.weight * gaussianEffect(h, m.peakLag, m.width) * 0.1;
+                });
+                baseIdx *= 1 + baseGr / 100;
+                scIdx *= 1 + (baseGr + shockGr) / 100;
+                forecast.push({ horizon: 'M+' + h, baseline: macroRound(baseIdx), scenario: macroRound(scIdx),
+                    deltaPct: macroRound(((scIdx / baseIdx) - 1) * 100), scenarioGrowth: macroRound(baseGr + shockGr) });
+            }
+            return forecast;
+        }
+
+        /* ═════════════════════════════════════════════════
+         *  METHOD 2: ARDL-OLS (data-driven coefficients)
+         *  Single-equation: ΔCC_t = α + Σ β_{k,l} ΔX_{k,t-l} + ε
+         * ═════════════════════════════════════════════════ */
+        // Tiny matrix algebra (no library)
+        function matTranspose(A) {
+            const m = A.length, n = A[0].length, T = [];
+            for (let j = 0; j < n; j++) { T[j] = []; for (let i = 0; i < m; i++) T[j][i] = A[i][j]; }
+            return T;
+        }
+        function matMul(A, B) {
+            const m = A.length, n = B[0].length, p = B.length, C = [];
+            for (let i = 0; i < m; i++) { C[i] = []; for (let j = 0; j < n; j++) { let s = 0; for (let k = 0; k < p; k++) s += A[i][k] * B[k][j]; C[i][j] = s; } }
+            return C;
+        }
+        function matVecMul(A, v) { return A.map(row => row.reduce((s, a, j) => s + a * v[j], 0)); }
+        function matInvert(M) {
+            const n = M.length;
+            const aug = M.map((row, i) => [...row, ...Array(n).fill(0).map((_, j) => i === j ? 1 : 0)]);
+            for (let c = 0; c < n; c++) {
+                let maxR = c;
+                for (let r = c + 1; r < n; r++) if (Math.abs(aug[r][c]) > Math.abs(aug[maxR][c])) maxR = r;
+                [aug[c], aug[maxR]] = [aug[maxR], aug[c]];
+                const piv = aug[c][c];
+                if (Math.abs(piv) < 1e-12) return null;
+                for (let j = 0; j < 2 * n; j++) aug[c][j] /= piv;
+                for (let r = 0; r < n; r++) {
+                    if (r === c) continue;
+                    const f = aug[r][c];
+                    for (let j = 0; j < 2 * n; j++) aug[r][j] -= f * aug[c][j];
+                }
+            }
+            return aug.map(row => row.slice(n));
+        }
+
+        // OLS: β = (X'X)^{-1} X'y
+        function olsEstimate(X, y) {
+            const Xt = matTranspose(X);
+            const XtX = matMul(Xt, X);
+            const XtXinv = matInvert(XtX);
+            if (!XtXinv) return null;
+            const Xty = matVecMul(Xt, y);
+            const beta = matVecMul(XtXinv, Xty);
+            // R² calculation
+            const yHat = matVecMul(X, beta);
+            const yMean = y.reduce((s, v) => s + v, 0) / y.length;
+            let ssTot = 0, ssRes = 0;
+            for (let i = 0; i < y.length; i++) { ssTot += (y[i] - yMean) ** 2; ssRes += (y[i] - yHat[i]) ** 2; }
+            const r2 = ssTot > 0 ? 1 - ssRes / ssTot : 0;
+            return { beta, r2 };
+        }
+
+        // Estimate ARDL: ΔCC = α + Σ_{k} Σ_{l=0..maxLag} β_{k,l} * ΔX_{k,t-l}
+        function estimateARDL(series, maxLag = 4) {
+            const n = series.length;
+            if (n < maxLag + 5) return null;
+            // Compute changes (% for levels, diff for rate)
+            const dCC = [], dDrivers = {};
+            DRIVER_KEYS.forEach(k => dDrivers[k] = []);
+            for (let i = 1; i < n; i++) {
+                dCC.push(((series[i].constructionCost / series[i - 1].constructionCost) - 1) * 100);
+                DRIVER_KEYS.forEach(k => {
+                    if (k === 'policyRate') dDrivers[k].push(series[i][k] - series[i - 1][k]);
+                    else dDrivers[k].push(((series[i][k] / series[i - 1][k]) - 1) * 100);
+                });
+            }
+            // Build X matrix: [const, ΔX1_t, ΔX1_{t-1}, ..., ΔX1_{t-maxLag}, ΔX2_t, ..., ΔXk_{t-maxLag}]
+            const T = dCC.length - maxLag;
+            if (T < 10) return null;
+            const X = [], y = [];
+            const colNames = ['const'];
+            DRIVER_KEYS.forEach(k => { for (let l = 0; l <= maxLag; l++) colNames.push(k + '_L' + l); });
+            for (let t = maxLag; t < dCC.length; t++) {
+                const row = [1]; // constant
+                DRIVER_KEYS.forEach(k => { for (let l = 0; l <= maxLag; l++) row.push(dDrivers[k][t - l]); });
+                X.push(row);
+                y.push(dCC[t]);
+            }
+            const result = olsEstimate(X, y);
+            if (!result) return null;
+            // Parse coefficients into {driver: {lag: coeff}}
+            const coeffs = {};
+            let idx = 1;
+            DRIVER_KEYS.forEach(k => {
+                coeffs[k] = {};
+                for (let l = 0; l <= maxLag; l++) { coeffs[k][l] = result.beta[idx]; idx++; }
+            });
+            return { intercept: result.beta[0], coeffs, r2: result.r2, maxLag, nObs: T };
+        }
+
+        // ARDL-based IRF: apply estimated lag coefficients instead of Gaussian
+        function ardlIRF(ardlModel, driverKey, h) {
+            if (!ardlModel || !ardlModel.coeffs[driverKey]) return 0;
+            const c = ardlModel.coeffs[driverKey];
+            return (h <= ardlModel.maxLag && c[h] !== undefined) ? c[h] : 0;
+        }
+
+        function buildForecastARDL(series, shocks, ardlModel) {
+            if (!ardlModel) return buildForecastGaussian(series, shocks);
+            const last = series[series.length - 1];
+            const recent = series.slice(-6);
+            const avgMoM = recent.reduce((s, r) => s + r.costMoM, 0) / recent.length;
+            let baseIdx = last.constructionCost, scIdx = last.constructionCost;
+            const forecast = [];
+            for (let h = 1; h <= 12; h++) {
+                const inertia = Math.max(0.1, avgMoM * Math.exp(-h / 10));
+                const baseGr = ardlModel.intercept + inertia * 0.3;
+                let shockGr = 0;
+                Object.entries(shocks).forEach(([key, val]) => {
+                    // Sum cumulative IRF: shock persists, so we aggregate lag responses
+                    let cumIRF = 0;
+                    for (let l = 0; l <= Math.min(h, ardlModel.maxLag); l++) cumIRF += ardlIRF(ardlModel, key, l);
+                    shockGr += val * cumIRF * 0.1;
+                });
+                baseIdx *= 1 + baseGr / 100;
+                scIdx *= 1 + (baseGr + shockGr) / 100;
+                forecast.push({ horizon: 'M+' + h, baseline: macroRound(baseIdx), scenario: macroRound(scIdx),
+                    deltaPct: macroRound(((scIdx / baseIdx) - 1) * 100), scenarioGrowth: macroRound(baseGr + shockGr) });
+            }
+            return forecast;
+        }
+
+        /* ═════════════════════════════════════════════════
+         *  METHOD 3: Local Projections (Jordà, 2005)
+         *  y_{t+h} - y_t = α_h + β_h * shock_t + γ_h * controls + ε
+         *  — Direct estimation at each horizon h
+         *  — More robust to misspecification & nonlinear shocks
+         * ═════════════════════════════════════════════════ */
+        function estimateLocalProjections(series, maxH = 12) {
+            const n = series.length;
+            if (n < 15) return null;
+            // Compute changes
+            const dCC = [], dDrivers = {};
+            DRIVER_KEYS.forEach(k => dDrivers[k] = []);
+            for (let i = 1; i < n; i++) {
+                dCC.push(((series[i].constructionCost / series[i - 1].constructionCost) - 1) * 100);
+                DRIVER_KEYS.forEach(k => {
+                    if (k === 'policyRate') dDrivers[k].push(series[i][k] - series[i - 1][k]);
+                    else dDrivers[k].push(((series[i][k] / series[i - 1][k]) - 1) * 100);
+                });
+            }
+            // For each horizon h, estimate: cumCC_{t→t+h} = α + Σ β_k * ΔX_k,t + ε
+            const lpCoeffs = {}; // {h: {driver: β_h, r2}}
+            for (let h = 1; h <= maxH; h++) {
+                const T = dCC.length - h;
+                if (T < 8) break;
+                const X = [], y = [];
+                for (let t = 0; t < T; t++) {
+                    const row = [1];
+                    DRIVER_KEYS.forEach(k => row.push(dDrivers[k][t]));
+                    X.push(row);
+                    // Cumulative forward change
+                    let cumChange = 0;
+                    for (let s = 1; s <= h; s++) cumChange += dCC[t + s];
+                    y.push(cumChange);
+                }
+                const result = olsEstimate(X, y);
+                if (!result) continue;
+                const hCoeffs = { intercept: result.beta[0], r2: result.r2 };
+                DRIVER_KEYS.forEach((k, i) => hCoeffs[k] = result.beta[i + 1]);
+                lpCoeffs[h] = hCoeffs;
+            }
+            return { coeffs: lpCoeffs, nObs: dCC.length };
+        }
+
+        function buildForecastLP(series, shocks, lpModel) {
+            if (!lpModel || !lpModel.coeffs) return buildForecastGaussian(series, shocks);
+            const last = series[series.length - 1];
+            let baseIdx = last.constructionCost;
+            const forecast = [];
+            // Compute baseline using LP intercepts
+            for (let h = 1; h <= 12; h++) {
+                const lp = lpModel.coeffs[h];
+                if (!lp) { forecast.push(buildForecastGaussian(series, shocks)[h - 1]); continue; }
+                const baseCumGr = lp.intercept;
+                let shockCumGr = 0;
+                Object.entries(shocks).forEach(([key, val]) => {
+                    if (lp[key] !== undefined) shockCumGr += val * lp[key] * 0.1;
+                });
+                const baselineVal = baseIdx * (1 + baseCumGr / 100);
+                const scenarioVal = baseIdx * (1 + (baseCumGr + shockCumGr) / 100);
+                forecast.push({ horizon: 'M+' + h, baseline: macroRound(baselineVal), scenario: macroRound(scenarioVal),
+                    deltaPct: macroRound(((scenarioVal / baselineVal) - 1) * 100),
+                    scenarioGrowth: macroRound(baseCumGr + shockCumGr) });
+            }
+            return forecast;
+        }
+
+        /* ═════════════════════════════════════════════════
+         *  Unified forecast: runs selected method(s)
+         * ═════════════════════════════════════════════════ */
+        // Cache estimated models per period
+        const _modelCache = {};
+        function getModels(series, periodKey) {
+            if (_modelCache[periodKey]) return _modelCache[periodKey];
+            const sub = sliceSeries(series, periodKey);
+            const ardl = estimateARDL(sub, 4);
+            const lp = estimateLocalProjections(sub, 12);
+            _modelCache[periodKey] = { ardl, lp, periodKey, nObs: sub.length };
+            return _modelCache[periodKey];
+        }
+
+        function buildScenarioForecast(series, shocks, method, periodKey) {
+            method = method || currentSimMethod || 'gaussian';
+            periodKey = periodKey || currentAnalysisPeriod || 'full';
+            const models = getModels(series, periodKey);
+            if (method === 'ardl' && models.ardl) return buildForecastARDL(series, shocks, models.ardl);
+            if (method === 'lp' && models.lp) return buildForecastLP(series, shocks, models.lp);
+            return buildForecastGaussian(series, shocks);
+        }
+
+        function buildMultiMethodForecast(series, shocks, periodKey) {
+            periodKey = periodKey || currentAnalysisPeriod;
+            const models = getModels(series, periodKey);
+            return {
+                gaussian: buildForecastGaussian(series, shocks),
+                ardl: models.ardl ? buildForecastARDL(series, shocks, models.ardl) : null,
+                lp: models.lp ? buildForecastLP(series, shocks, models.lp) : null,
+                models
+            };
+        }
+
+        /* ─── Attribution (period-aware) ─── */
+        function buildAttribution(series, periodKey) {
+            periodKey = periodKey || currentAnalysisPeriod;
+            const sub = sliceSeries(series, periodKey);
+            const last = sub[sub.length - 1];
+            const first = sub[0];
+            return DRIVER_KEYS.map(key => {
+                const change = key === 'policyRate' ? last[key] - first[key] : ((last[key] / first[key]) - 1) * 100;
+                return { key, driver: DRIVER_META[key].label, change: macroRound(change),
+                    lead: PASS_THROUGH[key].peakLag + '개월', contribution: macroRound(change * PASS_THROUGH[key].weight) };
+            }).sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution));
+        }
+
+        function buildRouteSummary(series, attribution) {
+            return attribution.map(item => {
+                const lagInfo = bestLagInfo(lagCorrelation(series, item.key, 'constructionCost', 12));
+                return { key: item.key, driver: DRIVER_META[item.key].label,
+                    path: ROUTE_BLUEPRINT[item.key].path, summary: ROUTE_BLUEPRINT[item.key].summary,
+                    lag: lagInfo.lag, corr: lagInfo.corr, contribution: item.contribution,
+                    score: macroRound(Math.abs(lagInfo.corr) * 100 * PASS_THROUGH[item.key].weight + Math.abs(item.contribution), 2) };
+            }).sort((a, b) => b.score - a.score);
+        }
+
+        function buildPressureState(latest, forecast, attribution) {
+            const topContribution = attribution.slice(0, 3).reduce((s, r) => s + Math.abs(r.contribution), 0);
+            const current = latest.costYoY ?? latest.costMoM;
+            const score = current * 0.45 + forecast[2].deltaPct * 1.5 + forecast[11].deltaPct * 1.2 + topContribution * 0.55;
+            if (score >= 4.2) return { label: 'HIGH PRESSURE', tone: '#fb7185', summary: '원가와 금융 축의 압력이 동시에 남아 있어 상방 리스크가 높습니다.' };
+            if (score >= 2.1) return { label: 'WATCH', tone: '#f59e0b', summary: '공사비는 우상향이나 충격의 확산 속도는 통제 가능한 수준입니다.' };
+            return { label: 'STABLE', tone: '#34d399', summary: '공사비 상방 압력은 제한적이며 지표는 상대적으로 안정적입니다.' };
+        }
+
+        // Initialize
+        const macroSimData = loadMacroHistory();
+        persistMacroHistory(macroSimData);
 
         function setCardTimestamp(elementId, isoString) {
             const el = document.getElementById(elementId);
@@ -3635,24 +4159,33 @@
             document.getElementById('simulationPopup').classList.remove('active');
         }
 
-        /* Scenario Presets */
+        /* Scenario Presets — macro driver shocks */
         const SIM_PRESETS = {
-            mild:      { oil: 5,   war: 2,  dur: 3,  rate: 0,   fx: 2,  supply: 2,  label: '경미한 긴장' },
-            moderate:  { oil: 15,  war: 5,  dur: 6,  rate: 25,  fx: 4,  supply: 4,  label: '중간 충돌' },
-            severe:    { oil: 30,  war: 7,  dur: 6,  rate: 50,  fx: 5,  supply: 5,  label: '심각한 전쟁' },
-            extreme:   { oil: 80,  war: 10, dur: 12, rate: 100, fx: 15, supply: 9,  label: '전면전' },
-            sanctions: { oil: 25,  war: 3,  dur: 12, rate: 75,  fx: 8,  supply: 7,  label: '경제제재' },
-            hormuz:    { oil: 120, war: 6,  dur: 3,  rate: 50,  fx: 12, supply: 10, label: '호르무즈 봉쇄' }
+            baseline:    { fx: 0,  oil: 0,  ppi: 0,  labor: 0,   rate: 0,    label: '기준 시나리오' },
+            fxShock:     { fx: 10, oil: 3,  ppi: 1,  labor: 0.5, rate: 0.25, label: '환율 급등' },
+            oilSpike:    { fx: 5,  oil: 20, ppi: 3,  labor: 1,   rate: 0.5,  label: '유가 급등' },
+            laborCrunch: { fx: 2,  oil: 5,  ppi: 2,  labor: 8,   rate: 0,    label: '노무비 압박' },
+            rateHike:    { fx: 3,  oil: 2,  ppi: 1,  labor: 0.5, rate: 1.5,  label: '금리 인상' },
+            allShock:    { fx: 8,  oil: 15, ppi: 5,  labor: 5,   rate: 1.0,  label: '복합 충격' }
         };
+
+        function updateSliderLabel(name) {
+            const el = document.getElementById('shock' + name);
+            const lbl = document.getElementById('sliderVal' + name);
+            if (!el || !lbl) return;
+            const v = parseFloat(el.value);
+            const suffix = name === 'Rate' ? '%p' : '%';
+            lbl.textContent = (v >= 0 ? '+' : '') + v.toFixed(1) + suffix;
+        }
 
         function loadPreset(key) {
             const p = SIM_PRESETS[key];
-            document.getElementById('oilChange').value = p.oil;
-            document.getElementById('warIntensity').value = p.war;
-            document.getElementById('duration').value = p.dur;
-            document.getElementById('rateChange').value = p.rate;
-            document.getElementById('fxChange').value = p.fx;
-            document.getElementById('supplyDisruption').value = p.supply;
+            document.getElementById('shockFx').value = p.fx;
+            document.getElementById('shockOil').value = p.oil;
+            document.getElementById('shockPpi').value = p.ppi;
+            document.getElementById('shockLabor').value = p.labor;
+            document.getElementById('shockRate').value = p.rate;
+            ['Fx', 'Oil', 'Ppi', 'Labor', 'Rate'].forEach(n => updateSliderLabel(n));
             document.querySelectorAll('.sim-preset-btn').forEach(b => b.classList.remove('active'));
             event.target.classList.add('active');
         }
@@ -3666,40 +4199,107 @@
             if (tab === 'mechanism') renderMechanism();
         }
 
-        /* Core impact calculation */
-        function calcImpacts(oil, war, dur, rate, fx, supply) {
-            const costInc = oil * 0.6 + war * 1.8 + supply * 1.2 + rate * 0.02;
-            const reChg = -oil * 0.25 - war * 0.4 + rate * 0.03 - supply * 0.3;
-            const revImp = -oil * 0.4 - war * 1.2 - supply * 0.8 - fx * 0.3;
-            const composite = war * 10 + oil * 0.3 + supply * 5 + fx * 0.5 + rate * 0.01;
-            const riskLvl = composite > 100 ? 'CRITICAL' : composite > 60 ? 'HIGH' : composite > 30 ? 'MODERATE' : 'LOW';
-            return { costInc: costInc.toFixed(1), reChg: reChg.toFixed(1), revImp: revImp.toFixed(1), riskLvl, rate, fx };
-        }
-
-        function getSimParams() {
+        /* Core: read shock sliders */
+        function getSimShocks() {
             return {
-                oil: parseFloat(document.getElementById('oilChange').value),
-                war: parseFloat(document.getElementById('warIntensity').value),
-                dur: parseFloat(document.getElementById('duration').value),
-                rate: parseFloat(document.getElementById('rateChange').value),
-                fx: parseFloat(document.getElementById('fxChange').value),
-                supply: parseFloat(document.getElementById('supplyDisruption').value)
+                fx:         parseFloat(document.getElementById('shockFx').value),
+                oil:        parseFloat(document.getElementById('shockOil').value),
+                ppi:        parseFloat(document.getElementById('shockPpi').value),
+                labor:      parseFloat(document.getElementById('shockLabor').value),
+                policyRate: parseFloat(document.getElementById('shockRate').value)
             };
         }
 
-        function runSimulation() {
-            const p = getSimParams();
-            const r = calcImpacts(p.oil, p.war, p.dur, p.rate, p.fx, p.supply);
+        /* Legacy wrapper — still used by sensitivity & mechanism tabs */
+        function getSimParams() {
+            const sh = getSimShocks();
+            return { oil: sh.oil, war: 1, dur: 12, rate: sh.policyRate * 100, fx: sh.fx, supply: 1 };
+        }
+        function calcImpacts(oil, war, dur, rate, fx, supply) {
+            const shocks = { fx, oil, ppi: 2, labor: 1.5, policyRate: rate / 100 };
+            const forecast = buildScenarioForecast(macroSimData, shocks, currentSimMethod, currentAnalysisPeriod);
+            const costInc = forecast[11].deltaPct;
+            return { costInc: costInc.toFixed(1), reChg: (-oil * 0.25 - rate * 0.03).toFixed(1),
+                revImp: (-oil * 0.4 - fx * 0.3).toFixed(1),
+                riskLvl: costInc > 3 ? 'CRITICAL' : costInc > 1.5 ? 'HIGH' : costInc > 0.5 ? 'MODERATE' : 'LOW',
+                rate, fx };
+        }
 
-            document.getElementById('simCost').textContent = '+' + r.costInc + '%';
-            document.getElementById('simRE').textContent = r.reChg + '%';
-            document.getElementById('simRevenue').textContent = r.revImp + '%';
-            document.getElementById('simRate').textContent = (r.rate >= 0 ? '+' : '') + r.rate + 'bp';
-            document.getElementById('simFx').textContent = (r.fx >= 0 ? '+' : '') + r.fx + '%';
-            const simRiskEl = document.getElementById('simRisk');
-            simRiskEl.textContent = r.riskLvl;
-            simRiskEl.className = 'sim-metric-value ' +
-                ({ CRITICAL: 'down', HIGH: 'warn', MODERATE: 'up', LOW: 'up' }[r.riskLvl]);
+        function onPeriodChange() {
+            currentAnalysisPeriod = document.getElementById('analysisPeriod').value;
+            delete _modelCache[currentAnalysisPeriod]; // force re-estimate
+            const p = ANALYSIS_PERIODS[currentAnalysisPeriod];
+            const method = document.getElementById('simMethod').value;
+            const mLabel = { all: '3가지 방법론 비교', gaussian: 'Gaussian IRF', ardl: 'ARDL-OLS', lp: 'Local Projections' }[method];
+            document.getElementById('periodMethodDesc').innerHTML =
+                '<strong>' + p.label + '</strong>: ' + p.desc + ' &nbsp;|&nbsp; 방법론: ' + mLabel;
+        }
+        function onMethodChange() {
+            currentSimMethod = document.getElementById('simMethod').value;
+            onPeriodChange();
+        }
+
+        function runSimulation() {
+            const shocks = getSimShocks();
+            const method = currentSimMethod;
+            const periodKey = currentAnalysisPeriod;
+            const multi = buildMultiMethodForecast(macroSimData, shocks, periodKey);
+            const attribution = buildAttribution(macroSimData, periodKey);
+            const routes = buildRouteSummary(macroSimData, attribution);
+            const latest = macroSimData[macroSimData.length - 1];
+
+            // Pick primary forecast based on selected method
+            const primaryFC = method === 'ardl' && multi.ardl ? multi.ardl
+                            : method === 'lp' && multi.lp ? multi.lp
+                            : multi.gaussian;
+            const pressure = buildPressureState(latest, primaryFC, attribution);
+
+            // Pressure badge
+            const badge = document.getElementById('simPressureBadge');
+            badge.textContent = pressure.label;
+            badge.style.color = pressure.tone;
+            badge.style.borderColor = pressure.tone;
+            document.getElementById('simPressureSummary').textContent = pressure.summary;
+
+            // Key metrics — show all methods if 'all'
+            if (method === 'all') {
+                const g = multi.gaussian, a = multi.ardl, l = multi.lp;
+                const fmtDelta = (fc, idx) => fc ? macroFmt(fc[idx].deltaPct, 2) + '%' : 'N/A';
+                document.getElementById('simDelta3M').innerHTML =
+                    '<span style="color:#38bdf8">' + fmtDelta(g,2) + '</span> / <span style="color:#f59e0b">' + fmtDelta(a,2) + '</span> / <span style="color:#a78bfa">' + fmtDelta(l,2) + '</span>';
+                document.getElementById('simDelta6M').innerHTML =
+                    '<span style="color:#38bdf8">' + fmtDelta(g,5) + '</span> / <span style="color:#f59e0b">' + fmtDelta(a,5) + '</span> / <span style="color:#a78bfa">' + fmtDelta(l,5) + '</span>';
+                document.getElementById('simDelta12M').innerHTML =
+                    '<span style="color:#38bdf8">' + fmtDelta(g,11) + '</span> / <span style="color:#f59e0b">' + fmtDelta(a,11) + '</span> / <span style="color:#a78bfa">' + fmtDelta(l,11) + '</span>';
+            } else {
+                document.getElementById('simDelta3M').textContent = '+' + macroFmt(primaryFC[2].deltaPct, 2) + '%';
+                document.getElementById('simDelta6M').textContent = '+' + macroFmt(primaryFC[5].deltaPct, 2) + '%';
+                document.getElementById('simDelta12M').textContent = '+' + macroFmt(primaryFC[11].deltaPct, 2) + '%';
+            }
+            document.getElementById('simTopRoute').textContent = routes[0]?.driver ?? '-';
+
+            // Attribution table
+            const tbody = document.getElementById('simAttributionBody');
+            const pLabel = ANALYSIS_PERIODS[periodKey].label;
+            tbody.innerHTML = attribution.slice(0, 6).map(row => {
+                const route = ROUTE_BLUEPRINT[row.key];
+                const color = row.contribution >= 0 ? 'var(--down)' : 'var(--up)';
+                return `<tr style="border-bottom: 1px solid #1a2840;">
+                    <td style="padding: 3px 6px; color: #dce8fb;">${row.driver}</td>
+                    <td style="padding: 3px 6px; text-align: right; color: #8ea3c1;">${row.change >= 0 ? '+' : ''}${macroFmt(row.change, 1)}</td>
+                    <td style="padding: 3px 6px; text-align: right; color: ${color}; font-weight: 600;">${macroFmt(row.contribution, 2)}%p</td>
+                    <td style="padding: 3px 6px; text-align: right; color: #8ea3c1;">${row.lead}</td>
+                    <td style="padding: 3px 6px; color: #6a829f; font-size: 9px;">${route ? route.path : '-'}</td>
+                </tr>`;
+            }).join('');
+
+            // Model stats
+            const models = multi.models;
+            let statsHTML = '<strong>추정 구간</strong>: ' + pLabel + ' (n=' + models.nObs + ')';
+            if (models.ardl) statsHTML += ' &nbsp;|&nbsp; <strong>ARDL</strong> R²=' + macroFmt(models.ardl.r2, 3);
+            if (models.lp && models.lp.coeffs[6]) statsHTML += ' &nbsp;|&nbsp; <strong>LP(6M)</strong> R²=' + macroFmt(models.lp.coeffs[6].r2, 3);
+            if (method === 'all') statsHTML += ' &nbsp;|&nbsp; <span style="color:#38bdf8">■</span> Gaussian <span style="color:#f59e0b">■</span> ARDL <span style="color:#a78bfa">■</span> LP';
+            document.getElementById('modelStatsBox').innerHTML = statsHTML;
 
             document.getElementById('simResults').classList.add('active');
 
@@ -3708,185 +4308,187 @@
                 return;
             }
 
-            // Left chart: time series impact
             if (simulationChartObj) simulationChartObj.destroy();
-            const ctx1 = document.getElementById('simulationChart').getContext('2d');
-            const labels = Array.from({ length: p.dur }, (_, i) => `M${i + 1}`);
-            simulationChartObj = new Chart(ctx1, {
-                type: 'line',
-                data: {
-                    labels,
-                    datasets: [
-                        { label: '건설비용', data: labels.map((_, i) => (r.costInc * (i + 1) / p.dur).toFixed(1)), borderColor: '#dc3545', tension: 0.4, borderWidth: 2, pointRadius: 0 },
-                        { label: '매출', data: labels.map((_, i) => (r.revImp * (i + 1) / p.dur).toFixed(1)), borderColor: '#ff6b00', tension: 0.4, borderWidth: 2, pointRadius: 0 },
-                        { label: '부동산', data: labels.map((_, i) => (r.reChg * (i + 1) / p.dur).toFixed(1)), borderColor: '#00c853', tension: 0.4, borderWidth: 2, pointRadius: 0 }
-                    ]
-                },
-                options: getChartOptions('영향도 추이 (%)')
-            });
-
-            // Right chart: radar
             if (simulationChart2Obj) simulationChart2Obj.destroy();
-            const ctx2 = document.getElementById('simulationChart2').getContext('2d');
-            simulationChart2Obj = new Chart(ctx2, {
-                type: 'radar',
-                data: {
-                    labels: ['유가 리스크', '금리 리스크', '환율 리스크', '공급망', '전쟁 강도', '건설비용'],
-                    datasets: [{
-                        label: '현재 시나리오',
-                        data: [
-                            Math.min(p.oil / 10, 10),
-                            Math.min(p.rate / 10, 10),
-                            Math.min(p.fx, 10),
-                            p.supply,
-                            p.war,
-                            Math.min(Math.abs(r.costInc) / 5, 10)
-                        ],
-                        borderColor: '#4ec9ff',
-                        backgroundColor: 'rgba(78, 201, 255, 0.15)',
-                        borderWidth: 2,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#4ec9ff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, title: { display: true, text: '리스크 레이더', color: '#8ea9cc', font: { size: 10 } } },
-                    scales: {
-                        r: {
-                            beginAtZero: true,
-                            max: 10,
-                            grid: { color: 'rgba(100, 140, 190, 0.15)' },
-                            angleLines: { color: 'rgba(100, 140, 190, 0.15)' },
-                            pointLabels: { color: '#8ea9cc', font: { size: 8 } },
-                            ticks: { display: false }
-                        }
+
+            const labels = Array.from({ length: 12 }, (_, i) => 'M+' + (i + 1));
+
+            if (method === 'all') {
+                // Left chart: 3-method scenario comparison
+                const ctx1 = document.getElementById('simulationChart').getContext('2d');
+                const datasets = [
+                    { label: 'Gaussian IRF', data: multi.gaussian.map(r => r.scenario), borderColor: '#38bdf8', borderWidth: 2.5, pointRadius: 0, tension: 0.4 }
+                ];
+                if (multi.ardl) datasets.push({ label: 'ARDL-OLS', data: multi.ardl.map(r => r.scenario), borderColor: '#f59e0b', borderWidth: 2.5, pointRadius: 0, tension: 0.4, borderDash: [6, 3] });
+                if (multi.lp) datasets.push({ label: 'Local Projections', data: multi.lp.map(r => r.scenario), borderColor: '#a78bfa', borderWidth: 2.5, pointRadius: 3, pointBackgroundColor: '#a78bfa', tension: 0 });
+                datasets.push({ label: '기준예측', data: multi.gaussian.map(r => r.baseline), borderColor: '#64748b', borderWidth: 1.5, pointRadius: 0, tension: 0.4, borderDash: [4, 4] });
+                simulationChartObj = new Chart(ctx1, {
+                    type: 'line',
+                    data: { labels, datasets },
+                    options: { ...getChartOptions(''), plugins: { ...getChartOptions('').plugins,
+                        legend: { labels: { color: '#8ea9cc', font: { size: 8 }, boxWidth: 12 } },
+                        title: { display: true, text: '3-Method 건설공사비 전망 비교', color: '#8ea9cc', font: { size: 10 } } } }
+                });
+
+                // Right chart: delta % comparison across methods
+                const ctx2 = document.getElementById('simulationChart2').getContext('2d');
+                const barData = {
+                    labels: ['3M', '6M', '12M'],
+                    datasets: [
+                        { label: 'Gaussian', data: [multi.gaussian[2].deltaPct, multi.gaussian[5].deltaPct, multi.gaussian[11].deltaPct], backgroundColor: 'rgba(56,189,248,0.7)' },
+                    ]
+                };
+                if (multi.ardl) barData.datasets.push({ label: 'ARDL', data: [multi.ardl[2].deltaPct, multi.ardl[5].deltaPct, multi.ardl[11].deltaPct], backgroundColor: 'rgba(245,158,11,0.7)' });
+                if (multi.lp) barData.datasets.push({ label: 'LP', data: [multi.lp[2].deltaPct, multi.lp[5].deltaPct, multi.lp[11].deltaPct], backgroundColor: 'rgba(167,139,250,0.7)' });
+                simulationChart2Obj = new Chart(ctx2, {
+                    type: 'bar', data: barData,
+                    options: { responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { labels: { color: '#8ea9cc', font: { size: 8 }, boxWidth: 10 } },
+                            title: { display: true, text: '방법론별 추가 상승 압력 (%)', color: '#8ea9cc', font: { size: 10 } } },
+                        scales: { x: { grid: { display: false }, ticks: { color: '#8ea9cc', font: { size: 10 } } },
+                            y: { grid: { color: 'rgba(100,140,190,0.1)' }, ticks: { color: '#5a7a9e', font: { size: 8 } } } }
                     }
-                }
-            });
+                });
+            } else {
+                // Single method: forecast path + attribution
+                const ctx1 = document.getElementById('simulationChart').getContext('2d');
+                const mLabel = { gaussian: 'Gaussian IRF', ardl: 'ARDL-OLS', lp: 'Local Projections' }[method] || method;
+                simulationChartObj = new Chart(ctx1, {
+                    type: 'line',
+                    data: { labels,
+                        datasets: [
+                            { label: '기준예측', data: primaryFC.map(r => r.baseline), borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.08)', fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0 },
+                            { label: mLabel + ' 시나리오', data: primaryFC.map(r => r.scenario), borderColor: '#fb7185', backgroundColor: 'rgba(251,113,133,0.08)', fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0 }
+                        ] },
+                    options: { ...getChartOptions(''), plugins: { ...getChartOptions('').plugins,
+                        title: { display: true, text: mLabel + ' — 12M 전망', color: '#8ea9cc', font: { size: 10 } } } }
+                });
+
+                const ctx2 = document.getElementById('simulationChart2').getContext('2d');
+                const attrTop = attribution.slice(0, 6);
+                simulationChart2Obj = new Chart(ctx2, {
+                    type: 'bar',
+                    data: { labels: attrTop.map(r => r.driver),
+                        datasets: [{ label: '기여도 (%p)', data: attrTop.map(r => r.contribution),
+                            backgroundColor: attrTop.map(r => r.contribution >= 0 ? 'rgba(251,113,133,0.7)' : 'rgba(52,211,153,0.7)'), borderWidth: 0 }] },
+                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false }, title: { display: true, text: pLabel + ' 상승 요인 분해', color: '#8ea9cc', font: { size: 10 } } },
+                        scales: { x: { grid: { color: 'rgba(100,140,190,0.1)' }, ticks: { color: '#5a7a9e', font: { size: 8 } } },
+                            y: { grid: { display: false }, ticks: { color: '#8ea9cc', font: { size: 9 } } } }
+                    }
+                });
+            }
         }
 
-        /* Comparison: run all presets side by side */
+        /* Comparison: run all presets across current method/period */
         function runComparison() {
             document.getElementById('simResults').classList.add('active');
             if (!chartLibraryAvailable) return;
-
             if (simulationChartObj) simulationChartObj.destroy();
             if (simulationChart2Obj) simulationChart2Obj.destroy();
 
             const presetKeys = Object.keys(SIM_PRESETS);
-            const colors = ['#4ec9ff', '#ff6b00', '#dc3545', '#00c853', '#8b5cf6', '#ffc56f'];
+            const colors = ['#64748b', '#38bdf8', '#22c55e', '#f59e0b', '#fb7185', '#a78bfa'];
+            const method = currentSimMethod === 'all' ? 'gaussian' : currentSimMethod;
 
-            // Left: bar chart comparing cost impact
             const ctx1 = document.getElementById('simulationChart').getContext('2d');
-            const costData = presetKeys.map(k => {
+            const deltaData = presetKeys.map(k => {
                 const p = SIM_PRESETS[k];
-                return calcImpacts(p.oil, p.war, p.dur, p.rate, p.fx, p.supply).costInc;
-            });
-            const revData = presetKeys.map(k => {
-                const p = SIM_PRESETS[k];
-                return calcImpacts(p.oil, p.war, p.dur, p.rate, p.fx, p.supply).revImp;
+                const shocks = { fx: p.fx, oil: p.oil, ppi: p.ppi, labor: p.labor, policyRate: p.rate };
+                const fc = buildScenarioForecast(macroSimData, shocks, method, currentAnalysisPeriod);
+                return { d3: fc[2].deltaPct, d6: fc[5].deltaPct, d12: fc[11].deltaPct };
             });
             simulationChartObj = new Chart(ctx1, {
                 type: 'bar',
-                data: {
-                    labels: presetKeys.map(k => SIM_PRESETS[k].label),
+                data: { labels: presetKeys.map(k => SIM_PRESETS[k].label),
                     datasets: [
-                        { label: '건설비용 증가(%)', data: costData, backgroundColor: 'rgba(220, 53, 69, 0.7)', borderColor: '#dc3545', borderWidth: 1 },
-                        { label: '매출 변동(%)', data: revData, backgroundColor: 'rgba(255, 107, 0, 0.7)', borderColor: '#ff6b00', borderWidth: 1 }
-                    ]
-                },
-                options: { ...getChartOptions('시나리오 비교'), plugins: { ...getChartOptions('').plugins, title: { display: true, text: '시나리오별 영향 비교', color: '#8ea9cc', font: { size: 10 } } } }
+                        { label: '3M', data: deltaData.map(d => d.d3), backgroundColor: 'rgba(56,189,248,0.7)' },
+                        { label: '6M', data: deltaData.map(d => d.d6), backgroundColor: 'rgba(167,139,250,0.7)' },
+                        { label: '12M', data: deltaData.map(d => d.d12), backgroundColor: 'rgba(251,113,133,0.7)' }
+                    ] },
+                options: { ...getChartOptions(''), plugins: { ...getChartOptions('').plugins, title: { display: true, text: '시나리오별 추가 상승 압력 (%)', color: '#8ea9cc', font: { size: 10 } } } }
             });
 
-            // Right: radar overlay
             const ctx2 = document.getElementById('simulationChart2').getContext('2d');
-            const radarDS = presetKeys.map((k, i) => {
+            const lineDS = presetKeys.map((k, i) => {
                 const p = SIM_PRESETS[k];
-                return {
-                    label: p.label,
-                    data: [Math.min(p.oil / 10, 10), Math.min(p.rate / 10, 10), Math.min(p.fx, 10), p.supply, p.war, Math.min(Math.abs(calcImpacts(p.oil, p.war, p.dur, p.rate, p.fx, p.supply).costInc) / 5, 10)],
-                    borderColor: colors[i],
-                    backgroundColor: 'transparent',
-                    borderWidth: 1.5,
-                    pointRadius: 0
-                };
+                const shocks = { fx: p.fx, oil: p.oil, ppi: p.ppi, labor: p.labor, policyRate: p.rate };
+                const fc = buildScenarioForecast(macroSimData, shocks, method, currentAnalysisPeriod);
+                return { label: p.label, data: fc.map(r => r.scenario), borderColor: colors[i], borderWidth: 1.5, pointRadius: 0, tension: 0.4 };
             });
             simulationChart2Obj = new Chart(ctx2, {
-                type: 'radar',
-                data: { labels: ['유가', '금리', '환율', '공급망', '전쟁', '비용'], datasets: radarDS },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { labels: { color: '#8ea9cc', font: { size: 7 }, boxWidth: 10 } }, title: { display: true, text: '시나리오 레이더 비교', color: '#8ea9cc', font: { size: 10 } } },
-                    scales: { r: { beginAtZero: true, max: 10, grid: { color: 'rgba(100,140,190,0.15)' }, angleLines: { color: 'rgba(100,140,190,0.15)' }, pointLabels: { color: '#8ea9cc', font: { size: 8 } }, ticks: { display: false } } }
+                type: 'line',
+                data: { labels: Array.from({ length: 12 }, (_, i) => 'M+' + (i + 1)), datasets: lineDS },
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#8ea9cc', font: { size: 7 }, boxWidth: 10 } },
+                        title: { display: true, text: '시나리오별 건설공사비 전망', color: '#8ea9cc', font: { size: 10 } } },
+                    scales: { x: { grid: { display: false }, ticks: { color: '#5a7a9e', font: { size: 8 } } },
+                        y: { grid: { color: 'rgba(100,140,190,0.1)' }, ticks: { color: '#5a7a9e', font: { size: 8 } } } }
                 }
             });
-
-            // Update metrics with current preset
             runSimulation();
         }
 
-        /* Sensitivity Analysis */
+        /* Sensitivity Analysis — PASS_THROUGH based */
         function runSensitivity() {
             const varName = document.getElementById('sensitivityVar').value;
-            const target = document.getElementById('sensitivityTarget').value;
-            const p = getSimParams();
-            const steps = [-50, -25, -10, 0, 10, 25, 50, 100];
-            const varLabels = { oil: '유가', rate: '금리', fx: '환율', war: '전쟁강도', supply: '공급망' };
-            const targetLabels = { cost: '건설비용', re: '부동산', revenue: '매출', all: '전체' };
+            const horizonIdx = parseInt(document.getElementById('sensitivityHorizon').value);
+            const baseShocks = getSimShocks();
+            const varLabels = { fx: '환율(%)', oil: '유가(%)', ppi: 'PPI(%)', labor: '노무비(%)', policyRate: '금리(%p)' };
+            const steps = varName === 'policyRate'
+                ? [-1.5, -1.0, -0.5, 0, 0.5, 1.0, 1.5, 2.0]
+                : [-10, -5, -2, 0, 2, 5, 10, 20];
 
-            let html = '<table class="sensitivity-table"><thead><tr><th>' + varLabels[varName] + ' 변동</th>';
-            if (target === 'all') {
-                html += '<th>건설비용</th><th>부동산</th><th>매출</th></tr></thead><tbody>';
-            } else {
-                html += '<th>' + targetLabels[target] + ' 영향(%)</th></tr></thead><tbody>';
-            }
+            let html = '<table class="sensitivity-table"><thead><tr>';
+            html += '<th>' + varLabels[varName] + '</th>';
+            html += '<th>3M 압력</th><th>6M 압력</th><th>12M 압력</th><th>Signal</th>';
+            html += '</tr></thead><tbody>';
 
             steps.forEach(delta => {
-                const tp = { ...p };
-                if (varName === 'oil') tp.oil = Math.max(0, p.oil + delta);
-                else if (varName === 'rate') tp.rate = Math.max(0, p.rate + delta);
-                else if (varName === 'fx') tp.fx = Math.max(0, p.fx + delta);
-                else if (varName === 'war') tp.war = Math.max(1, Math.min(10, p.war + delta / 10));
-                else if (varName === 'supply') tp.supply = Math.max(1, Math.min(10, p.supply + delta / 10));
+                const shocks = { ...baseShocks };
+                const shockKey = varName === 'policyRate' ? 'policyRate' : varName;
+                shocks[shockKey] = delta;
+                const fc = buildScenarioForecast(macroSimData, shocks);
+                const d3 = fc[2].deltaPct, d6 = fc[5].deltaPct, d12 = fc[11].deltaPct;
+                const latest = macroSimData[macroSimData.length - 1];
+                const attr = buildAttribution(macroSimData);
+                const pr = buildPressureState(latest, fc, attr);
+                const cellColor = v => v > 0 ? 'color: var(--down)' : v < 0 ? 'color: var(--up)' : '';
+                const signalColor = { 'HIGH PRESSURE': 'var(--down)', 'WATCH': 'var(--accent)', 'STABLE': 'var(--up)' };
 
-                const r = calcImpacts(tp.oil, tp.war, tp.dur, tp.rate, tp.fx, tp.supply);
-                const cellColor = v => parseFloat(v) > 0 ? 'color: var(--down)' : parseFloat(v) < 0 ? 'color: var(--up)' : '';
-
-                html += '<tr><td>' + (delta >= 0 ? '+' : '') + delta + '</td>';
-                if (target === 'all') {
-                    html += '<td style="' + cellColor(r.costInc) + '">+' + r.costInc + '%</td>';
-                    html += '<td style="' + cellColor(r.reChg) + '">' + r.reChg + '%</td>';
-                    html += '<td style="' + cellColor(r.revImp) + '">' + r.revImp + '%</td>';
-                } else {
-                    const val = target === 'cost' ? r.costInc : target === 're' ? r.reChg : r.revImp;
-                    html += '<td style="' + cellColor(val) + '">' + (parseFloat(val) > 0 ? '+' : '') + val + '%</td>';
-                }
+                html += '<tr>';
+                html += '<td>' + (delta >= 0 ? '+' : '') + delta + '</td>';
+                html += '<td style="' + cellColor(d3) + '">' + (d3 >= 0 ? '+' : '') + macroFmt(d3, 2) + '%</td>';
+                html += '<td style="' + cellColor(d6) + '">' + (d6 >= 0 ? '+' : '') + macroFmt(d6, 2) + '%</td>';
+                html += '<td style="' + cellColor(d12) + '; font-weight: 600;">' + (d12 >= 0 ? '+' : '') + macroFmt(d12, 2) + '%</td>';
+                html += '<td style="color: ' + (signalColor[pr.label] || '#8ea3c1') + '; font-size: 9px;">' + pr.label + '</td>';
                 html += '</tr>';
             });
             html += '</tbody></table>';
             document.getElementById('sensitivityResult').innerHTML = html;
         }
 
-        /* Monte Carlo Simulation */
+        /* Monte Carlo Simulation — PASS_THROUGH engine */
         function runMonteCarlo() {
             const iterations = parseInt(document.getElementById('mcIterations').value);
             const oilVol = parseFloat(document.getElementById('mcOilVol').value);
             const fxVol = parseFloat(document.getElementById('mcFxVol').value);
-            const p = getSimParams();
+            const baseShocks = getSimShocks();
 
             const results = [];
             for (let i = 0; i < iterations; i++) {
-                const randOil = p.oil + gaussianRandom() * oilVol;
-                const randFx = p.fx + gaussianRandom() * fxVol;
-                const randWar = Math.max(1, Math.min(10, p.war + gaussianRandom() * 1.5));
-                const randSupply = Math.max(1, Math.min(10, p.supply + gaussianRandom() * 2));
-                const r = calcImpacts(randOil, randWar, p.dur, p.rate, randFx, randSupply);
-                results.push({ cost: parseFloat(r.costInc), re: parseFloat(r.reChg), rev: parseFloat(r.revImp) });
+                const shocks = {
+                    fx:         baseShocks.fx + gaussianRandom() * fxVol,
+                    oil:        baseShocks.oil + gaussianRandom() * oilVol,
+                    ppi:        baseShocks.ppi + gaussianRandom() * 1.5,
+                    labor:      baseShocks.labor + gaussianRandom() * 1.0,
+                    policyRate: baseShocks.policyRate + gaussianRandom() * 0.3
+                };
+                const fc = buildScenarioForecast(macroSimData, shocks);
+                results.push({ d3: fc[2].deltaPct, d6: fc[5].deltaPct, d12: fc[11].deltaPct });
             }
 
-            const costArr = results.map(r => r.cost).sort((a, b) => a - b);
+            const d12Arr = results.map(r => r.d12).sort((a, b) => a - b);
             const mean = arr => arr.reduce((s, v) => s + v, 0) / arr.length;
             const pctile = (arr, p) => arr[Math.floor(arr.length * p / 100)];
             const std = arr => { const m = mean(arr); return Math.sqrt(arr.reduce((s, v) => s + (v - m) ** 2, 0) / arr.length); };
@@ -3894,37 +4496,37 @@
             const statsHtml = `
                 <div class="mc-stats">
                     <div class="mc-stat-box">
-                        <div class="mc-stat-label">평균 건설비용 변동</div>
-                        <div class="mc-stat-value" style="color: var(--down)">+${mean(costArr).toFixed(1)}%</div>
+                        <div class="mc-stat-label">평균 12M 추가압력</div>
+                        <div class="mc-stat-value" style="color: var(--down)">+${mean(d12Arr).toFixed(2)}%</div>
                     </div>
                     <div class="mc-stat-box">
                         <div class="mc-stat-label">표준편차 (σ)</div>
-                        <div class="mc-stat-value" style="color: var(--accent-cool)">${std(costArr).toFixed(1)}%</div>
+                        <div class="mc-stat-value" style="color: var(--accent-cool)">${std(d12Arr).toFixed(2)}%</div>
                     </div>
                     <div class="mc-stat-box">
                         <div class="mc-stat-label">5th 백분위 (Best)</div>
-                        <div class="mc-stat-value" style="color: var(--up)">+${pctile(costArr, 5).toFixed(1)}%</div>
+                        <div class="mc-stat-value" style="color: var(--up)">${pctile(d12Arr, 5).toFixed(2)}%</div>
                     </div>
                     <div class="mc-stat-box">
                         <div class="mc-stat-label">95th 백분위 (Worst)</div>
-                        <div class="mc-stat-value" style="color: var(--down)">+${pctile(costArr, 95).toFixed(1)}%</div>
+                        <div class="mc-stat-value" style="color: var(--down)">+${pctile(d12Arr, 95).toFixed(2)}%</div>
                     </div>
                 </div>
                 <div style="margin-top: 6px; font-size: 9px; color: #6a829f;">
-                    ${iterations}회 시뮬레이션 | VaR(95%): +${pctile(costArr, 95).toFixed(1)}% | CVaR: +${mean(costArr.slice(Math.floor(costArr.length * 0.95))).toFixed(1)}%
+                    ${iterations}회 시뮬레이션 | VaR(95%): +${pctile(d12Arr, 95).toFixed(2)}% | CVaR: +${mean(d12Arr.slice(Math.floor(d12Arr.length * 0.95))).toFixed(2)}%
                 </div>
             `;
 
             // Histogram
             const bins = 20;
-            const minV = costArr[0], maxV = costArr[costArr.length - 1];
-            const binW = (maxV - minV) / bins;
+            const minV = d12Arr[0], maxV = d12Arr[d12Arr.length - 1];
+            const binW = (maxV - minV) / bins || 0.01;
             const histData = Array(bins).fill(0);
-            costArr.forEach(v => {
+            d12Arr.forEach(v => {
                 const idx = Math.min(Math.floor((v - minV) / binW), bins - 1);
                 histData[idx]++;
             });
-            const histLabels = Array.from({ length: bins }, (_, i) => (minV + i * binW).toFixed(0));
+            const histLabels = Array.from({ length: bins }, (_, i) => (minV + i * binW).toFixed(2));
 
             document.getElementById('monteCarloResult').innerHTML = statsHtml +
                 '<div style="height: 180px; margin-top: 10px;"><canvas id="mcHistogramChart"></canvas></div>';
@@ -3946,12 +4548,8 @@
                         }]
                     },
                     options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            title: { display: true, text: '건설비용 변동 분포 (Monte Carlo)', color: '#8ea9cc', font: { size: 10 } }
-                        },
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false }, title: { display: true, text: '12M 추가 상승 압력 분포 (Monte Carlo)', color: '#8ea9cc', font: { size: 10 } } },
                         scales: {
                             x: { grid: { display: false }, ticks: { color: '#5a7a9e', font: { size: 7 }, maxRotation: 0 } },
                             y: { grid: { color: 'rgba(100,140,190,0.1)' }, ticks: { color: '#5a7a9e', font: { size: 8 } } }
@@ -4005,63 +4603,67 @@
 
         function renderMechanism() {
             const s = externalIndicatorState;
-            // Correlation matrix indices: wti=0, fedfunds=1, usdkrw=2, construction=3, realestate=4
+            const shocks = getSimShocks();
+            const forecast = buildScenarioForecast(macroSimData, shocks);
+            const attribution = buildAttribution(macroSimData);
+            const routes = buildRouteSummary(macroSimData, attribution);
+            const latest = macroSimData[macroSimData.length - 1];
 
             // ── Trigger nodes ──
             const wtiVal = s.wti;
             const liborVal = s.libor ?? s.fedfunds;
-            mechSetText('mechValWar', wtiVal != null ? '$' + wtiVal.toFixed(1) + '/bbl' : 'API 대기');
-            mechSetText('mechValLibor', liborVal != null ? liborVal.toFixed(2) + '%' : 'API 대기');
+            mechSetText('mechValWar', wtiVal != null ? '$' + wtiVal.toFixed(1) + '/bbl' : macroFmt(latest.oil, 1) + '$/bbl');
+            mechSetText('mechValLibor', liborVal != null ? liborVal.toFixed(2) + '%' : macroFmt(latest.policyRate, 2) + '%');
 
-            // ── Get sim params for impact calculations ──
-            const p = getSimParams();
-
-            // ── PATH 1: Energy Cost ──
-            mechSetText('mechValWti', wtiVal != null ? '$' + wtiVal.toFixed(1) : '--');
-            const corrWtiConst = getCorr(0, 3);  // WTI vs construction
-            setMechLink('mechLink1a', 'mechCoeff1a', corrWtiConst);
-            setMechLink('mechLink1b', 'mechCoeff1b', null, 'β=0.60');
+            // ── PATH 1: Energy Cost — w/ PASS_THROUGH weights ──
+            mechSetText('mechValWti', wtiVal != null ? '$' + wtiVal.toFixed(1) : macroFmt(latest.oil, 1));
+            const corrWtiConst = getCorr(0, 3);
+            setMechLink('mechLink1a', 'mechCoeff1a', corrWtiConst, 'w=' + PASS_THROUGH.oil.weight);
+            setMechLink('mechLink1b', 'mechCoeff1b', null, 'lag=' + PASS_THROUGH.oil.peakLag + 'M');
             setMechLink('mechLink1c', 'mechCoeff1c', corrWtiConst);
             const steelVal = s.steel;
-            mechSetText('mechValSteel', steelVal != null ? '$' + steelVal.toFixed(0) + '/t' : '--');
-            mechSetText('mechImpact1', '+' + (p.oil * 0.6).toFixed(1) + '%');
+            mechSetText('mechValSteel', steelVal != null ? '$' + steelVal.toFixed(0) + '/t' : macroFmt(latest.steel, 1));
+            // Use forecast-based impact
+            const oilImpact = shocks.oil * PASS_THROUGH.oil.weight * 0.1;
+            mechSetText('mechImpact1', (oilImpact >= 0 ? '+' : '') + oilImpact.toFixed(2) + '%');
 
-            // ── PATH 2: Supply Chain ──
-            mechSetText('mechValSupply', p.supply + '/10');
-            setMechLink('mechLink2a', 'mechCoeff2a', null, 'β=1.20');
-            setMechLink('mechLink2b', 'mechCoeff2b', null, '공급부족');
+            // ── PATH 2: Supply Chain (importPrice + steel) ──
+            mechSetText('mechValSupply', macroFmt(latest.importPrice, 1));
+            setMechLink('mechLink2a', 'mechCoeff2a', null, 'w=' + PASS_THROUGH.importPrice.weight);
+            setMechLink('mechLink2b', 'mechCoeff2b', null, 'lag=' + PASS_THROUGH.importPrice.peakLag + 'M');
             setMechLink('mechLink2c', 'mechCoeff2c', corrWtiConst);
-            mechSetText('mechValMat2', steelVal != null ? '$' + steelVal.toFixed(0) : '--');
-            mechSetText('mechImpact2', '+' + (p.supply * 1.2).toFixed(1) + '%');
+            mechSetText('mechValMat2', macroFmt(latest.steel, 1));
+            const importImpact = shocks.fx * PASS_THROUGH.fx.weight * 0.1 + shocks.ppi * PASS_THROUGH.ppi.weight * 0.1;
+            mechSetText('mechImpact2', (importImpact >= 0 ? '+' : '') + importImpact.toFixed(2) + '%');
 
             // ── PATH 3: Financing Cost ──
             const fedVal = s.fedfunds;
-            mechSetText('mechValFed', fedVal != null ? fedVal.toFixed(2) + '%' : '--');
-            const corrFedConst = getCorr(1, 3);  // Fed vs construction
-            setMechLink('mechLink3a', 'mechCoeff3a', corrFedConst);
-            setMechLink('mechLink3b', 'mechCoeff3b', null, 'β=0.02');
+            mechSetText('mechValFed', fedVal != null ? fedVal.toFixed(2) + '%' : macroFmt(latest.policyRate, 2) + '%');
+            const corrFedConst = getCorr(1, 3);
+            setMechLink('mechLink3a', 'mechCoeff3a', corrFedConst, 'w=' + PASS_THROUGH.policyRate.weight);
+            setMechLink('mechLink3b', 'mechCoeff3b', null, 'lag=' + PASS_THROUGH.policyRate.peakLag + 'M');
             setMechLink('mechLink3c', 'mechCoeff3c', corrFedConst);
-            mechSetText('mechImpact3', '+' + (p.rate * 0.02).toFixed(1) + '%');
+            const rateImpact = shocks.policyRate * PASS_THROUGH.policyRate.weight * 0.1;
+            mechSetText('mechImpact3', (rateImpact >= 0 ? '+' : '') + rateImpact.toFixed(2) + '%');
 
-            // ── PATH 4: Demand Contraction ──
-            mechSetText('mechValMort', fedVal != null ? (fedVal + 1.5).toFixed(1) + '%' : '--');
-            const corrFedRE = getCorr(1, 4);  // Fed vs realestate
-            setMechLink('mechLink4a', 'mechCoeff4a', corrFedRE);
-            const corrUsdRE = getCorr(2, 4);  // USD/KRW vs realestate
+            // ── PATH 4: Demand (labor) ──
+            mechSetText('mechValMort', macroFmt(latest.labor, 1));
+            const corrFedRE = getCorr(1, 4);
+            setMechLink('mechLink4a', 'mechCoeff4a', corrFedRE, 'w=' + PASS_THROUGH.labor.weight);
+            const corrUsdRE = getCorr(2, 4);
             setMechLink('mechLink4b', 'mechCoeff4b', corrUsdRE);
-            setMechLink('mechLink4c', 'mechCoeff4c', null, 'β=-0.30');
+            setMechLink('mechLink4c', 'mechCoeff4c', null, 'lag=' + PASS_THROUGH.labor.peakLag + 'M');
             const reVal = s.kbfin || s.reindex;
             mechSetText('mechValDemand', reVal != null ? reVal.toLocaleString() : '--');
-            const demandImpact = (-p.oil * 0.25 - p.war * 0.4 - p.supply * 0.3).toFixed(1);
-            mechSetText('mechImpact4', demandImpact + '%');
+            const laborImpact = shocks.labor * PASS_THROUGH.labor.weight * 0.1;
+            mechSetText('mechImpact4', (laborImpact >= 0 ? '+' : '') + laborImpact.toFixed(2) + '%');
 
-            // ── Summary ──
-            const r = calcImpacts(p.oil, p.war, p.dur, p.rate, p.fx, p.supply);
-            mechSetText('mechTotalCost', '+' + r.costInc + '%');
-            mechSetText('mechTotalDemand', r.reChg + '%');
+            // ── Summary — use forecast totals ──
+            mechSetText('mechTotalCost', '+' + macroFmt(forecast[11].deltaPct, 2) + '%');
+            mechSetText('mechTotalDemand', routes[0] ? routes[0].path : '--');
             const range = correlationMonths.length > 0
                 ? `${correlationMonths[0]} ~ ${correlationMonths[correlationMonths.length - 1]}`
-                : 'N/A';
+                : '5Y 시뮬레이션';
             mechSetText('mechDataRange', range);
         }
 
