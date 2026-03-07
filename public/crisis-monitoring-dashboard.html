@@ -397,29 +397,29 @@
         .sim-kpi-card {
             background: rgba(12, 20, 32, 0.8);
             border: 1px solid #1f2f46;
-            border-radius: 6px;
-            padding: 8px 10px;
+            border-radius: 4px;
+            padding: 4px 6px;
             text-align: center;
             transition: border-color 0.2s;
         }
         .sim-kpi-card.active-kpi { border-color: var(--accent-cool); }
         .sim-kpi-label {
-            font-size: 9px;
+            font-size: 7px;
             color: #7f93ad;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
-            margin-bottom: 3px;
+            letter-spacing: 0.3px;
+            margin-bottom: 1px;
         }
         .sim-kpi-value {
-            font-size: 20px;
+            font-size: 10px;
             font-weight: 700;
             font-family: 'JetBrains Mono', monospace;
             color: var(--text);
         }
         .sim-kpi-sub {
-            font-size: 8px;
+            font-size: 6px;
             color: #5a7a9a;
-            margin-top: 2px;
+            margin-top: 1px;
         }
 
         /* Sim 3-column body */
@@ -457,6 +457,38 @@
             padding-bottom: 4px;
             border-bottom: 1px solid #1a2a42;
             font-family: 'JetBrains Mono', monospace;
+        }
+        .sim-accordion-title {
+            font-size: 9px;
+            font-weight: 700;
+            color: #8ea9cc;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 6px 0 4px;
+            border-bottom: 1px solid #1a2a42;
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+        .sim-accordion-title:hover { color: #b8d4f0; }
+        .sim-accordion-title::after {
+            content: '▾';
+            font-size: 10px;
+            transition: transform 0.2s;
+        }
+        .sim-accordion-title.collapsed::after { transform: rotate(-90deg); }
+        .sim-accordion-body {
+            overflow: hidden;
+            transition: max-height 0.25s ease, opacity 0.2s ease;
+            max-height: 2000px;
+            opacity: 1;
+        }
+        .sim-accordion-body.collapsed {
+            max-height: 0;
+            opacity: 0;
         }
 
         /* Right column: RE impact cards */
@@ -2132,8 +2164,9 @@
                 <div class="sim-body-3col">
                     <div class="sim-col">
                         <div class="sim-col-section" style="flex:0 0 auto;">
-                            <div class="sim-col-section-title">파라미터 설정</div>
-                            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;">
+                            <div class="sim-accordion-title" onclick="toggleAccordion(this)">파라미터 설정</div>
+                            <div class="sim-accordion-body">
+                            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;margin-top:6px;">
                                 <button class="sim-preset-btn" onclick="loadPreset('baseline')" style="font-size:10px;padding:3px 8px;">기준</button>
                                 <button class="sim-preset-btn" onclick="loadPreset('fxShock')" style="font-size:10px;padding:3px 8px;">환율급등</button>
                                 <button class="sim-preset-btn active" onclick="loadPreset('oilSpike')" style="font-size:10px;padding:3px 8px;">유가급등</button>
@@ -2179,9 +2212,13 @@
                                 <div id="monteCarloResult" style="margin-top:6px;"></div>
                             </div>
                         </div>
+                            </div>
+                        </div>
                         <div class="sim-col-section" style="flex:1 1 0;min-height:0;overflow-y:auto;">
-                            <div class="sim-col-section-title">전파경로</div>
+                            <div class="sim-accordion-title" onclick="toggleAccordion(this)">전파경로</div>
+                            <div class="sim-accordion-body" style="margin-top:6px;">
                             <div id="mechDynamic" style="min-height:100px;"></div>
+                            </div>
                         </div>
                     </div>
                     <div class="sim-col">
@@ -2214,12 +2251,16 @@
                     </div>
                     <div class="sim-col" style="overflow-y:auto;">
                         <div class="sim-col-section" style="flex:0 0 auto;">
-                            <div class="sim-col-section-title">유형별 건설공사비 영향</div>
+                            <div class="sim-accordion-title" onclick="toggleAccordion(this)">유형별 건설공사비 영향</div>
+                            <div class="sim-accordion-body" style="margin-top:6px;">
                             <div id="simReImpact"></div>
+                            </div>
                         </div>
                         <div class="sim-col-section" style="flex:0 0 auto;">
-                            <div class="sim-col-section-title">등급별 PF금리 영향</div>
+                            <div class="sim-accordion-title" onclick="toggleAccordion(this)">등급별 PF금리 영향</div>
+                            <div class="sim-accordion-body" style="margin-top:6px;">
                             <div id="simPfImpact"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -4334,7 +4375,7 @@
                 document.getElementById('reportTimestamp').textContent =
                     `생성: ${new Date(data.generatedAt).toLocaleString('ko-KR')} | 데이터: ${data.dataTimestamp || 'N/A'}`;
             } catch (err) {
-                content.textContent = '리포트 생성 실패: ' + err.message + '\n\nANTHROPIC_API_KEY가 설정되어 있는지 확인하세요.';
+                content.textContent = '리포트 생성 실패: ' + err.message + '\n\nLLM API KEY가 설정되어 있는지 확인하세요. (MOONSHOT / OPENAI / ANTHROPIC)';
             }
             btn.textContent = 'AI 리포트';
             btn.disabled = false;
@@ -4406,6 +4447,12 @@
             ['Fx', 'Oil', 'Ppi', 'Labor', 'Rate'].forEach(n => updateSliderLabel(n));
             document.querySelectorAll('.sim-preset-btn').forEach(b => b.classList.remove('active'));
             event.target.classList.add('active');
+        }
+
+        function toggleAccordion(el) {
+            el.classList.toggle('collapsed');
+            const body = el.nextElementSibling;
+            if (body) body.classList.toggle('collapsed');
         }
 
         function switchSimTab(tab) {

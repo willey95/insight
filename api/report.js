@@ -1,5 +1,8 @@
 const { buildIndicatorsPayload, buildCorrelationPayload } = require('./_lib/shared');
 
+// LLM Provider (priority: Moonshot → OpenAI → Anthropic)
+const MOONSHOT_API_KEY = process.env.MOONSHOT_API_KEY || '';
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
 
 module.exports = async function handler(req, res) {
@@ -12,8 +15,8 @@ module.exports = async function handler(req, res) {
         return;
     }
 
-    if (!ANTHROPIC_API_KEY) {
-        res.status(503).json({ error: 'ANTHROPIC_API_KEY not configured' });
+    if (!MOONSHOT_API_KEY && !OPENAI_API_KEY && !ANTHROPIC_API_KEY) {
+        res.status(503).json({ error: 'No LLM API key configured (MOONSHOT / OPENAI / ANTHROPIC)' });
         return;
     }
 
@@ -27,8 +30,8 @@ module.exports = async function handler(req, res) {
         // Build context for LLM
         const context = buildReportContext(indicators, correlation);
 
-        // Call Claude API
-        const report = await callClaude(context);
+        // Call LLM API (priority: Moonshot → OpenAI → Anthropic)
+        const report = await callLLM(context);
 
         res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=120');
         res.status(200).json({
@@ -90,8 +93,7 @@ function buildReportContext(indicators, correlation) {
     return parts.join('\n');
 }
 
-async function callClaude(context) {
-    const systemPrompt = `당신은 건설·부동산 시장 전문 애널리스트입니다. 주어진 실시간 시장 데이터를 분석하여 건설공사비 영향 관점의 리포트를 작성합니다.
+const SYSTEM_PROMPT = `당신은 건설·부동산 시장 전문 애널리스트입니다. 주어진 실시간 시장 데이터를 분석하여 건설공사비 영향 관점의 리포트를 작성합니다.
 
 리포트 구조:
 1. **시장 요약** (현재 상황 2-3문장)
@@ -102,6 +104,65 @@ async function callClaude(context) {
 
 한국어로 작성하고, 데이터 기반으로 구체적 수치를 인용하세요. 마크다운 형식으로 작성하세요.`;
 
+const USER_MSG = (context) => `다음 실시간 시장 데이터를 분석하여 건설공사비 영향 리포트를 작성해주세요.\n\n${context}`;
+
+async function callLLM(context) {
+    if (MOONSHOT_API_KEY) return callMoonshot(context);
+    if (OPENAI_API_KEY) return callOpenAI(context);
+    return callAnthropic(context);
+}
+
+async function callMoonshot(context) {
+    const response = await fetch('https://api.moonshot.cn/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${MOONSHOT_API_KEY}`
+        },
+        body: JSON.stringify({
+            model: 'moonshot-v1-8k',
+            messages: [
+                { role: 'system', content: SYSTEM_PROMPT },
+                { role: 'user', content: USER_MSG(context) }
+            ],
+            max_tokens: 2000,
+            temperature: 0.7
+        })
+    });
+    if (!response.ok) {
+        const err = await response.text();
+        throw new Error(`Moonshot API error: ${response.status} — ${err}`);
+    }
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || '리포트 생성 실패';
+}
+
+async function callOpenAI(context) {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+                { role: 'system', content: SYSTEM_PROMPT },
+                { role: 'user', content: USER_MSG(context) }
+            ],
+            max_tokens: 2000,
+            temperature: 0.7
+        })
+    });
+    if (!response.ok) {
+        const err = await response.text();
+        throw new Error(`OpenAI API error: ${response.status} — ${err}`);
+    }
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || '리포트 생성 실패';
+}
+
+async function callAnthropic(context) {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -112,19 +173,14 @@ async function callClaude(context) {
         body: JSON.stringify({
             model: 'claude-sonnet-4-20250514',
             max_tokens: 2000,
-            system: systemPrompt,
-            messages: [{
-                role: 'user',
-                content: `다음 실시간 시장 데이터를 분석하여 건설공사비 영향 리포트를 작성해주세요.\n\n${context}`
-            }]
+            system: SYSTEM_PROMPT,
+            messages: [{ role: 'user', content: USER_MSG(context) }]
         })
     });
-
     if (!response.ok) {
         const err = await response.text();
-        throw new Error(`Claude API error: ${response.status} — ${err}`);
+        throw new Error(`Anthropic API error: ${response.status} — ${err}`);
     }
-
     const data = await response.json();
     return data.content?.[0]?.text || '리포트 생성 실패';
 }
