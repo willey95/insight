@@ -559,10 +559,10 @@
             display: none;
             position: fixed;
             left: 50%;
-            top: 12px;
+            top: 4px;
             transform: translateX(-50%);
             width: min(1440px, 97vw);
-            max-height: 97vh;
+            max-height: 99vh;
             z-index: 2100;
             overflow: hidden;
             box-shadow: 0 0 0 9999px rgba(4, 8, 14, 0.82), 0 18px 38px rgba(0, 0, 0, 0.5);
@@ -624,7 +624,7 @@
         /* Sim 3-column body */
         .sim-body-3col {
             display: grid;
-            grid-template-columns: 280px 1fr 280px;
+            grid-template-columns: 330px 1fr 330px;
             gap: 8px;
             flex: 1;
             min-height: 0;
@@ -1749,9 +1749,9 @@
         .modal-content {
             background: linear-gradient(165deg, rgba(13, 19, 29, 0.97), rgba(9, 13, 20, 0.97));
             border: 1px solid #2a3952;
-            border-radius: 8px;
-            padding: 30px;
-            max-width: 900px;
+            border-radius: 6px;
+            padding: 15px;
+            max-width: 520px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
@@ -1761,8 +1761,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
             border-bottom: 1px solid #2a3952;
         }
 
@@ -1770,38 +1770,38 @@
             background: #172536;
             color: #d5e5fc;
             border: none;
-            width: 30px;
-            height: 30px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             cursor: pointer;
-            font-size: 19px;
+            font-size: 13px;
             border: 1px solid #354963;
         }
 
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin: 20px 0;
+            gap: 8px;
+            margin: 10px 0;
         }
 
         .stat-box {
             background: rgba(14, 24, 38, 0.82);
-            padding: 15px;
+            padding: 8px;
             border-radius: 4px;
             border-left: 2px solid var(--accent-cool);
         }
 
         .stat-label {
-            font-size: 12px;
+            font-size: 6px;
             color: #8ea0bc;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
             text-transform: uppercase;
             letter-spacing: 0.35px;
         }
 
         .stat-value {
-            font-size: 23px;
+            font-size: 12px;
             font-weight: 700;
             color: #dce9ff;
             font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
@@ -2641,7 +2641,7 @@
     <div class="modal" id="detailModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="modalTitle" style="color: #ff6b00; font-size: 21px;">지표 상세 분석</h2>
+                <h2 id="modalTitle" style="color: #ff6b00; font-size: 11px;">지표 상세 분석</h2>
                 <button class="modal-close" onclick="closeModal()">×</button>
             </div>
             <div class="stats-grid">
