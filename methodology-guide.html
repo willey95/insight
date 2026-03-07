@@ -640,6 +640,91 @@ flowchart TB
 </div>
 
 <!-- ═══════════════════════════════════════════════
+     실전 활용 가이드
+     ═══════════════════════════════════════════════ -->
+<div class="section">
+    <h2><span class="dot" style="background: #f59e0b;"></span> 실전 활용 가이드: 언제 어떤 방법론을 쓸 것인가</h2>
+
+    <h3 style="color:#38bdf8; font-size:15px; margin: 16px 0 10px;">시나리오별 권장 방법론</h3>
+    <table class="comp-table">
+        <thead><tr><th>분석 목적</th><th>추천 방법론</th><th>추천 기간</th><th>이유</th></tr></thead>
+        <tbody>
+            <tr><td><strong>빠른 스크리닝</strong><br>프로젝트 초기 사업성 검토</td><td style="color:#22c55e;">Gaussian IRF</td><td>최근 12M</td>
+                <td>파라미터 추정 불필요, 고정 가중치로 즉시 결과 확인. 방향성 판단에 충분.</td></tr>
+            <tr><td><strong>정밀 비용 예측</strong><br>예산 편성, 입찰가 산정</td><td style="color:#8b5cf6;">ARDL-OLS</td><td>전체(5Y) or 최근 12M</td>
+                <td>시차별 계수를 데이터로 추정하므로 정량적 예측 정확도가 높음. 단, 충분한 관측치 필요(40+).</td></tr>
+            <tr><td><strong>위기 상황 분석</strong><br>전쟁, 팬데믹 등 비정상 충격</td><td style="color:#fb7185;">Local Projections</td><td>전쟁기(2022.02~)</td>
+                <td>비정상 분포(fat tails)에 강건. 모형 오설정에 덜 민감. 소규모 표본 가능.</td></tr>
+            <tr><td><strong>교차 검증</strong><br>리스크 보고서, 의사결정 지원</td><td style="color:#38bdf8;">All (3방법 비교)</td><td>상황에 맞게</td>
+                <td>3개 방법의 결과가 수렴하면 신뢰도↑, 괴리가 크면 불확실성↑ 신호.</td></tr>
+            <tr><td><strong>과거 충격 회고</strong><br>코로나, 금리 인상기 복기</td><td style="color:#8b5cf6;">ARDL / LP</td><td>해당 시기 선택</td>
+                <td>실제 계수 추정으로 "그 당시 어떤 변수가 얼마나 영향을 줬는지" 분해 가능.</td></tr>
+        </tbody>
+    </table>
+
+    <h3 style="color:#38bdf8; font-size:15px; margin: 24px 0 10px;">분석 결과 해석 가이드</h3>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+        <div style="background: #0a1f35; border: 1px solid #13304d; border-radius: 12px; padding: 18px;">
+            <div style="font-size: 12px; font-weight: 700; color: #ff6b00; margin-bottom: 8px;">PRESSURE BADGE 해석</div>
+            <div style="font-size: 12px; line-height: 1.8;">
+                <div><span style="background:#dc3545; color:#fff; padding:1px 8px; border-radius:3px; font-size:10px;">HIGH PRESSURE</span>
+                    — 복합 점수 > 3.0. 건설비 상승 압력이 강하게 작용 중.</div>
+                <div style="margin-top:4px;"><span style="background:#f59e0b; color:#000; padding:1px 8px; border-radius:3px; font-size:10px;">WATCH</span>
+                    — 복합 점수 1.5~3.0. 일부 변수에서 압력 신호 감지.</div>
+                <div style="margin-top:4px;"><span style="background:#22c55e; color:#000; padding:1px 8px; border-radius:3px; font-size:10px;">STABLE</span>
+                    — 복합 점수 < 1.5. 현재 유의미한 상승 압력 없음.</div>
+            </div>
+        </div>
+        <div style="background: #0a1f35; border: 1px solid #13304d; border-radius: 12px; padding: 18px;">
+            <div style="font-size: 12px; font-weight: 700; color: #4ec9ff; margin-bottom: 8px;">3M / 6M / 12M 추가압력 해석</div>
+            <div style="font-size: 12px; line-height: 1.8;">
+                <div><strong>+2.5% (3M)</strong> → 향후 3개월간 건설공사비 지수가 현재 대비 2.5% 추가 상승 예상</div>
+                <div style="margin-top:4px;"><strong>-0.3% (6M)</strong> → 6개월 시점에서 충격이 흡수되어 소폭 하락 전환 예상</div>
+                <div style="margin-top:4px;"><strong>3방법 비교 시</strong> — 결과가 동일 방향이면 확신↑, 서로 다르면 불확실성 구간에 해당</div>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div style="background: #0a1f35; border: 1px solid #13304d; border-radius: 12px; padding: 18px;">
+            <div style="font-size: 12px; font-weight: 700; color: #a78bfa; margin-bottom: 8px;">ATTRIBUTION TABLE 해석</div>
+            <div style="font-size: 12px; line-height: 1.8;">
+                <div><strong>기여도(%)</strong> — 해당 변수가 전체 공사비 변동의 몇 %를 설명하는지 (change × weight).</div>
+                <div style="margin-top:4px;"><strong>반영시차</strong> — 충격 후 최대 영향까지 걸리는 개월 수 (peakLag).</div>
+                <div style="margin-top:4px;"><strong>전달경로</strong> — 충격이 건설공사비까지 도달하는 중간 경로.</div>
+                <div style="margin-top:4px;">기여도가 가장 큰 변수 = <strong>핵심 관리 대상</strong>. 시차가 긴 변수는 선제 대응 가능.</div>
+            </div>
+        </div>
+        <div style="background: #0a1f35; border: 1px solid #13304d; border-radius: 12px; padding: 18px;">
+            <div style="font-size: 12px; font-weight: 700; color: #22c55e; margin-bottom: 8px;">상관관계 vs 인과관계 주의</div>
+            <div style="font-size: 12px; line-height: 1.8;">
+                <div>상관계수(r)가 높다고 인과관계를 의미하지 않습니다.</div>
+                <div style="margin-top:4px;"><strong>r > 0.7</strong> — 강한 양의 상관. 함께 움직이는 경향 강함.</div>
+                <div style="margin-top:4px;"><strong>-0.7 < r < 0.7</strong> — 중간~약한 관계. 다른 요인 존재 가능.</div>
+                <div style="margin-top:4px;">인과 방향 확인에는 <strong>Granger 인과검정</strong> 또는 구조 VAR이 필요하며, 본 대시보드는 예측적 상관에 초점.</div>
+            </div>
+        </div>
+    </div>
+
+    <h3 style="color:#38bdf8; font-size:15px; margin: 24px 0 10px;">3가지 방법론 결과가 다를 때 의사결정 흐름</h3>
+    <div class="mermaid" style="background: #06111f; border-radius: 12px; padding: 16px;">
+    flowchart TD
+        A["3방법 실행"] --> B{"결과 방향<br>일치?"}
+        B -->|"3개 모두 상승"| C["높은 확신<br>상승 대비 전략 수립"]
+        B -->|"2:1 분리"| D["중간 확신<br>다수 의견 참조 + 소수 원인 분석"]
+        B -->|"완전 불일치"| E["높은 불확실성<br>시나리오 분석 강화"]
+        C --> F["예산 상향 조정 검토"]
+        D --> G["주요 변수 모니터링 강화"]
+        E --> H["Monte Carlo 시뮬레이션으로<br>확률 분포 확인"]
+        style A fill:#0a2540,stroke:#38bdf8,color:#e2e8f0
+        style C fill:#0a2540,stroke:#22c55e,color:#22c55e
+        style D fill:#0a2540,stroke:#f59e0b,color:#f59e0b
+        style E fill:#0a2540,stroke:#dc3545,color:#dc3545
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
      References
      ═══════════════════════════════════════════════ -->
 <div class="section">

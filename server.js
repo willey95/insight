@@ -73,6 +73,8 @@ const YAHOO_SECTOR_SYMBOLS = {
     hyundaie: '000720.KS',
     daewooec: '047040.KS',
     dlenc: '375500.KS',
+    gsenc: '006360.KS',
+    poscoenc: '034220.KS',
     cement: '004980.KS'        // 성신양회 (시멘트 대표주)
 };
 
@@ -88,6 +90,12 @@ const YAHOO_COMMODITY_SYMBOLS = {
 
 const YAHOO_FX_SYMBOLS = {
     usdkrw: 'USDKRW%3DX'
+};
+
+const YAHOO_MACRO_SYMBOLS = {
+    vix: '%5EVIX',
+    us10y: '%5ETNX',
+    us2y: '%5EIRX'
 };
 
 // Middle East bounding box for military data queries
@@ -833,11 +841,12 @@ async function buildIndicatorsPayload() {
     const warnings = [];
 
     // 1) Yahoo Finance — free, no API key needed
-    const [yahooIndices, yahooSectors, yahooCommodities, yahooFx] = await Promise.all([
+    const [yahooIndices, yahooSectors, yahooCommodities, yahooFx, yahooMacro] = await Promise.all([
         fetchYahooQuotes(YAHOO_INDEX_SYMBOLS, warnings, '지수').catch(() => ({})),
         fetchYahooQuotes(YAHOO_SECTOR_SYMBOLS, warnings, '섹터주').catch(() => ({})),
         fetchYahooQuotes(YAHOO_COMMODITY_SYMBOLS, warnings, '원자재').catch(() => ({})),
-        fetchYahooQuotes(YAHOO_FX_SYMBOLS, warnings, '환율').catch(() => ({}))
+        fetchYahooQuotes(YAHOO_FX_SYMBOLS, warnings, '환율').catch(() => ({})),
+        fetchYahooQuotes(YAHOO_MACRO_SYMBOLS, warnings, '매크로').catch(() => ({}))
     ]);
 
     // 2) Interest rates from FRED/ECOS (need API keys)
@@ -934,6 +943,8 @@ async function buildIndicatorsPayload() {
         sectorStocks,
         // Commodities: { wti, brent, gas, gold, silver, steel, lng }
         commodities,
+        // Macro indicators: VIX, Treasury yields
+        macroIndicators: { ...yahooMacro },
         // Standalone gold for finance card
         gold,
         goldChangePct,

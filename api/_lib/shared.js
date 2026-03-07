@@ -34,6 +34,8 @@ const YAHOO_SECTOR_SYMBOLS = {
     hyundaie: '000720.KS',
     daewooec: '047040.KS',
     dlenc: '375500.KS',
+    gsenc: '006360.KS',
+    poscoenc: '034220.KS',
     cement: '004980.KS'
 };
 
@@ -49,6 +51,12 @@ const YAHOO_COMMODITY_SYMBOLS = {
 
 const YAHOO_FX_SYMBOLS = {
     usdkrw: 'USDKRW%3DX'
+};
+
+const YAHOO_MACRO_SYMBOLS = {
+    vix: '%5EVIX',
+    us10y: '%5ETNX',
+    us2y: '%5EIRX'
 };
 
 const ME_BBOX = { minLat: 10, maxLat: 39, minLon: 32, maxLon: 63 };
@@ -662,11 +670,12 @@ async function buildNewsPayload() {
 async function buildIndicatorsPayload() {
     const warnings = [];
 
-    const [yahooIndices, yahooSectors, yahooCommodities, yahooFx] = await Promise.all([
+    const [yahooIndices, yahooSectors, yahooCommodities, yahooFx, yahooMacro] = await Promise.all([
         fetchYahooQuotes(YAHOO_INDEX_SYMBOLS, warnings, '지수').catch(() => ({})),
         fetchYahooQuotes(YAHOO_SECTOR_SYMBOLS, warnings, '섹터주').catch(() => ({})),
         fetchYahooQuotes(YAHOO_COMMODITY_SYMBOLS, warnings, '원자재').catch(() => ({})),
-        fetchYahooQuotes(YAHOO_FX_SYMBOLS, warnings, '환율').catch(() => ({}))
+        fetchYahooQuotes(YAHOO_FX_SYMBOLS, warnings, '환율').catch(() => ({})),
+        fetchYahooQuotes(YAHOO_MACRO_SYMBOLS, warnings, '매크로').catch(() => ({}))
     ]);
 
     const fedfundsPromise = fetchFredLatest('FEDFUNDS').catch((error) => {
@@ -718,6 +727,16 @@ async function buildIndicatorsPayload() {
     }
 
     const sectorStocks = { ...yahooSectors };
+
+    // Compute construction stock average (5 companies)
+    const constKeys = ['hyundaie', 'daewooec', 'dlenc', 'gsenc', 'poscoenc'];
+    const validConst = constKeys.filter(k => sectorStocks[k] && Number.isFinite(sectorStocks[k].value));
+    if (validConst.length > 0) {
+        const avgValue = validConst.reduce((s, k) => s + sectorStocks[k].value, 0) / validConst.length;
+        const avgChangePct = validConst.reduce((s, k) => s + (sectorStocks[k].changePct || 0), 0) / validConst.length;
+        sectorStocks.constructionAvg = { value: Math.round(avgValue), changePct: Math.round(avgChangePct * 100) / 100 };
+    }
+
     const commodities = { ...yahooCommodities };
     const gold = yahooCommodities.gold?.value ?? null;
     const goldChangePct = yahooCommodities.gold?.changePct ?? null;
@@ -738,12 +757,16 @@ async function buildIndicatorsPayload() {
     if (reindex !== null) sources.push('ECOS(부동산)');
     if (sources.length === 0) sources.push('fallback defaults');
 
+    // Macro indicators (VIX, Treasury yields)
+    const macroIndicators = { ...yahooMacro };
+
     return {
         fedfunds, libor, bok,
         usdkrw, usdkrwChangePct,
         stockIndices,
         sectorStocks,
         commodities,
+        macroIndicators,
         gold, goldChangePct,
         reindex,
         constructionIndex,
@@ -858,15 +881,27 @@ function pearsonCorrelation(x, y) {
 
 async function buildCorrelationPayload() {
     const warnings = [];
-    const keys = ['wti', 'fedfunds', 'usdkrw', 'construction', 'realestate'];
-    const labels = ['WTI 원유', 'Fed 기준금리', 'USD/KRW', '건설(현대건설)', '부동산(KB금융)'];
+    const keys = ['wti', 'fedfunds', 'usdkrw', 'construction', 'realestate', 'vix', 'us10y'];
+    const labels = ['WTI 원유', 'Fed 기준금리', 'USD/KRW', '건설주 평균(5사)', '부동산(KB금융)', 'VIX 공포지수', 'US 10Y 국채'];
+
+    // Fetch all 5 construction stocks for averaging
+    const constructionTickers = {
+        hyundaie: '000720.KS', daewooec: '047040.KS', dlenc: '375500.KS',
+        gsenc: '006360.KS', poscoenc: '034220.KS'
+    };
+    const constructionPromises = Object.entries(constructionTickers).map(async ([name, ticker]) => {
+        try { return await fetchYahooMonthly(ticker); }
+        catch (e) { warnings.push(`${name} 5Y: ${e.message}`); return null; }
+    });
 
     const seriesPromises = {
         wti: fetchYahooMonthly('CL%3DF').catch(e => { warnings.push(`WTI 5Y: ${e.message}`); return null; }),
         fedfunds: fetchFredMonthly('FEDFUNDS').catch(e => { warnings.push(`FEDFUNDS 5Y: ${e.message}`); return null; }),
         usdkrw: fetchYahooMonthly('USDKRW%3DX').catch(e => { warnings.push(`USDKRW 5Y: ${e.message}`); return null; }),
-        construction: fetchYahooMonthly('000720.KS').catch(e => { warnings.push(`현대건설 5Y: ${e.message}`); return null; }),
-        realestate: fetchYahooMonthly('105560.KS').catch(e => { warnings.push(`KB금융 5Y: ${e.message}`); return null; })
+        constructionStocks: Promise.all(constructionPromises),
+        realestate: fetchYahooMonthly('105560.KS').catch(e => { warnings.push(`KB금융 5Y: ${e.message}`); return null; }),
+        vix: fetchYahooMonthly('%5EVIX').catch(e => { warnings.push(`VIX 5Y: ${e.message}`); return null; }),
+        us10y: fetchYahooMonthly('%5ETNX').catch(e => { warnings.push(`US10Y 5Y: ${e.message}`); return null; })
     };
 
     const raw = {};
@@ -874,6 +909,33 @@ async function buildCorrelationPayload() {
         Object.entries(seriesPromises).map(async ([k, p]) => [k, await p])
     );
     for (const [k, v] of entries) raw[k] = v;
+
+    // Average construction stocks into a single "construction" series
+    const stocksData = raw.constructionStocks || [];
+    const validStocks = stocksData.filter(s => s && s.length > 0);
+    if (validStocks.length > 0) {
+        // Find common months across all valid construction stocks
+        const stockMonthSets = validStocks.map(s => new Set(s.map(p => p.month)));
+        let stockCommon = [...stockMonthSets[0]];
+        for (let i = 1; i < stockMonthSets.length; i++) {
+            stockCommon = stockCommon.filter(m => stockMonthSets[i].has(m));
+        }
+        stockCommon.sort();
+        // Normalize each stock to base 100, then average
+        const normalized = validStocks.map(stock => {
+            const byM = {}; for (const p of stock) byM[p.month] = p.value;
+            const vals = stockCommon.map(m => byM[m]);
+            const base = vals[0] || 1;
+            return vals.map(v => (v / base) * 100);
+        });
+        raw.construction = stockCommon.map((month, i) => ({
+            month,
+            value: normalized.reduce((sum, norm) => sum + norm[i], 0) / normalized.length
+        }));
+    } else {
+        raw.construction = null;
+    }
+    delete raw.constructionStocks;
 
     // Build month-aligned intersection
     const monthSets = keys.map(k => new Set((raw[k] || []).map(p => p.month)));
