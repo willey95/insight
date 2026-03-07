@@ -3962,8 +3962,12 @@
                 mapAssetMarkers[asset.id] = marker;
             });
 
-            // ── Heatmap Layer ──
-            if (typeof window.L.heatLayer === 'function') {
+            // ── Heatmap Layer (deferred until map has valid size) ──
+            function initHeatmap() {
+                if (heatmapLayer) return;
+                if (typeof window.L.heatLayer !== 'function') return;
+                const size = geoMap.getSize();
+                if (!size || size.x === 0 || size.y === 0) return;
                 heatmapLayer = window.L.heatLayer(heatmapData, {
                     radius: 30,
                     blur: 25,
@@ -3972,6 +3976,8 @@
                     gradient: { 0.2: '#1a1aff', 0.4: '#00d084', 0.6: '#ffc832', 0.8: '#ff6b00', 1.0: '#ff2d55' }
                 }).addTo(mapLayers.heatmap);
             }
+            initHeatmap();
+            geoMap.on('resize moveend', initHeatmap);
 
             // ── Layer Toggle Controls ──
             initMapLayerControls();

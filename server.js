@@ -336,6 +336,196 @@ async function fetchEcosHousingIndex() {
     return { value: latest, changePct };
 }
 
+// ─── Yahoo Finance 5Y Monthly History ────────────────────────────────────────
+
+async function fetchYahooHistory(encodedSymbol, range = '5y', interval = '1mo') {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodedSymbol}?interval=${interval}&range=${range}&includePrePost=false`;
+    const data = await fetchJson(url);
+    const result = data?.chart?.result?.[0];
+    if (!result) return [];
+
+    const timestamps = result.timestamp || [];
+    const closes = result.indicators?.quote?.[0]?.close || [];
+    const out = [];
+    for (let i = 0; i < timestamps.length; i++) {
+        const v = closes[i];
+        if (v == null || !Number.isFinite(v)) continue;
+        const d = new Date(timestamps[i] * 1000);
+        const month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        out.push({ month, value: Math.round(v * 100) / 100 });
+    }
+    return out;
+}
+
+// ─── ECOS 5Y Monthly History ─────────────────────────────────────────────────
+
+async function fetchEcosHistory(tableCode, itemCode, startYM, endYM) {
+    if (!ECOS_API_KEY) return [];
+    const url =
+        `https://ecos.bok.or.kr/api/StatisticSearch/${ECOS_API_KEY}/json/kr/1/600/` +
+        `${tableCode}/M/${startYM}/${endYM}/${itemCode}`;
+    const data = await fetchJson(url);
+    const rows = data?.StatisticSearch?.row;
+    if (!Array.isArray(rows)) return [];
+    return rows
+        .map(r => {
+            const v = toNumber(r.DATA_VALUE);
+            if (v === null) return null;
+            const t = r.TIME || '';
+            const month = t.length >= 6 ? `${t.slice(0, 4)}-${t.slice(4, 6)}` : t;
+            return { month, value: v };
+        })
+        .filter(Boolean);
+}
+
+// ─── FRED 5Y Monthly History ─────────────────────────────────────────────────
+
+async function fetchFredHistory(seriesId) {
+    if (!FRED_API_KEY) return [];
+    const now = new Date();
+    const startDate = `${now.getFullYear() - 5}-01-01`;
+    const url = new URL('https://api.stlouisfed.org/fred/series/observations');
+    url.searchParams.set('series_id', seriesId);
+    url.searchParams.set('api_key', FRED_API_KEY);
+    url.searchParams.set('file_type', 'json');
+    url.searchParams.set('observation_start', startDate);
+    url.searchParams.set('frequency', 'm');
+    const data = await fetchJson(url.toString());
+    const rows = Array.isArray(data.observations) ? data.observations : [];
+    return rows
+        .map(r => {
+            const v = toNumber(r.value);
+            if (v === null) return null;
+            const d = r.date || '';
+            const month = d.slice(0, 7); // YYYY-MM
+            return { month, value: v };
+        })
+        .filter(Boolean);
+}
+
+// ─── Correlation & History endpoints ─────────────────────────────────────────
+
+const HIST_CACHE_TTL_MS = 30 * 60 * 1000; // 30 min
+let histCache = { expiresAt: 0, payload: null };
+let corrCache = { expiresAt: 0, payload: null };
+
+async function fetchAllHistory() {
+    const now = new Date();
+    const endYM = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const startYM = `${now.getFullYear() - 5}01`;
+
+    const [
+        wti, brent, gas, gold, silver, steel, usdkrw, vix, us10y,
+        fedfunds, sofr,
+        realestate, bokRate, constructionEcos
+    ] = await Promise.all([
+        fetchYahooHistory('CL%3DF').catch(() => []),
+        fetchYahooHistory('BZ%3DF').catch(() => []),
+        fetchYahooHistory('NG%3DF').catch(() => []),
+        fetchYahooHistory('GC%3DF').catch(() => []),
+        fetchYahooHistory('SI%3DF').catch(() => []),
+        fetchYahooHistory('HRC%3DF').catch(() => []),
+        fetchYahooHistory('USDKRW%3DX').catch(() => []),
+        fetchYahooHistory('%5EVIX').catch(() => []),
+        fetchYahooHistory('%5ETNX').catch(() => []),
+        fetchFredHistory('FEDFUNDS').catch(() => []),
+        fetchFredHistory('SOFR').catch(() => []),
+        fetchEcosHistory('901Y009', 'H01', startYM, endYM).catch(() => []),
+        fetchEcosHistory('722Y001', '0101000', startYM, endYM).catch(() => []),
+        fetchEcosHistory('403Y003', '*', startYM, endYM).catch(() => [])
+    ]);
+
+    return {
+        wti, brent, gas, lng: gas, gold, silver, steel,
+        usdkrw, vix, us10y,
+        fedfunds, sofr, bok: bokRate,
+        realestate, constructionAvg: constructionEcos,
+        cementProxy: steel // cement proxy via steel futures
+    };
+}
+
+function computeCorrelation(xArr, yArr) {
+    const n = xArr.length;
+    if (n < 3) return 0;
+    const mx = xArr.reduce((a, b) => a + b, 0) / n;
+    const my = yArr.reduce((a, b) => a + b, 0) / n;
+    let num = 0, dx2 = 0, dy2 = 0;
+    for (let i = 0; i < n; i++) {
+        const dx = xArr[i] - mx, dy = yArr[i] - my;
+        num += dx * dy;
+        dx2 += dx * dx;
+        dy2 += dy * dy;
+    }
+    const denom = Math.sqrt(dx2 * dy2);
+    return denom === 0 ? 0 : Math.round((num / denom) * 1000) / 1000;
+}
+
+async function getCorrelation() {
+    if (corrCache.payload && Date.now() < corrCache.expiresAt) return corrCache.payload;
+
+    const allHist = histCache.payload || await fetchAllHistory();
+
+    const allKeys = ['wti', 'fedfunds', 'usdkrw', 'constructionAvg', 'realestate', 'vix', 'us10y'];
+    const keyAlias = { constructionAvg: 'construction' };
+
+    // Only use keys that actually have data
+    const activeKeys = allKeys.filter(k => (allHist[k] || []).length > 0);
+
+    // Find common months across active series only
+    let commonMonths = [];
+    if (activeKeys.length > 0) {
+        const monthSets = activeKeys.map(k => new Set((allHist[k] || []).map(d => d.month)));
+        commonMonths = [...monthSets[0]];
+        for (let i = 1; i < monthSets.length; i++) {
+            commonMonths = commonMonths.filter(m => monthSets[i].has(m));
+        }
+        commonMonths.sort();
+    }
+
+    const history = {};
+    for (const k of allKeys) {
+        const alias = keyAlias[k] || k;
+        const arr = allHist[k] || [];
+        if (arr.length === 0) {
+            history[alias] = [];
+            continue;
+        }
+        const lookup = Object.fromEntries(arr.map(d => [d.month, d.value]));
+        history[alias] = commonMonths.map(m => lookup[m] ?? null);
+    }
+
+    const outputKeys = allKeys.map(k => keyAlias[k] || k);
+
+    const payload = {
+        keys: outputKeys,
+        history,
+        months: commonMonths,
+        dataPoints: commonMonths.length
+    };
+
+    corrCache = { expiresAt: Date.now() + HIST_CACHE_TTL_MS, payload };
+    return payload;
+}
+
+async function getHistory() {
+    if (histCache.expiresAt > Date.now() && histCache.payload) {
+        const series = {};
+        for (const [key, arr] of Object.entries(histCache.payload)) {
+            series[key] = arr.map(d => d.value);
+        }
+        return { series };
+    }
+
+    const allHist = await fetchAllHistory();
+    histCache = { expiresAt: Date.now() + HIST_CACHE_TTL_MS, payload: allHist };
+
+    const series = {};
+    for (const [key, arr] of Object.entries(allHist)) {
+        series[key] = arr.map(d => d.value);
+    }
+    return { series };
+}
+
 // ─── FastForex (USD/KRW fallback) ───────────────────────────────────────────
 
 async function fetchFastForexUsdKrw() {
@@ -1035,6 +1225,26 @@ const server = http.createServer(async (req, res) => {
             sendJson(res, 200, payload);
         } catch (error) {
             sendJson(res, 500, { error: error.message || 'military data fetch failed' });
+        }
+        return;
+    }
+
+    if (requestUrl.pathname === '/api/correlation') {
+        try {
+            const payload = await getCorrelation();
+            sendJson(res, 200, payload);
+        } catch (error) {
+            sendJson(res, 500, { error: error.message || 'correlation fetch failed' });
+        }
+        return;
+    }
+
+    if (requestUrl.pathname === '/api/history') {
+        try {
+            const payload = await getHistory();
+            sendJson(res, 200, payload);
+        } catch (error) {
+            sendJson(res, 500, { error: error.message || 'history fetch failed' });
         }
         return;
     }
