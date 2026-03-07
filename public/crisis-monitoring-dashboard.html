@@ -1153,6 +1153,73 @@
         }
 
         /* ─── Mechanism Diagram ─────────────────────────────────── */
+        @keyframes flowPulse {
+            0% { opacity: 0.3; transform: translateX(-4px); }
+            50% { opacity: 1; transform: translateX(4px); }
+            100% { opacity: 0.3; transform: translateX(-4px); }
+        }
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 0 6px rgba(78, 201, 255, 0.15); }
+            50% { box-shadow: 0 0 16px rgba(78, 201, 255, 0.4); }
+        }
+
+        .mech-dyn-row {
+            display: flex; align-items: center; gap: 0; margin-bottom: 3px;
+            background: rgba(10, 15, 24, 0.5); border-radius: 6px;
+            padding: 6px 10px; border: 1px solid rgba(26, 37, 54, 0.6);
+            transition: border-color 0.3s, background 0.3s;
+            cursor: pointer;
+        }
+        .mech-dyn-row:hover { border-color: rgba(78, 201, 255, 0.4); background: rgba(15, 25, 40, 0.7); }
+        .mech-dyn-row.active { animation: glowPulse 2s ease-in-out infinite; border-color: rgba(78, 201, 255, 0.5); }
+
+        .mech-dyn-driver {
+            min-width: 80px; text-align: center; flex-shrink: 0;
+        }
+        .mech-dyn-driver-label { font-size: 8px; color: #7f93ad; text-transform: uppercase; letter-spacing: 0.3px; }
+        .mech-dyn-driver-val { font-size: 11px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+
+        .mech-dyn-flow {
+            flex: 1; display: flex; align-items: center; gap: 2px;
+            padding: 0 8px; position: relative; min-width: 0;
+        }
+        .mech-dyn-flow-bar {
+            height: 3px; border-radius: 2px; transition: width 0.5s ease, background 0.3s;
+            position: relative;
+        }
+        .mech-dyn-flow-particle {
+            position: absolute; top: -2px; width: 7px; height: 7px;
+            border-radius: 50%; animation: flowPulse 1.5s ease-in-out infinite;
+        }
+        .mech-dyn-flow-label {
+            font-size: 7px; color: #5a7a9a; white-space: nowrap; flex-shrink: 0;
+            padding: 0 4px; min-width: 50px; text-align: center;
+        }
+
+        .mech-dyn-path {
+            flex: 1; font-size: 8px; color: #6b8baa; padding: 0 8px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .mech-dyn-impact {
+            min-width: 60px; text-align: right; flex-shrink: 0;
+        }
+        .mech-dyn-impact-val {
+            font-size: 13px; font-weight: 700; font-family: 'IBM Plex Mono', monospace;
+        }
+        .mech-dyn-impact-rank {
+            font-size: 8px; color: #5a7a9a;
+        }
+
+        .mech-dyn-target {
+            margin-top: 8px; text-align: center; padding: 10px;
+            background: linear-gradient(135deg, rgba(255,179,71,0.08), rgba(255,107,0,0.08));
+            border: 1px solid rgba(255,179,71,0.3); border-radius: 8px;
+        }
+        .mech-dyn-target-label { font-size: 9px; color: #ffb347; text-transform: uppercase; letter-spacing: 0.5px; }
+        .mech-dyn-target-val { font-size: 20px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; color: #ff6b00; }
+        .mech-dyn-target-sub { font-size: 10px; color: #8ea9cc; margin-top: 2px; }
+
         .mech-container {
             padding: 2px 0;
         }
@@ -1992,6 +2059,7 @@
                     <div style="display: flex; gap: 6px; margin-top: 8px;">
                         <button class="sim-button" onclick="runSimulation()" style="flex: 1;">시뮬레이션 실행</button>
                         <button class="sim-button" onclick="runComparison()" style="flex: 1; background: linear-gradient(90deg, #6b3fa0 0%, #8b5cf6 100%);">프리셋 비교</button>
+                        <button class="sim-button" onclick="generateLLMReport()" style="flex: 0.8; background: linear-gradient(90deg, #0d9488 0%, #14b8a6 100%);" id="btnReport">AI 리포트</button>
                     </div>
                     <div style="margin-top: 6px; padding: 8px; border: 1px dashed #22324a; border-radius: 5px; font-size: 10px; color: #6a829f;" id="modelInfoBox">
                         <strong>Gaussian IRF</strong>: 고정 가중치 + Gaussian 형태 IRF &nbsp;|&nbsp;
@@ -2053,179 +2121,7 @@
 
                 <!-- Mechanism Tab -->
                 <div class="sim-tab-content" id="simTabMechanism">
-                    <div class="mech-container">
-                        <!-- Trigger Nodes -->
-                        <div class="mech-origins">
-                            <div class="mech-node mech-node-trigger" onclick="mechShowDetail('wti')">
-                                <div class="mech-node-icon">⚔</div>
-                                <div class="mech-node-label">전쟁/분쟁 → 유가</div>
-                                <div class="mech-node-value" id="mechValWar">--</div>
-                            </div>
-                            <div class="mech-node mech-node-trigger" onclick="mechShowDetail('fedfunds')">
-                                <div class="mech-node-icon">%</div>
-                                <div class="mech-node-label">LIBOR 3M / 기준금리</div>
-                                <div class="mech-node-value" id="mechValLibor">--</div>
-                            </div>
-                        </div>
-
-                        <div class="mech-pathways">
-                            <!-- Path 1: Energy Cost -->
-                            <div class="mech-path">
-                                <div class="mech-path-header">PATH 1 — 에너지 비용 경로</div>
-                                <div class="mech-chain">
-                                    <div class="mech-node mech-node-mid" onclick="mechShowDetail('wti')">
-                                        <div class="mech-node-label">유가 급등</div>
-                                        <div class="mech-node-value" id="mechValWti">--</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink1a">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff1a">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-mid">
-                                        <div class="mech-node-label">에너지 비용 ↑</div>
-                                        <div class="mech-node-value">직접전가</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink1b">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff1b">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-mid" onclick="mechShowDetail('construction')">
-                                        <div class="mech-node-label">건설자재 비용 ↑</div>
-                                        <div class="mech-node-value" id="mechValSteel">--</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink1c">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff1c">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-end">
-                                        <div class="mech-node-label">건설공사비 ↑</div>
-                                        <div class="mech-node-value mech-val-impact" id="mechImpact1">--</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Path 2: Supply Chain -->
-                            <div class="mech-path">
-                                <div class="mech-path-header">PATH 2 — 공급망 차질 경로</div>
-                                <div class="mech-chain">
-                                    <div class="mech-node mech-node-mid">
-                                        <div class="mech-node-label">공급망 차질</div>
-                                        <div class="mech-node-value" id="mechValSupply">--</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink2a">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff2a">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-mid">
-                                        <div class="mech-node-label">원자재 부족</div>
-                                        <div class="mech-node-value">수급불균형</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink2b">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff2b">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-mid" onclick="mechShowDetail('construction')">
-                                        <div class="mech-node-label">자재 가격 ↑</div>
-                                        <div class="mech-node-value" id="mechValMat2">--</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink2c">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff2c">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-end">
-                                        <div class="mech-node-label">건설공사비 ↑</div>
-                                        <div class="mech-node-value mech-val-impact" id="mechImpact2">--</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Path 3: Financing Cost -->
-                            <div class="mech-path">
-                                <div class="mech-path-header">PATH 3 — 금융비용 경로</div>
-                                <div class="mech-chain">
-                                    <div class="mech-node mech-node-mid" onclick="mechShowDetail('fedfunds')">
-                                        <div class="mech-node-label">조달금리 ↑</div>
-                                        <div class="mech-node-value" id="mechValFed">--</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink3a">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff3a">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-mid">
-                                        <div class="mech-node-label">PF 대출금리 ↑</div>
-                                        <div class="mech-node-value">+스프레드</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink3b">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff3b">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-mid">
-                                        <div class="mech-node-label">사업비 ↑</div>
-                                        <div class="mech-node-value" id="mechValProjCost">금융비용</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink3c">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff3c">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-end">
-                                        <div class="mech-node-label">건설공사비 ↑</div>
-                                        <div class="mech-node-value mech-val-impact" id="mechImpact3">--</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Path 4: Demand Contraction -->
-                            <div class="mech-path">
-                                <div class="mech-path-header">PATH 4 — 수요 위축 경로</div>
-                                <div class="mech-chain">
-                                    <div class="mech-node mech-node-mid">
-                                        <div class="mech-node-label">대출금리 ↑</div>
-                                        <div class="mech-node-value" id="mechValMort">--</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink4a">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff4a">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-mid" onclick="mechShowDetail('realestate')">
-                                        <div class="mech-node-label">주택수요 ↓</div>
-                                        <div class="mech-node-value" id="mechValDemand">--</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink4b">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff4b">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-mid">
-                                        <div class="mech-node-label">분양률 ↓</div>
-                                        <div class="mech-node-value">미분양증가</div>
-                                    </div>
-                                    <div class="mech-link" id="mechLink4c">
-                                        <div class="mech-arrow"></div>
-                                        <div class="mech-link-coeff" id="mechCoeff4c">--</div>
-                                    </div>
-                                    <div class="mech-node mech-node-end mech-node-negative">
-                                        <div class="mech-node-label">사업성 ↓</div>
-                                        <div class="mech-node-value mech-val-impact" id="mechImpact4">--</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Summary -->
-                        <div class="mech-summary">
-                            <div class="mech-summary-item">
-                                <span class="mech-summary-label">총 건설비 영향</span>
-                                <span class="mech-summary-value down" id="mechTotalCost">--</span>
-                            </div>
-                            <div class="mech-summary-item">
-                                <span class="mech-summary-label">총 수요 영향</span>
-                                <span class="mech-summary-value down" id="mechTotalDemand">--</span>
-                            </div>
-                            <div class="mech-summary-item">
-                                <span class="mech-summary-label">상관분석 기간</span>
-                                <span class="mech-summary-value" id="mechDataRange">--</span>
-                            </div>
-                        </div>
-                    </div>
+                    <div id="mechDynamic" style="min-height: 200px;"></div>
                 </div>
 
                 <!-- Results -->
@@ -2323,6 +2219,21 @@
             <div id="modalCorrelationSection" style="display:none; margin-top:12px;">
                 <div style="font-size:11px; color:#8ea9cc; margin-bottom:8px; font-weight:600;">CROSS-CORRELATION (5Y 월간 데이터 기반)</div>
                 <div id="modalCorrBars" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LLM Report Modal -->
+    <div class="modal" id="reportModal">
+        <div class="modal-content" style="max-width: 800px; max-height: 85vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2 style="color: #14b8a6; font-size: 18px;">AI 건설공사비 영향 리포트</h2>
+                <button class="modal-close" onclick="document.getElementById('reportModal').classList.remove('active')">×</button>
+            </div>
+            <div id="reportContent" style="font-size: 13px; line-height: 1.8; color: #cbd5e1; white-space: pre-wrap;">리포트 생성 중...</div>
+            <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #1a2840; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 10px; color: #5a7a9a;" id="reportTimestamp"></span>
+                <button class="sim-button" onclick="copyReport()" style="padding: 4px 16px; font-size: 11px;">복사</button>
             </div>
         </div>
     </div>
@@ -3966,39 +3877,63 @@
         }
 
         // 5-Year historical correlation data (loaded from /api/correlation)
+        const CORR_CACHE_KEY = 'insight-correlation-5y-v2';
+        const CORR_CACHE_TTL = 3600000; // 1 hour
         let correlationPayload = null;
-        const correlationHistory = { wti: [], fedfunds: [], usdkrw: [], construction: [], realestate: [] };
+        const correlationHistory = { wti: [], fedfunds: [], usdkrw: [], construction: [], realestate: [], vix: [], us10y: [] };
         let correlationMonths = [];
 
         function recordCorrelationPoint() {
             // No-op: correlation now uses historical 5Y data from API
         }
 
+        function loadCachedCorrelation() {
+            try {
+                const raw = localStorage.getItem(CORR_CACHE_KEY);
+                if (!raw) return null;
+                const cached = JSON.parse(raw);
+                if (Date.now() - cached._savedAt > CORR_CACHE_TTL) return null;
+                return cached;
+            } catch { return null; }
+        }
+
+        function saveCachedCorrelation(payload) {
+            try {
+                payload._savedAt = Date.now();
+                localStorage.setItem(CORR_CACHE_KEY, JSON.stringify(payload));
+            } catch { /* quota exceeded — ignore */ }
+        }
+
+        function applyCorrPayload(payload) {
+            const keys = payload.keys || [];
+            const history = payload.history || {};
+            correlationMonths = payload.months || [];
+            keys.forEach(k => { if (history[k]) correlationHistory[k] = history[k]; });
+            const infoEl = document.getElementById('corrDataInfo');
+            if (infoEl) {
+                const n = payload.dataPoints || 0;
+                const range = correlationMonths.length > 0
+                    ? `${correlationMonths[0]} ~ ${correlationMonths[correlationMonths.length - 1]}` : '';
+                infoEl.textContent = `| 5Y 월간 ${n}개월 (${range})`;
+            }
+            renderCorrelationMatrix();
+            populateHistoricalRanges();
+        }
+
         async function fetchHistoricalCorrelation() {
+            // Try localStorage cache first
+            const cached = loadCachedCorrelation();
+            if (cached) {
+                correlationPayload = cached;
+                applyCorrPayload(cached);
+                return;
+            }
             try {
                 const resp = await fetch('/api/correlation', { cache: 'no-store' });
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 correlationPayload = await resp.json();
-
-                // Populate correlationHistory from server data for detail charts
-                const keys = correlationPayload.keys || [];
-                const history = correlationPayload.history || {};
-                correlationMonths = correlationPayload.months || [];
-                keys.forEach(k => {
-                    if (history[k]) correlationHistory[k] = history[k];
-                });
-
-                const infoEl = document.getElementById('corrDataInfo');
-                if (infoEl) {
-                    const n = correlationPayload.dataPoints || 0;
-                    const range = correlationMonths.length > 0
-                        ? `${correlationMonths[0]} ~ ${correlationMonths[correlationMonths.length - 1]}`
-                        : '';
-                    infoEl.textContent = `| 5Y 월간 ${n}개월 (${range})`;
-                }
-
-                renderCorrelationMatrix();
-                populateHistoricalRanges();
+                saveCachedCorrelation(correlationPayload);
+                applyCorrPayload(correlationPayload);
             } catch (err) {
                 const infoEl = document.getElementById('corrDataInfo');
                 if (infoEl) infoEl.textContent = '| API 연동 실패';
@@ -4323,6 +4258,50 @@
 
         function closeModal() {
             document.getElementById('detailModal').classList.remove('active');
+        }
+
+        async function generateLLMReport() {
+            const btn = document.getElementById('btnReport');
+            btn.textContent = '생성 중...';
+            btn.disabled = true;
+            const modal = document.getElementById('reportModal');
+            const content = document.getElementById('reportContent');
+            content.textContent = '데이터 수집 및 AI 분석 중...\n\n잠시만 기다려 주세요.';
+            modal.classList.add('active');
+            try {
+                const resp = await fetch('/api/report', { cache: 'no-store' });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                content.innerHTML = markdownToHtml(data.report);
+                document.getElementById('reportTimestamp').textContent =
+                    `생성: ${new Date(data.generatedAt).toLocaleString('ko-KR')} | 데이터: ${data.dataTimestamp || 'N/A'}`;
+            } catch (err) {
+                content.textContent = '리포트 생성 실패: ' + err.message + '\n\nANTHROPIC_API_KEY가 설정되어 있는지 확인하세요.';
+            }
+            btn.textContent = 'AI 리포트';
+            btn.disabled = false;
+        }
+
+        function markdownToHtml(md) {
+            return md
+                .replace(/^### (.+)$/gm, '<h4 style="color:#38bdf8;margin:14px 0 6px;font-size:14px;">$1</h4>')
+                .replace(/^## (.+)$/gm, '<h3 style="color:#14b8a6;margin:18px 0 8px;font-size:16px;border-bottom:1px solid #1a2840;padding-bottom:4px;">$1</h3>')
+                .replace(/^# (.+)$/gm, '<h2 style="color:#e2e8f0;margin:20px 0 10px;font-size:18px;">$1</h2>')
+                .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e2e8f0;">$1</strong>')
+                .replace(/^- (.+)$/gm, '<div style="padding:2px 0 2px 12px;border-left:2px solid #1a2840;">$1</div>')
+                .replace(/^(\d+)\. (.+)$/gm, '<div style="padding:2px 0 2px 12px;">$1. $2</div>')
+                .replace(/\n\n/g, '<br><br>')
+                .replace(/\n/g, '<br>');
+        }
+
+        function copyReport() {
+            const content = document.getElementById('reportContent');
+            const text = content.innerText || content.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                btn.textContent = '복사됨';
+                setTimeout(() => { btn.textContent = '복사'; }, 1500);
+            });
         }
 
         function openSimulationPopup() {
@@ -4783,80 +4762,84 @@
         }
 
         function renderMechanism() {
-            const s = externalIndicatorState;
+            const container = document.getElementById('mechDynamic');
+            if (!container) return;
             const shocks = getSimShocks();
             const forecast = buildScenarioForecast(macroSimData, shocks);
             const attribution = buildAttribution(macroSimData);
-            const routes = buildRouteSummary(macroSimData, attribution);
             const latest = macroSimData[macroSimData.length - 1];
 
-            // ── Trigger nodes ──
-            const wtiVal = s.wti;
-            const liborVal = s.libor ?? s.fedfunds;
-            mechSetText('mechValWar', wtiVal != null ? '$' + wtiVal.toFixed(1) + '/bbl' : macroFmt(latest.oil, 1) + '$/bbl');
-            mechSetText('mechValLibor', liborVal != null ? liborVal.toFixed(2) + '%' : macroFmt(latest.policyRate, 2) + '%');
+            // Build per-driver impacts sorted by weight
+            const driverData = DRIVER_KEYS.map(key => {
+                const pt = PASS_THROUGH[key];
+                const meta = DRIVER_META[key];
+                const route = ROUTE_BLUEPRINT[key];
+                const shock = shocks[key] || 0;
+                const impact = shock * pt.weight * 0.1;
+                const attrItem = attribution.find(a => a.key === key);
+                return { key, label: meta.label, weight: pt.weight, peakLag: pt.peakLag, width: pt.width,
+                         path: route.path, summary: route.summary, shock, impact,
+                         contribution: attrItem ? attrItem.contribution : 0,
+                         currentVal: latest[key] };
+            }).sort((a, b) => b.weight - a.weight);
 
-            // ── PATH 1: Energy Cost — w/ PASS_THROUGH weights ──
-            mechSetText('mechValWti', wtiVal != null ? '$' + wtiVal.toFixed(1) : macroFmt(latest.oil, 1));
-            const corrWtiConst = getCorr(0, 3);
-            setMechLink('mechLink1a', 'mechCoeff1a', corrWtiConst, 'w=' + PASS_THROUGH.oil.weight);
-            setMechLink('mechLink1b', 'mechCoeff1b', null, 'lag=' + PASS_THROUGH.oil.peakLag + 'M');
-            setMechLink('mechLink1c', 'mechCoeff1c', corrWtiConst);
-            const steelVal = s.steel;
-            mechSetText('mechValSteel', steelVal != null ? '$' + steelVal.toFixed(0) + '/t' : macroFmt(latest.steel, 1));
-            // Use forecast-based impact
-            const oilImpact = shocks.oil * PASS_THROUGH.oil.weight * 0.1;
-            mechSetText('mechImpact1', (oilImpact >= 0 ? '+' : '') + oilImpact.toFixed(2) + '%');
+            const totalImpact = forecast[11] ? forecast[11].deltaPct : 0;
+            const maxWeight = Math.max(...driverData.map(d => d.weight));
 
-            // ── PATH 2: Supply Chain (importPrice + steel) ──
-            mechSetText('mechValSupply', macroFmt(latest.importPrice, 1));
-            setMechLink('mechLink2a', 'mechCoeff2a', null, 'w=' + PASS_THROUGH.importPrice.weight);
-            setMechLink('mechLink2b', 'mechCoeff2b', null, 'lag=' + PASS_THROUGH.importPrice.peakLag + 'M');
-            setMechLink('mechLink2c', 'mechCoeff2c', corrWtiConst);
-            mechSetText('mechValMat2', macroFmt(latest.steel, 1));
-            const importImpact = shocks.fx * PASS_THROUGH.fx.weight * 0.1 + shocks.ppi * PASS_THROUGH.ppi.weight * 0.1;
-            mechSetText('mechImpact2', (importImpact >= 0 ? '+' : '') + importImpact.toFixed(2) + '%');
+            // Color palette for drivers
+            const colors = {
+                fx: '#38bdf8', oil: '#22c55e', ppi: '#a78bfa', importPrice: '#f59e0b',
+                labor: '#fb7185', steel: '#60a5fa', cement: '#94a3b8', policyRate: '#f472b6',
+                vix: '#ef4444', us10y: '#8b5cf6'
+            };
 
-            // ── PATH 3: Financing Cost ──
-            const fedVal = s.fedfunds;
-            mechSetText('mechValFed', fedVal != null ? fedVal.toFixed(2) + '%' : macroFmt(latest.policyRate, 2) + '%');
-            const corrFedConst = getCorr(1, 3);
-            setMechLink('mechLink3a', 'mechCoeff3a', corrFedConst, 'w=' + PASS_THROUGH.policyRate.weight);
-            setMechLink('mechLink3b', 'mechCoeff3b', null, 'lag=' + PASS_THROUGH.policyRate.peakLag + 'M');
-            setMechLink('mechLink3c', 'mechCoeff3c', corrFedConst);
-            const rateImpact = shocks.policyRate * PASS_THROUGH.policyRate.weight * 0.1;
-            mechSetText('mechImpact3', (rateImpact >= 0 ? '+' : '') + rateImpact.toFixed(2) + '%');
+            let html = '';
 
-            // ── PATH 4: Demand (labor) ──
-            mechSetText('mechValMort', macroFmt(latest.labor, 1));
-            const corrFedRE = getCorr(1, 4);
-            setMechLink('mechLink4a', 'mechCoeff4a', corrFedRE, 'w=' + PASS_THROUGH.labor.weight);
-            const corrUsdRE = getCorr(2, 4);
-            setMechLink('mechLink4b', 'mechCoeff4b', corrUsdRE);
-            setMechLink('mechLink4c', 'mechCoeff4c', null, 'lag=' + PASS_THROUGH.labor.peakLag + 'M');
-            const reVal = s.kbfin || s.reindex;
-            mechSetText('mechValDemand', reVal != null ? reVal.toLocaleString() : '--');
-            const laborImpact = shocks.labor * PASS_THROUGH.labor.weight * 0.1;
-            mechSetText('mechImpact4', (laborImpact >= 0 ? '+' : '') + laborImpact.toFixed(2) + '%');
+            // Driver rows
+            driverData.forEach((d, idx) => {
+                const c = colors[d.key] || '#4ec9ff';
+                const barW = Math.round((d.weight / maxWeight) * 100);
+                const impactSign = d.impact >= 0 ? '+' : '';
+                const impactColor = d.impact > 0 ? '#ff6b00' : d.impact < 0 ? '#22c55e' : '#5a7a9a';
+                const isActive = Math.abs(d.shock) > 0;
+                const animDelay = (idx * 0.2).toFixed(1);
 
-            // ── Summary — use forecast totals ──
-            mechSetText('mechTotalCost', '+' + macroFmt(forecast[11].deltaPct, 2) + '%');
-            mechSetText('mechTotalDemand', routes[0] ? routes[0].path : '--');
+                html += `<div class="mech-dyn-row${isActive ? ' active' : ''}" onclick="showDetails('${d.key === 'policyRate' ? 'fedfunds' : d.key}')" title="${d.summary}">
+                    <div class="mech-dyn-driver">
+                        <div class="mech-dyn-driver-label">${d.label}</div>
+                        <div class="mech-dyn-driver-val" style="color:${c};">${d.key === 'policyRate' || d.key === 'us10y' ? d.currentVal.toFixed(2) + '%' : d.key === 'vix' ? d.currentVal.toFixed(1) : macroFmt(d.currentVal, 1)}</div>
+                    </div>
+                    <div class="mech-dyn-flow">
+                        <div class="mech-dyn-flow-label">w=${d.weight}</div>
+                        <div style="flex:1;position:relative;">
+                            <div class="mech-dyn-flow-bar" style="width:${barW}%;background:${c};"></div>
+                            ${isActive ? `<div class="mech-dyn-flow-particle" style="background:${c};left:${barW * 0.5}%;animation-delay:${animDelay}s;"></div>` : ''}
+                        </div>
+                        <div class="mech-dyn-flow-label">lag ${d.peakLag}M</div>
+                    </div>
+                    <div class="mech-dyn-path" title="${d.path}">${d.path}</div>
+                    <div class="mech-dyn-impact">
+                        <div class="mech-dyn-impact-val" style="color:${impactColor};">${impactSign}${d.impact.toFixed(2)}%</div>
+                        <div class="mech-dyn-impact-rank">${d.contribution !== 0 ? '기여 ' + (d.contribution >= 0 ? '+' : '') + d.contribution.toFixed(1) + '%' : ''}</div>
+                    </div>
+                </div>`;
+            });
+
+            // Target summary
             const range = correlationMonths.length > 0
-                ? `${correlationMonths[0]} ~ ${correlationMonths[correlationMonths.length - 1]}`
-                : '5Y 시뮬레이션';
-            mechSetText('mechDataRange', range);
+                ? `${correlationMonths[0]} ~ ${correlationMonths[correlationMonths.length - 1]}` : '시뮬레이션';
+            const totalColor = totalImpact > 0 ? '#ff6b00' : totalImpact < 0 ? '#22c55e' : '#8ea9cc';
+            html += `<div class="mech-dyn-target">
+                <div class="mech-dyn-target-label">건설공사비 총 영향 (12M)</div>
+                <div class="mech-dyn-target-val" style="color:${totalColor};">${totalImpact >= 0 ? '+' : ''}${macroFmt(totalImpact, 2)}%</div>
+                <div class="mech-dyn-target-sub">${driverData.filter(d => Math.abs(d.impact) > 0.01).length}개 변수 활성 | 분석 기간: ${range}</div>
+            </div>`;
+
+            container.innerHTML = html;
         }
 
         function mechShowDetail(indicator) {
-            const indexMap = { wti: 0, fedfunds: 1, usdkrw: 2, construction: 3, realestate: 4 };
-            const corrKey = { war: 'wti', libor: 'fedfunds', energy: 'wti', supply: 'wti' }[indicator] || indicator;
-            const i = indexMap[corrKey];
-            const j = corrKey === 'construction' ? 4 : 3;
-            if (i !== undefined) {
-                const corr = getCorr(i, j);
-                showCorrelationDetail(i, j, corr);
-            }
+            showDetails(indicator);
         }
 
         // Close modal on outside click
