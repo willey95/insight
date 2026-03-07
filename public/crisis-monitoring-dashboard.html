@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crisis Monitoring Dashboard | Bloomberg Style</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
@@ -19,10 +16,9 @@
         }
 
         :root {
-            --ticker-height: 20px;
-            --header-height: 42px;
-            --easy-zone-height: 0px;
-            --dashboard-gap: 5px;
+            --ticker-height: 24px;
+            --header-height: 82px;
+            --dashboard-gap: 8px;
             --accent: #ffb347;
             --accent-cool: #4ec9ff;
             --accent-soft: #2a3547;
@@ -41,7 +37,7 @@
         }
 
         body {
-            font-family: 'Outfit', 'Noto Sans KR', 'Segoe UI', sans-serif;
+            font-family: 'IBM Plex Sans KR', 'Noto Sans KR', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #05080f;
             color: var(--text);
             overflow: hidden;
@@ -65,12 +61,13 @@
         /* News Ticker */
         .news-ticker {
             background: #090e17;
-            padding: 1px 0;
+            padding: 3px 0;
             overflow: hidden;
             position: sticky;
             top: 0;
             z-index: 1000;
             height: var(--ticker-height);
+            border-top: 1px solid #2c3b53;
             border-bottom: 1px solid #2c3b53;
         }
 
@@ -86,7 +83,7 @@
             font-weight: 700;
             color: var(--accent);
             letter-spacing: 0.35px;
-            font-family: 'JetBrains Mono', 'JetBrains Mono', 'IBM Plex Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
         }
 
         @keyframes scroll {
@@ -98,56 +95,50 @@
         .header {
             background: rgba(6, 10, 17, 0.92);
             backdrop-filter: blur(4px);
-            padding: 3px 10px;
+            padding: 7px 10px;
             border-bottom: 1px solid #223149;
-            height: var(--header-height);
+            min-height: var(--header-height);
             position: relative;
             z-index: 1;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            overflow: hidden;
         }
 
         .header h1 {
-            font-size: 13px;
+            font-size: 17px;
             color: #d7e4ff;
             display: flex;
             align-items: center;
             gap: 6px;
+            flex-wrap: wrap;
             letter-spacing: 0.45px;
             font-weight: 600;
             text-transform: uppercase;
-            white-space: nowrap;
-            flex-shrink: 0;
         }
 
         .header-stock-inline {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
+            margin-left: auto;
             flex-grow: 1;
             justify-content: flex-end;
             font-size: 10px;
-            font-family: 'JetBrains Mono', 'JetBrains Mono', 'IBM Plex Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
             text-transform: none;
             letter-spacing: 0.2px;
             color: #c8dbf8;
-            overflow: hidden;
         }
 
         .header-stock-item {
             display: inline-flex;
             align-items: center;
-            gap: 2px;
+            gap: 3px;
             background: rgba(17, 31, 47, 0.75);
             border: 1px solid #2f4461;
             border-radius: 999px;
-            padding: 1px 6px;
+            padding: 1px 7px;
             white-space: nowrap;
             cursor: pointer;
             transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-            flex-shrink: 0;
         }
 
         .header-stock-item:hover {
@@ -162,24 +153,24 @@
 
         .header-stock-label {
             color: #86a3c6;
-            font-size: 8px;
+            font-size: 9px;
         }
 
         .header-stock-value {
             color: #dce9fc;
-            font-size: 8px;
+            font-size: 8.5px;
         }
 
         .header-stock-change {
-            font-size: 8px;
+            font-size: 9px;
             font-weight: 700;
         }
 
         .alert-badge {
             background: var(--down);
-            padding: 1px 5px;
+            padding: 2px 6px;
             border-radius: 3px;
-            font-size: 9px;
+            font-size: 11px;
             animation: pulse 2s infinite;
             color: #17070a;
             font-weight: 700;
@@ -191,21 +182,25 @@
         }
 
         .timestamp {
-            font-size: 9px;
+            font-size: 11px;
             color: var(--muted);
-            white-space: nowrap;
-            flex-shrink: 0;
+            margin-top: 2px;
         }
 
         .library-warning {
-            font-size: 9px;
+            font-size: 10px;
             color: #ffcf8a;
-            white-space: nowrap;
-            flex-shrink: 0;
+            margin-top: 1px;
+            min-height: 11px;
         }
 
         .header-sector-strip {
-            display: none;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
         .header-sector-group {
@@ -219,7 +214,7 @@
             color: #8ba3c4;
             text-transform: uppercase;
             letter-spacing: 0.4px;
-            font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
             white-space: nowrap;
             padding: 1px 5px;
             background: rgba(78, 201, 255, 0.08);
@@ -227,116 +222,11 @@
             border: 1px solid rgba(78, 201, 255, 0.15);
         }
 
-        /* ─── Easy Zone: hidden, cards moved to right column ──── */
-        .easy-zone {
-            display: none;
-        }
-
-        .pyeong-card {
-            background: linear-gradient(165deg, rgba(15, 22, 35, 0.95), rgba(8, 13, 22, 0.95));
-            border: 1px solid #1f2f46;
-            border-radius: 6px;
-            padding: 6px 8px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            cursor: pointer;
-            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .pyeong-card:hover {
-            border-color: #3b6ea1;
-            background: linear-gradient(165deg, rgba(20, 30, 48, 0.95), rgba(12, 18, 28, 0.95));
-            box-shadow: 0 0 12px rgba(78, 201, 255, 0.12);
-        }
-
-        .pyeong-card::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0; bottom: 0;
-            width: 3px;
-            border-radius: 3px 0 0 3px;
-        }
-
-        .pyeong-card[data-type="apt"]::before { background: #4ec9ff; }
-        .pyeong-card[data-type="officetel"]::before { background: #a78bfa; }
-        .pyeong-card[data-type="commercial"]::before { background: #f59e0b; }
-        .pyeong-card[data-type="office"]::before { background: #22c55e; }
-        .pyeong-card[data-type="knowledge"]::before { background: #fb7185; }
-        .pyeong-card[data-type="logistics"]::before { background: #38bdf8; }
-
-        .pyeong-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 2px;
-        }
-
-        .pyeong-type {
-            font-size: 9px;
-            color: #8ea9cc;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .pyeong-type-icon {
-            font-size: 12px;
-            line-height: 1;
-        }
-
-        .pyeong-change {
-            font-size: 9px;
-            font-weight: 700;
-            font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
-        }
-
-        .pyeong-value {
-            font-size: 15px;
-            font-weight: 700;
-            font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
-            color: #e8f1ff;
-            line-height: 1.1;
-        }
-
-        .pyeong-unit {
-            font-size: 10px;
-            color: #5a7a9a;
-            font-weight: 400;
-        }
-
-        .pyeong-bar-wrap {
-            margin-top: 3px;
-            height: 4px;
-            background: rgba(255,255,255,0.06);
-            border-radius: 2px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .pyeong-bar {
-            height: 100%;
-            border-radius: 2px;
-            transition: width 0.6s ease;
-        }
-
-        .pyeong-bar-label {
-            font-size: 7px;
-            color: #5a7a9a;
-            margin-top: 1px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        /* Main Grid — 3 Column Layout */
+        /* Main Grid */
         .dashboard {
             display: grid;
-            grid-template-columns: 270px 1fr 290px;
+            grid-template-columns: minmax(220px, 1.12fr) minmax(290px, 1.38fr) minmax(290px, 1.38fr) minmax(220px, 1fr);
+            grid-template-rows: minmax(170px, 1fr) minmax(170px, 1fr) minmax(180px, 1fr);
             gap: var(--dashboard-gap);
             padding: var(--dashboard-gap);
             max-width: 1920px;
@@ -347,71 +237,13 @@
             z-index: 1;
         }
 
-        .col-left, .col-center, .col-right {
-            display: flex;
-            flex-direction: column;
-            gap: var(--dashboard-gap);
-            min-height: 0;
-            overflow: hidden;
-        }
-        .col-left {
-            overflow-y: auto;
-        }
-        .col-left::-webkit-scrollbar { width: 2px; }
-        .col-left::-webkit-scrollbar-track { background: transparent; }
-        .col-left::-webkit-scrollbar-thumb { background: rgba(78,201,255,0.15); border-radius: 2px; }
-
-        .col-header {
-            font-size: 8px;
-            font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            padding: 3px 8px;
-            border-radius: 3px;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .col-header::before {
-            content: '';
-            width: 8px;
-            height: 2px;
-            border-radius: 1px;
-        }
-        .col-left .col-header {
-            color: #4ec9ff;
-            background: rgba(78, 201, 255, 0.06);
-            border-left: 2px solid #4ec9ff;
-        }
-        .col-left .col-header::before { background: #4ec9ff; }
-        .col-center .col-header {
-            color: #ffb347;
-            background: rgba(255, 179, 71, 0.06);
-            border-left: 2px solid #ffb347;
-        }
-        .col-center .col-header::before { background: #ffb347; }
-        .col-right .col-header {
-            color: #22c55e;
-            background: rgba(34, 197, 94, 0.06);
-            border-left: 2px solid #22c55e;
-        }
-        .col-right .col-header::before { background: #22c55e; }
-        .col-right {
-            overflow-y: auto;
-        }
-        .col-right::-webkit-scrollbar { width: 2px; }
-        .col-right::-webkit-scrollbar-track { background: transparent; }
-        .col-right::-webkit-scrollbar-thumb { background: rgba(34,197,94,0.15); border-radius: 2px; }
-
         /* Cards */
         .card {
             background: linear-gradient(165deg, rgba(13, 20, 31, 0.95), rgba(7, 11, 19, 0.95));
             border: 1px solid var(--panel-stroke);
-            border-radius: 5px;
-            padding: 5px 6px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(78, 94, 119, 0.08);
+            border-radius: 7px;
+            padding: 8px;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(78, 94, 119, 0.1);
             display: flex;
             flex-direction: column;
             min-height: 0;
@@ -422,112 +254,81 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 3px;
-            padding-bottom: 2px;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
             border-bottom: 1px solid #223247;
         }
 
         .card-title {
-            font-size: 9px;
+            font-size: 11px;
             font-weight: 700;
             color: #9ecbff;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-family: 'JetBrains Mono', 'JetBrains Mono', 'IBM Plex Mono', monospace;
+            letter-spacing: 0.65px;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
         }
 
         .card-subtitle {
-            font-size: 8px;
+            font-size: 9px;
             color: #7285a2;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
         }
 
-        /* Card Roles */
+        /* Grid Areas */
         .war-status {
+            grid-column: 1;
+            grid-row: 1;
             background: linear-gradient(165deg, rgba(35, 11, 17, 0.96), rgba(19, 8, 12, 0.96));
             border-color: rgba(255, 77, 109, 0.48);
             box-shadow: inset 0 0 0 1px rgba(255, 77, 109, 0.12), 0 8px 18px rgba(0, 0, 0, 0.22);
-            flex: 0 0 auto;
         }
 
         .map-card {
-            flex: 1 1 0;
-            min-height: 160px;
+            grid-column: 2 / span 2;
+            grid-row: 1 / span 2;
         }
 
         .news-card {
-            flex: 1 1 0;
-            min-height: 80px;
+            grid-column: 1;
+            grid-row: 2;
         }
 
         .finance-card {
-            flex: 1 1 0;
+            grid-column: 4;
+            grid-row: 2;
         }
 
         .construction-card {
-            flex: 1 1 0;
+            grid-column: 4;
+            grid-row: 3;
         }
 
         .correlation-card {
+            grid-column: 1;
+            grid-row: 3;
             overflow: hidden;
-            flex: 0 0 auto;
         }
 
         .energy-trend-card {
-            flex: 1 1 0;
+            grid-column: 4;
+            grid-row: 1;
         }
 
         .energy-chart-card {
-            display: none;
+            grid-column: 2;
+            grid-row: 3;
         }
 
         .finance-trend-card {
-            display: none;
-        }
-
-        /* Mechanism Card — Center Column */
-        .mechanism-card {
-            flex: 1 1 0;
-            min-height: 0;
-            overflow-y: auto;
-            overflow-x: hidden;
-            border-color: rgba(255, 179, 71, 0.25);
-            background: linear-gradient(165deg, rgba(18, 14, 8, 0.96), rgba(7, 11, 19, 0.96));
-            box-shadow: inset 0 0 0 1px rgba(255, 179, 71, 0.06), 0 4px 16px rgba(0, 0, 0, 0.25);
-        }
-        .mechanism-card::-webkit-scrollbar { width: 3px; }
-        .mechanism-card::-webkit-scrollbar-track { background: transparent; }
-        .mechanism-card::-webkit-scrollbar-thumb { background: rgba(255,179,71,0.2); border-radius: 3px; }
-        .mechanism-card .card-title { color: #ffb347; }
-
-        /* Right Column Pyeong Grid */
-        .pyeong-grid-right {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4px;
-            flex: 0 0 auto;
-        }
-        .pyeong-grid-right .pyeong-card {
-            padding: 5px 7px;
-            animation: fadeSlideUp 0.5s ease-out both;
-        }
-        .pyeong-grid-right .pyeong-card:nth-child(1) { animation-delay: 0.05s; }
-        .pyeong-grid-right .pyeong-card:nth-child(2) { animation-delay: 0.1s; }
-        .pyeong-grid-right .pyeong-card:nth-child(3) { animation-delay: 0.15s; }
-        .pyeong-grid-right .pyeong-card:nth-child(4) { animation-delay: 0.2s; }
-        .pyeong-grid-right .pyeong-card:nth-child(5) { animation-delay: 0.25s; }
-        .pyeong-grid-right .pyeong-card:nth-child(6) { animation-delay: 0.3s; }
-
-        @keyframes fadeSlideUp {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
+            grid-column: 3;
+            grid-row: 3;
         }
 
         .correlation-layout {
             display: grid;
-            grid-template-columns: 52px 1fr;
-            gap: 3px;
+            grid-template-columns: 72px 1fr;
+            gap: 6px;
         }
 
         .correlation-layout-top {
@@ -535,19 +336,19 @@
         }
 
         .correlation-layout-main {
-            margin-top: 2px;
+            margin-top: 6px;
         }
 
         .corr-top-labels {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 2px;
+            gap: 4px;
         }
 
         .corr-left-labels {
             display: grid;
-            grid-template-rows: repeat(5, 20px);
-            gap: 2px;
+            grid-template-rows: repeat(5, 26px);
+            gap: 3px;
         }
 
         .corr-left-label {
@@ -640,7 +441,6 @@
         .sim-col::-webkit-scrollbar { width: 3px; }
         .sim-col::-webkit-scrollbar-track { background: transparent; }
         .sim-col::-webkit-scrollbar-thumb { background: rgba(78,201,255,0.15); border-radius: 2px; }
-
         .sim-col-section {
             background: rgba(8, 13, 22, 0.7);
             border: 1px solid #1a2a42;
@@ -675,15 +475,8 @@
         .re-impact-card:hover { border-color: #3b6ea1; }
         .re-impact-icon { font-size: 8px; flex-shrink: 0; }
         .re-impact-info { flex: 1; min-width: 0; }
-        .re-impact-name {
-            font-size: 5px;
-            color: #8ea9cc;
-            font-weight: 600;
-        }
-        .re-impact-baseline {
-            font-size: 5px;
-            color: #5a7a9a;
-        }
+        .re-impact-name { font-size: 5px; color: #8ea9cc; font-weight: 600; }
+        .re-impact-baseline { font-size: 5px; color: #5a7a9a; }
         .re-impact-delta {
             font-size: 7px;
             font-weight: 700;
@@ -691,51 +484,42 @@
             text-align: right;
             flex-shrink: 0;
         }
-        .re-impact-bar-wrap {
-            height: 3px;
-            background: rgba(255,255,255,0.06);
-            border-radius: 2px;
-            margin-top: 3px;
-        }
-        .re-impact-bar {
-            height: 100%;
-            border-radius: 2px;
-            transition: width 0.5s;
-        }
+        .re-impact-bar-wrap { height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; margin-top: 3px; }
+        .re-impact-bar { height: 100%; border-radius: 2px; transition: width 0.5s; }
 
         .threat-level {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 3px;
+            gap: 6px;
             margin-top: 2px;
         }
 
         .threat-indicator {
-            padding: 3px 4px;
+            padding: 6px;
             background: rgba(255, 77, 109, 0.1);
             border-left: 2px solid var(--down);
-            border-radius: 4px;
+            border-radius: 5px;
         }
 
         .threat-indicator h3 {
-            font-size: 8px;
+            font-size: 10px;
             color: #ffb6c2;
-            margin-bottom: 1px;
-            letter-spacing: 0.3px;
+            margin-bottom: 2px;
+            letter-spacing: 0.35px;
             text-transform: uppercase;
         }
 
         .threat-value {
             font-family: Consolas, 'Roboto Mono', monospace;
-            font-size: 12px;
+            font-size: 14px;
             font-weight: 700;
             color: #ffd8df;
         }
 
         .war-bars {
             display: grid;
-            gap: 3px;
-            margin-top: 3px;
+            gap: 5px;
+            margin-top: 6px;
         }
 
         .war-bar {
@@ -912,15 +696,15 @@
             font-size: 9px;
             color: #dce9fb;
             letter-spacing: 0.25px;
-            font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
         }
 
         .map-legend {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             align-items: center;
-            margin-top: 2px;
-            font-size: 8px;
+            margin-top: 4px;
+            font-size: 9px;
             color: #9da9bf;
             flex-wrap: wrap;
             text-transform: uppercase;
@@ -961,14 +745,14 @@
         .live-news-item {
             display: grid;
             grid-template-columns: auto 1fr auto;
-            gap: 4px;
+            gap: 5px;
             align-items: center;
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid #273346;
             border-left: 2px solid var(--accent);
             border-radius: 3px;
-            padding: 2px 4px;
-            min-height: 22px;
+            padding: 4px 5px;
+            min-height: 30px;
             cursor: pointer;
             transition: border-color 0.15s ease, background-color 0.15s ease;
         }
@@ -991,7 +775,7 @@
             color: #1a1307;
             background: var(--accent);
             white-space: nowrap;
-            font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
         }
 
         .news-badge.alert {
@@ -1017,7 +801,7 @@
             font-size: 9px;
             color: #7f8fa8;
             white-space: nowrap;
-            font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
         }
 
         @keyframes pulse-dot {
@@ -1036,8 +820,8 @@
         .market-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 3px;
-            margin-top: 1px;
+            gap: 6px;
+            margin-top: 2px;
         }
 
         .finance-card .market-grid {
@@ -1046,11 +830,11 @@
 
         .market-item {
             background: rgba(255, 255, 255, 0.02);
-            padding: 3px 4px;
-            border-radius: 4px;
+            padding: 6px;
+            border-radius: 5px;
             border: 1px solid #273346;
             border-left: 2px solid var(--accent);
-            min-height: 32px;
+            min-height: 46px;
             cursor: pointer;
             transition: background-color 0.15s ease, border-color 0.15s ease;
         }
@@ -1061,10 +845,10 @@
         }
 
         .market-label {
-            font-size: 8px;
+            font-size: 10px;
             color: #8ea0bc;
-            margin-bottom: 0;
-            letter-spacing: 0.2px;
+            margin-bottom: 1px;
+            letter-spacing: 0.25px;
         }
 
         .market-unit {
@@ -1078,24 +862,24 @@
         .card-timestamp {
             font-size: 8px;
             color: #5a7090;
-            font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
             letter-spacing: 0.2px;
             white-space: nowrap;
         }
 
         .market-value {
             font-family: Consolas, 'Roboto Mono', monospace;
-            font-size: 12px;
+            font-size: 14px;
             font-weight: 700;
             display: flex;
             align-items: baseline;
-            gap: 3px;
+            gap: 4px;
             white-space: nowrap;
             color: #e8f1ff;
         }
 
         .market-change {
-            font-size: 9px;
+            font-size: 10px;
             font-weight: 600;
         }
 
@@ -1107,8 +891,8 @@
         }
 
         .sector-stock-head {
-            margin-top: 2px;
-            font-size: 8px;
+            margin-top: 4px;
+            font-size: 9px;
             color: #8b9eb9;
             letter-spacing: 0.28px;
             text-transform: uppercase;
@@ -1117,8 +901,8 @@
         .sector-stock-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 3px;
-            margin-top: 2px;
+            gap: 4px;
+            margin-top: 3px;
         }
 
         .sector-stock-item {
@@ -1126,9 +910,9 @@
             border: 1px solid #253245;
             border-left: 2px solid var(--accent-cool);
             border-radius: 4px;
-            padding: 2px 4px;
+            padding: 4px;
             cursor: pointer;
-            min-height: 26px;
+            min-height: 34px;
             transition: border-color 0.15s ease, background-color 0.15s ease;
         }
 
@@ -1138,9 +922,9 @@
         }
 
         .sector-stock-name {
-            font-size: 8px;
+            font-size: 9px;
             color: #cad8ea;
-            margin-bottom: 0;
+            margin-bottom: 1px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -1150,14 +934,14 @@
         .sector-stock-quote {
             display: flex;
             align-items: baseline;
-            gap: 2px;
-            font-size: 10px;
+            gap: 3px;
+            font-size: 11px;
             font-weight: 700;
             white-space: nowrap;
         }
 
         .sector-stock-quote .market-change {
-            font-size: 8px;
+            font-size: 9px;
         }
 
         .up { color: var(--up); }
@@ -1166,16 +950,16 @@
         /* Chart Container */
         .chart-container {
             position: relative;
-            height: 70px;
-            min-height: 60px;
-            margin-top: 2px;
+            height: 88px;
+            min-height: 82px;
+            margin-top: 4px;
             flex: 1;
         }
 
         .finance-card .chart-container,
         .construction-card .chart-container {
-            height: 50px;
-            min-height: 44px;
+            height: 64px;
+            min-height: 58px;
         }
 
         .energy-trend-card .chart-container,
@@ -1187,15 +971,15 @@
         }
 
         .popup-launch {
-            margin-top: 3px;
+            margin-top: 5px;
             width: 100%;
             border: 1px solid #37537a;
             background: rgba(24, 47, 75, 0.45);
             color: #cce5ff;
-            border-radius: 4px;
-            font-size: 9px;
+            border-radius: 5px;
+            font-size: 10px;
             font-weight: 600;
-            padding: 4px 5px;
+            padding: 6px 7px;
             text-align: center;
             cursor: pointer;
             letter-spacing: 0.25px;
@@ -1231,22 +1015,22 @@
         .correlation-matrix {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            grid-auto-rows: 20px;
-            gap: 2px;
-            margin-top: 2px;
+            grid-auto-rows: 26px;
+            gap: 3px;
+            margin-top: 4px;
         }
 
         .corr-cell {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 9px;
+            font-size: 12px;
             font-weight: 700;
-            border-radius: 3px;
+            border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s;
             border: 1px solid rgba(18, 26, 40, 0.7);
-            font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
         }
 
         .corr-cell:hover {
@@ -1255,12 +1039,12 @@
         }
 
         .corr-label {
-            font-size: 7px;
+            font-size: 9px;
             line-height: 1;
             text-align: center;
             color: #8394af;
-            padding: 1px;
-            letter-spacing: 0.2px;
+            padding: 2px;
+            letter-spacing: 0.3px;
             text-transform: uppercase;
         }
 
@@ -1304,7 +1088,7 @@
             border-radius: 5px;
             font-size: 13px;
             width: 100%;
-            font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
         }
 
         .sim-button {
@@ -1327,10 +1111,14 @@
         }
 
         .sim-results {
-            background: none;
-            padding: 0;
-            border-radius: 0;
-            border-left: none;
+            background: rgba(12, 22, 35, 0.82);
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid var(--accent-cool);
+            display: none;
+        }
+
+        .sim-results.active {
             display: block;
         }
 
@@ -1489,9 +1277,9 @@
         }
 
         .mech-dyn-row {
-            display: flex; align-items: center; gap: 0; margin-bottom: 2px;
-            background: rgba(10, 15, 24, 0.5); border-radius: 5px;
-            padding: 4px 8px; border: 1px solid rgba(26, 37, 54, 0.6);
+            display: flex; align-items: center; gap: 0; margin-bottom: 3px;
+            background: rgba(10, 15, 24, 0.5); border-radius: 6px;
+            padding: 6px 10px; border: 1px solid rgba(26, 37, 54, 0.6);
             transition: border-color 0.3s, background 0.3s;
             cursor: pointer;
         }
@@ -1499,51 +1287,51 @@
         .mech-dyn-row.active { animation: glowPulse 2s ease-in-out infinite; border-color: rgba(78, 201, 255, 0.5); }
 
         .mech-dyn-driver {
-            min-width: 68px; text-align: center; flex-shrink: 0;
+            min-width: 80px; text-align: center; flex-shrink: 0;
         }
-        .mech-dyn-driver-label { font-size: 7px; color: #7f93ad; text-transform: uppercase; letter-spacing: 0.3px; }
-        .mech-dyn-driver-val { font-size: 10px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+        .mech-dyn-driver-label { font-size: 8px; color: #7f93ad; text-transform: uppercase; letter-spacing: 0.3px; }
+        .mech-dyn-driver-val { font-size: 11px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
 
         .mech-dyn-flow {
             flex: 1; display: flex; align-items: center; gap: 2px;
-            padding: 0 6px; position: relative; min-width: 0;
+            padding: 0 8px; position: relative; min-width: 0;
         }
         .mech-dyn-flow-bar {
             height: 3px; border-radius: 2px; transition: width 0.5s ease, background 0.3s;
             position: relative;
         }
         .mech-dyn-flow-particle {
-            position: absolute; top: -2px; width: 6px; height: 6px;
+            position: absolute; top: -2px; width: 7px; height: 7px;
             border-radius: 50%; animation: flowPulse 1.5s ease-in-out infinite;
         }
         .mech-dyn-flow-label {
             font-size: 7px; color: #5a7a9a; white-space: nowrap; flex-shrink: 0;
-            padding: 0 3px; min-width: 42px; text-align: center;
+            padding: 0 4px; min-width: 50px; text-align: center;
         }
 
         .mech-dyn-path {
-            flex: 1; font-size: 7px; color: #6b8baa; padding: 0 6px;
+            flex: 1; font-size: 8px; color: #6b8baa; padding: 0 8px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
         .mech-dyn-impact {
-            min-width: 52px; text-align: right; flex-shrink: 0;
+            min-width: 60px; text-align: right; flex-shrink: 0;
         }
         .mech-dyn-impact-val {
-            font-size: 11px; font-weight: 700; font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px; font-weight: 700; font-family: 'IBM Plex Mono', monospace;
         }
         .mech-dyn-impact-rank {
-            font-size: 7px; color: #5a7a9a;
+            font-size: 8px; color: #5a7a9a;
         }
 
         .mech-dyn-target {
-            margin-top: 6px; text-align: center; padding: 8px;
+            margin-top: 8px; text-align: center; padding: 10px;
             background: linear-gradient(135deg, rgba(255,179,71,0.08), rgba(255,107,0,0.08));
-            border: 1px solid rgba(255,179,71,0.3); border-radius: 6px;
+            border: 1px solid rgba(255,179,71,0.3); border-radius: 8px;
         }
-        .mech-dyn-target-label { font-size: 8px; color: #ffb347; text-transform: uppercase; letter-spacing: 0.5px; }
-        .mech-dyn-target-val { font-size: 18px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; color: #ff6b00; }
-        .mech-dyn-target-sub { font-size: 9px; color: #8ea9cc; margin-top: 2px; }
+        .mech-dyn-target-label { font-size: 9px; color: #ffb347; text-transform: uppercase; letter-spacing: 0.5px; }
+        .mech-dyn-target-val { font-size: 20px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; color: #ff6b00; }
+        .mech-dyn-target-sub { font-size: 10px; color: #8ea9cc; margin-top: 2px; }
 
         .mech-container {
             padding: 2px 0;
@@ -1604,7 +1392,7 @@
         }
 
         .mech-node-value {
-            font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
             font-size: 11px;
             font-weight: 700;
             color: var(--text);
@@ -1636,7 +1424,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 4px;
-            font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
         }
 
         .mech-chain {
@@ -1686,7 +1474,7 @@
         .mech-link.weak .mech-arrow { height: 1px; opacity: 0.5; }
 
         .mech-link-coeff {
-            font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
             font-size: 8px;
             color: #5a7494;
             white-space: nowrap;
@@ -1717,7 +1505,7 @@
         }
 
         .mech-summary-value {
-            font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
             font-size: 14px;
             font-weight: 700;
             color: var(--text);
@@ -1804,7 +1592,7 @@
             font-size: 23px;
             font-weight: 700;
             color: #dce9ff;
-            font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
         }
 
         .news-modal-content {
@@ -1870,12 +1658,18 @@
                 grid-template-rows: none;
             }
 
-            .col-left, .col-center, .col-right {
-                min-height: auto;
-            }
-
-            .pyeong-grid-right {
-                grid-template-columns: repeat(3, 1fr);
+            .war-status,
+            .map-card,
+            .news-card,
+            .finance-card,
+            .construction-card,
+            .energy-trend-card,
+            .energy-chart-card,
+            .finance-trend-card,
+            .correlation-card,
+            .simulation-card {
+                grid-column: 1;
+                grid-row: auto;
             }
 
             .threat-level {
@@ -1902,10 +1696,6 @@
                 display: none;
             }
 
-            .pyeong-grid-right {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
             .threat-level,
             .sim-controls {
                 grid-template-columns: 1fr;
@@ -1916,16 +1706,16 @@
             }
 
             .correlation-layout {
-                grid-template-columns: 42px 1fr;
-                gap: 2px;
+                grid-template-columns: 56px 1fr;
+                gap: 4px;
             }
 
             .corr-left-labels {
-                grid-template-rows: repeat(7, 18px);
+                grid-template-rows: repeat(7, 22px);
             }
 
             .correlation-matrix {
-                grid-auto-rows: 18px;
+                grid-auto-rows: 22px;
             }
         }
 
@@ -1956,95 +1746,39 @@
     <!-- Header -->
     <div class="header">
         <h1>
-            <span>건설공사비 IMPACT MONITOR</span>
-            <span class="alert-badge">LIVE</span>
+            <span>CRISIS MONITORING DASHBOARD</span>
+            <span class="alert-badge">⚠️ 전쟁 위기 경보</span>
+            <span class="header-stock-inline" id="headerStockInline">
+                <span class="header-stock-item" onclick="showDetails('kospi')" role="button" tabindex="0"><span class="header-stock-label">KOSPI</span><span class="header-stock-value" id="kospi">--</span><span class="header-stock-change" id="kospi-change">--%</span></span>
+                <span class="header-stock-item" onclick="showDetails('kosdaq')" role="button" tabindex="0"><span class="header-stock-label">KOSDAQ</span><span class="header-stock-value" id="kosdaq">--</span><span class="header-stock-change" id="kosdaq-change">--%</span></span>
+                <span class="header-stock-item" onclick="showDetails('nasdaq')" role="button" tabindex="0"><span class="header-stock-label">NASDAQ</span><span class="header-stock-value" id="nasdaq">--</span><span class="header-stock-change" id="nasdaq-change">--%</span></span>
+                <span class="header-stock-item" onclick="showDetails('dow')" role="button" tabindex="0"><span class="header-stock-label">DOW</span><span class="header-stock-value" id="dow">--</span><span class="header-stock-change" id="dow-change">--%</span></span>
+                <span class="header-stock-item" onclick="showDetails('sp500')" role="button" tabindex="0"><span class="header-stock-label">S&P500</span><span class="header-stock-value" id="sp500">--</span><span class="header-stock-change" id="sp500-change">--%</span></span>
+            </span>
         </h1>
-        <span class="header-stock-inline" id="headerStockInline">
-            <span class="header-stock-item" onclick="showDetails('kospi')" role="button" tabindex="0"><span class="header-stock-label">KOSPI</span><span class="header-stock-value" id="kospi">--</span><span class="header-stock-change" id="kospi-change">--%</span></span>
-            <span class="header-stock-item" onclick="showDetails('kosdaq')" role="button" tabindex="0"><span class="header-stock-label">KOSDAQ</span><span class="header-stock-value" id="kosdaq">--</span><span class="header-stock-change" id="kosdaq-change">--%</span></span>
-            <span class="header-stock-item" onclick="showDetails('nasdaq')" role="button" tabindex="0"><span class="header-stock-label">NASDAQ</span><span class="header-stock-value" id="nasdaq">--</span><span class="header-stock-change" id="nasdaq-change">--%</span></span>
-            <span class="header-stock-item" onclick="showDetails('dow')" role="button" tabindex="0"><span class="header-stock-label">DOW</span><span class="header-stock-value" id="dow">--</span><span class="header-stock-change" id="dow-change">--%</span></span>
-            <span class="header-stock-item" onclick="showDetails('sp500')" role="button" tabindex="0"><span class="header-stock-label">S&P500</span><span class="header-stock-value" id="sp500">--</span><span class="header-stock-change" id="sp500-change">--%</span></span>
-            <span class="header-stock-item" onclick="showDetails('constructionAvg')" role="button" tabindex="0" style="background:rgba(78,201,255,0.12);border:1px solid rgba(78,201,255,0.3)"><span class="header-stock-label">건설평균</span><span class="header-stock-value" id="constructionAvg">--</span><span class="header-stock-change" id="constructionAvg-change">--%</span></span>
-        </span>
+        <div class="header-sector-strip">
+            <span class="header-sector-group">
+                <span class="header-sector-label">금융주</span>
+                <span class="header-stock-item" onclick="showDetails('kbfin')" role="button" tabindex="0"><span class="header-stock-label">KB금융</span><span class="header-stock-value" id="kbfin">--</span><span class="header-stock-change" id="kbfin-change">--%</span></span>
+                <span class="header-stock-item" onclick="showDetails('shinhan')" role="button" tabindex="0"><span class="header-stock-label">신한지주</span><span class="header-stock-value" id="shinhan">--</span><span class="header-stock-change" id="shinhan-change">--%</span></span>
+                <span class="header-stock-item" onclick="showDetails('hanafin')" role="button" tabindex="0"><span class="header-stock-label">하나금융</span><span class="header-stock-value" id="hanafin">--</span><span class="header-stock-change" id="hanafin-change">--%</span></span>
+            </span>
+            <span class="header-sector-group">
+                <span class="header-sector-label">건설주</span>
+                <span class="header-stock-item" onclick="showDetails('constructionAvg')" role="button" tabindex="0" style="background:rgba(78,201,255,0.12);border:1px solid rgba(78,201,255,0.3)"><span class="header-stock-label">건설평균</span><span class="header-stock-value" id="constructionAvg">--</span><span class="header-stock-change" id="constructionAvg-change">--%</span></span>
+                <span class="header-stock-item" onclick="showDetails('hyundaie')" role="button" tabindex="0"><span class="header-stock-label">현대건설</span><span class="header-stock-value" id="hyundaie">--</span><span class="header-stock-change" id="hyundaie-change">--%</span></span>
+                <span class="header-stock-item" onclick="showDetails('daewooec')" role="button" tabindex="0"><span class="header-stock-label">대우건설</span><span class="header-stock-value" id="daewooec">--</span><span class="header-stock-change" id="daewooec-change">--%</span></span>
+                <span class="header-stock-item" onclick="showDetails('dlenc')" role="button" tabindex="0"><span class="header-stock-label">DL이앤씨</span><span class="header-stock-value" id="dlenc">--</span><span class="header-stock-change" id="dlenc-change">--%</span></span>
+                <span class="header-stock-item" onclick="showDetails('gsenc')" role="button" tabindex="0"><span class="header-stock-label">GS건설</span><span class="header-stock-value" id="gsenc">--</span><span class="header-stock-change" id="gsenc-change">--%</span></span>
+                <span class="header-stock-item" onclick="showDetails('poscoenc')" role="button" tabindex="0"><span class="header-stock-label">포스코이앤씨</span><span class="header-stock-value" id="poscoenc">--</span><span class="header-stock-change" id="poscoenc-change">--%</span></span>
+            </span>
+        </div>
         <div class="timestamp" id="timestamp"></div>
         <div class="library-warning" id="libraryWarning"></div>
-        <!-- Hidden sector stocks for data binding -->
-        <div style="display:none">
-            <span id="kbfin">--</span><span id="kbfin-change">--%</span>
-            <span id="shinhan">--</span><span id="shinhan-change">--%</span>
-            <span id="hanafin">--</span><span id="hanafin-change">--%</span>
-            <span id="hyundaie">--</span><span id="hyundaie-change">--%</span>
-            <span id="daewooec">--</span><span id="daewooec-change">--%</span>
-            <span id="dlenc">--</span><span id="dlenc-change">--%</span>
-            <span id="gsenc">--</span><span id="gsenc-change">--%</span>
-            <span id="poscoenc">--</span><span id="poscoenc-change">--%</span>
-        </div>
     </div>
 
-    <!-- Easy Zone: Per-Pyeong Construction Cost by Property Type -->
-    <div class="easy-zone" id="easyZone">
-        <div class="pyeong-card" data-type="apt" onclick="showPyeongDetail('apt')">
-            <div class="pyeong-top">
-                <div class="pyeong-type"><span class="pyeong-type-icon">🏢</span> 아파트</div>
-                <div class="pyeong-change up" id="pyeong-apt-change">--</div>
-            </div>
-            <div class="pyeong-value"><span id="pyeong-apt-val">--</span> <span class="pyeong-unit">만원/평</span></div>
-            <div class="pyeong-bar-wrap"><div class="pyeong-bar" id="pyeong-apt-bar" style="width:0%; background: linear-gradient(90deg, #4ec9ff, #38bdf8);"></div></div>
-            <div class="pyeong-bar-label"><span>재료 42%</span><span>노무 33%</span></div>
-        </div>
-        <div class="pyeong-card" data-type="officetel" onclick="showPyeongDetail('officetel')">
-            <div class="pyeong-top">
-                <div class="pyeong-type"><span class="pyeong-type-icon">🏨</span> 오피스텔</div>
-                <div class="pyeong-change up" id="pyeong-officetel-change">--</div>
-            </div>
-            <div class="pyeong-value"><span id="pyeong-officetel-val">--</span> <span class="pyeong-unit">만원/평</span></div>
-            <div class="pyeong-bar-wrap"><div class="pyeong-bar" id="pyeong-officetel-bar" style="width:0%; background: linear-gradient(90deg, #a78bfa, #8b5cf6);"></div></div>
-            <div class="pyeong-bar-label"><span>재료 44%</span><span>노무 31%</span></div>
-        </div>
-        <div class="pyeong-card" data-type="commercial" onclick="showPyeongDetail('commercial')">
-            <div class="pyeong-top">
-                <div class="pyeong-type"><span class="pyeong-type-icon">🏬</span> 상가</div>
-                <div class="pyeong-change up" id="pyeong-commercial-change">--</div>
-            </div>
-            <div class="pyeong-value"><span id="pyeong-commercial-val">--</span> <span class="pyeong-unit">만원/평</span></div>
-            <div class="pyeong-bar-wrap"><div class="pyeong-bar" id="pyeong-commercial-bar" style="width:0%; background: linear-gradient(90deg, #f59e0b, #d97706);"></div></div>
-            <div class="pyeong-bar-label"><span>재료 40%</span><span>노무 34%</span></div>
-        </div>
-        <div class="pyeong-card" data-type="office" onclick="showPyeongDetail('office')">
-            <div class="pyeong-top">
-                <div class="pyeong-type"><span class="pyeong-type-icon">🏛️</span> 오피스</div>
-                <div class="pyeong-change up" id="pyeong-office-change">--</div>
-            </div>
-            <div class="pyeong-value"><span id="pyeong-office-val">--</span> <span class="pyeong-unit">만원/평</span></div>
-            <div class="pyeong-bar-wrap"><div class="pyeong-bar" id="pyeong-office-bar" style="width:0%; background: linear-gradient(90deg, #22c55e, #16a34a);"></div></div>
-            <div class="pyeong-bar-label"><span>재료 46%</span><span>노무 30%</span></div>
-        </div>
-        <div class="pyeong-card" data-type="knowledge" onclick="showPyeongDetail('knowledge')">
-            <div class="pyeong-top">
-                <div class="pyeong-type"><span class="pyeong-type-icon">🏭</span> 지산센터</div>
-                <div class="pyeong-change up" id="pyeong-knowledge-change">--</div>
-            </div>
-            <div class="pyeong-value"><span id="pyeong-knowledge-val">--</span> <span class="pyeong-unit">만원/평</span></div>
-            <div class="pyeong-bar-wrap"><div class="pyeong-bar" id="pyeong-knowledge-bar" style="width:0%; background: linear-gradient(90deg, #fb7185, #e11d48);"></div></div>
-            <div class="pyeong-bar-label"><span>재료 45%</span><span>노무 30%</span></div>
-        </div>
-        <div class="pyeong-card" data-type="logistics" onclick="showPyeongDetail('logistics')">
-            <div class="pyeong-top">
-                <div class="pyeong-type"><span class="pyeong-type-icon">📦</span> 물류센터</div>
-                <div class="pyeong-change up" id="pyeong-logistics-change">--</div>
-            </div>
-            <div class="pyeong-value"><span id="pyeong-logistics-val">--</span> <span class="pyeong-unit">만원/평</span></div>
-            <div class="pyeong-bar-wrap"><div class="pyeong-bar" id="pyeong-logistics-bar" style="width:0%; background: linear-gradient(90deg, #38bdf8, #0ea5e9);"></div></div>
-            <div class="pyeong-bar-label"><span>재료 52%</span><span>노무 25%</span></div>
-        </div>
-    </div>
-
-    <!-- Main Dashboard — 3 Column Layout -->
+    <!-- Main Dashboard -->
     <div class="dashboard">
-        <!-- ══════ LEFT COLUMN: Market Indicators ══════ -->
-        <div class="col-left">
-        <div class="col-header">시장 지표 — Indicators</div>
         <!-- War Status Monitor -->
         <div class="card war-status">
             <div class="card-header">
@@ -2092,6 +1826,35 @@
                     <div class="war-bar-value" id="warBarFinanceVal">--%</div>
                 </div>
             </div>
+        </div>
+
+        <!-- Live Crisis Map -->
+        <div class="card map-card">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">GEO CRISIS MAP</div>
+                    <div class="card-subtitle">Middle East Hotspot Tracking</div>
+                </div>
+            </div>
+            <div class="geo-map-wrap">
+                <div class="geo-map-canvas" id="geoMapCanvas" aria-label="Middle East Crisis Map"></div>
+            </div>
+            <div class="map-legend">
+                <span><i class="legend-dot legend-red"></i>군사 긴장</span>
+                <span><i class="legend-dot legend-orange"></i>충돌 가능성</span>
+                <span><i class="legend-dot legend-green"></i>통상 경로</span>
+            </div>
+        </div>
+
+        <!-- Real-time News -->
+        <div class="card news-card">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">REAL-TIME NEWS</div>
+                    <div class="card-subtitle">실시간뉴스</div>
+                </div>
+            </div>
+            <div class="live-news-feed" id="liveNewsFeed"></div>
         </div>
 
         <!-- Financial Indicators -->
@@ -2160,49 +1923,6 @@
             </div>
         </div>
 
-        <!-- Energy Trend -->
-        <div class="card energy-trend-card">
-            <div class="card-header">
-                <div>
-                    <div class="card-title">ENERGY SHOCK BETA</div>
-                    <div class="card-subtitle">에너지 시장</div>
-                </div>
-                <div class="card-timestamp" id="tsEnergy">기준: --</div>
-            </div>
-            <div class="market-grid">
-                <div class="market-item" onclick="showDetails('wti')">
-                    <div class="market-label">WTI 원유 <span class="market-unit">$/bbl</span></div>
-                    <div class="market-value">
-                        <span id="wti">--</span>
-                        <span class="market-change" id="wti-change">--%</span>
-                    </div>
-                    <div class="hist-range" id="hist-wti"></div>
-                </div>
-                <div class="market-item" onclick="showDetails('brent')">
-                    <div class="market-label">Brent 원유 <span class="market-unit">$/bbl</span></div>
-                    <div class="market-value">
-                        <span id="brent">--</span>
-                        <span class="market-change" id="brent-change">--%</span>
-                    </div>
-                    <div class="hist-range" id="hist-brent"></div>
-                </div>
-                <div class="market-item" onclick="showDetails('gas')">
-                    <div class="market-label">천연가스 <span class="market-unit">$/MMBtu</span></div>
-                    <div class="market-value">
-                        <span id="gas">--</span>
-                        <span class="market-change" id="gas-change">--%</span>
-                    </div>
-                </div>
-                <div class="market-item" onclick="showDetails('lng')">
-                    <div class="market-label">LNG(Henry Hub) <span class="market-unit">$/MMBtu</span></div>
-                    <div class="market-value">
-                        <span id="lng">--</span>
-                        <span class="market-change" id="lng-change">--%</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Construction & Real Estate -->
         <div class="card construction-card">
             <div class="card-header">
@@ -2246,112 +1966,75 @@
                     <div class="hist-range" id="hist-construction"></div>
                 </div>
             </div>
+            <button class="popup-launch" onclick="openSimulationPopup()">시뮬레이션</button>
         </div>
-        </div><!-- /col-left -->
 
-        <!-- ══════ CENTER COLUMN: Transmission Pathways ══════ -->
-        <div class="col-center">
-        <div class="col-header">전파 경로 — Transmission</div>
-        <!-- Live Crisis Map -->
-        <div class="card map-card">
+        <!-- Energy Trend -->
+        <div class="card energy-trend-card">
             <div class="card-header">
                 <div>
-                    <div class="card-title">GEO CRISIS MAP</div>
-                    <div class="card-subtitle">Middle East Hotspot Tracking</div>
+                    <div class="card-title">ENERGY SHOCK BETA</div>
+                    <div class="card-subtitle">에너지 시장</div>
                 </div>
+                <div class="card-timestamp" id="tsEnergy">기준: --</div>
             </div>
-            <div class="geo-map-wrap">
-                <div class="geo-map-canvas" id="geoMapCanvas" aria-label="Middle East Crisis Map"></div>
-            </div>
-            <div class="map-legend">
-                <span><i class="legend-dot legend-red"></i>군사 긴장</span>
-                <span><i class="legend-dot legend-orange"></i>충돌 가능성</span>
-                <span><i class="legend-dot legend-green"></i>통상 경로</span>
+            <div class="market-grid">
+                <div class="market-item" onclick="showDetails('wti')">
+                    <div class="market-label">WTI 원유 <span class="market-unit">$/bbl</span></div>
+                    <div class="market-value">
+                        <span id="wti">--</span>
+                        <span class="market-change" id="wti-change">--%</span>
+                    </div>
+                    <div class="hist-range" id="hist-wti"></div>
+                </div>
+                <div class="market-item" onclick="showDetails('brent')">
+                    <div class="market-label">Brent 원유 <span class="market-unit">$/bbl</span></div>
+                    <div class="market-value">
+                        <span id="brent">--</span>
+                        <span class="market-change" id="brent-change">--%</span>
+                    </div>
+                    <div class="hist-range" id="hist-brent"></div>
+                </div>
+                <div class="market-item" onclick="showDetails('gas')">
+                    <div class="market-label">천연가스 <span class="market-unit">$/MMBtu</span></div>
+                    <div class="market-value">
+                        <span id="gas">--</span>
+                        <span class="market-change" id="gas-change">--%</span>
+                    </div>
+                </div>
+                <div class="market-item" onclick="showDetails('lng')">
+                    <div class="market-label">LNG(Henry Hub) <span class="market-unit">$/MMBtu</span></div>
+                    <div class="market-value">
+                        <span id="lng">--</span>
+                        <span class="market-change" id="lng-change">--%</span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Transmission Mechanism — Main Page -->
-        <div class="card mechanism-card">
+        <!-- Energy Price Trend Chart (col2/row3) -->
+        <div class="card energy-chart-card">
             <div class="card-header">
                 <div>
-                    <div class="card-title">TRANSMISSION MECHANISM</div>
-                    <div class="card-subtitle">거시변수 → 건설공사비 전파경로</div>
+                    <div class="card-title">ENERGY PRICE TREND</div>
+                    <div class="card-subtitle">에너지 가격 추이 (WTI / Brent)</div>
                 </div>
-                <button class="popup-launch" onclick="openSimulationPopup()" style="font-size:8px;padding:2px 8px;">시뮬레이션</button>
             </div>
-            <div id="mainMechanism" class="mech-container"></div>
+            <div class="chart-container">
+                <canvas id="energyChart"></canvas>
+            </div>
         </div>
 
-        <!-- Real-time News -->
-        <div class="card news-card">
+        <!-- Finance Trend Chart (col3/row3) -->
+        <div class="card finance-trend-card">
             <div class="card-header">
                 <div>
-                    <div class="card-title">REAL-TIME NEWS</div>
-                    <div class="card-subtitle">실시간뉴스</div>
+                    <div class="card-title">FINANCIAL TREND</div>
+                    <div class="card-subtitle">금융지표 추이 (금, 은, 환율)</div>
                 </div>
             </div>
-            <div class="live-news-feed" id="liveNewsFeed"></div>
-        </div>
-        </div><!-- /col-center -->
-
-        <!-- ══════ RIGHT COLUMN: Per-Type Impact ══════ -->
-        <div class="col-right">
-        <div class="col-header">유형별 영향 — Impact by Type</div>
-        <!-- Per-Pyeong Construction Cost by Type -->
-        <div class="pyeong-grid-right">
-            <div class="pyeong-card" data-type="apt" onclick="showPyeongDetail('apt')">
-                <div class="pyeong-top">
-                    <div class="pyeong-type"><span class="pyeong-type-icon">🏢</span> 아파트</div>
-                    <div class="pyeong-change up" id="pyeong-apt-change2">--</div>
-                </div>
-                <div class="pyeong-value"><span id="pyeong-apt-val2">--</span> <span class="pyeong-unit">만원/평</span></div>
-                <div class="pyeong-bar-wrap"><div class="pyeong-bar" id="pyeong-apt-bar2" style="width:0%; background: linear-gradient(90deg, #4ec9ff, #38bdf8);"></div></div>
-                <div class="pyeong-bar-label"><span>재료 42%</span><span>노무 33%</span></div>
-            </div>
-            <div class="pyeong-card" data-type="officetel" onclick="showPyeongDetail('officetel')">
-                <div class="pyeong-top">
-                    <div class="pyeong-type"><span class="pyeong-type-icon">🏨</span> 오피스텔</div>
-                    <div class="pyeong-change up" id="pyeong-officetel-change2">--</div>
-                </div>
-                <div class="pyeong-value"><span id="pyeong-officetel-val2">--</span> <span class="pyeong-unit">만원/평</span></div>
-                <div class="pyeong-bar-wrap"><div class="pyeong-bar" id="pyeong-officetel-bar2" style="width:0%; background: linear-gradient(90deg, #a78bfa, #8b5cf6);"></div></div>
-                <div class="pyeong-bar-label"><span>재료 44%</span><span>노무 31%</span></div>
-            </div>
-            <div class="pyeong-card" data-type="commercial" onclick="showPyeongDetail('commercial')">
-                <div class="pyeong-top">
-                    <div class="pyeong-type"><span class="pyeong-type-icon">🏬</span> 상가</div>
-                    <div class="pyeong-change up" id="pyeong-commercial-change2">--</div>
-                </div>
-                <div class="pyeong-value"><span id="pyeong-commercial-val2">--</span> <span class="pyeong-unit">만원/평</span></div>
-                <div class="pyeong-bar-wrap"><div class="pyeong-bar" id="pyeong-commercial-bar2" style="width:0%; background: linear-gradient(90deg, #f59e0b, #d97706);"></div></div>
-                <div class="pyeong-bar-label"><span>재료 40%</span><span>노무 34%</span></div>
-            </div>
-            <div class="pyeong-card" data-type="office" onclick="showPyeongDetail('office')">
-                <div class="pyeong-top">
-                    <div class="pyeong-type"><span class="pyeong-type-icon">🏛️</span> 오피스</div>
-                    <div class="pyeong-change up" id="pyeong-office-change2">--</div>
-                </div>
-                <div class="pyeong-value"><span id="pyeong-office-val2">--</span> <span class="pyeong-unit">만원/평</span></div>
-                <div class="pyeong-bar-wrap"><div class="pyeong-bar" id="pyeong-office-bar2" style="width:0%; background: linear-gradient(90deg, #22c55e, #16a34a);"></div></div>
-                <div class="pyeong-bar-label"><span>재료 46%</span><span>노무 30%</span></div>
-            </div>
-            <div class="pyeong-card" data-type="knowledge" onclick="showPyeongDetail('knowledge')">
-                <div class="pyeong-top">
-                    <div class="pyeong-type"><span class="pyeong-type-icon">🏭</span> 지산센터</div>
-                    <div class="pyeong-change up" id="pyeong-knowledge-change2">--</div>
-                </div>
-                <div class="pyeong-value"><span id="pyeong-knowledge-val2">--</span> <span class="pyeong-unit">만원/평</span></div>
-                <div class="pyeong-bar-wrap"><div class="pyeong-bar" id="pyeong-knowledge-bar2" style="width:0%; background: linear-gradient(90deg, #fb7185, #e11d48);"></div></div>
-                <div class="pyeong-bar-label"><span>재료 45%</span><span>노무 30%</span></div>
-            </div>
-            <div class="pyeong-card" data-type="logistics" onclick="showPyeongDetail('logistics')">
-                <div class="pyeong-top">
-                    <div class="pyeong-type"><span class="pyeong-type-icon">📦</span> 물류센터</div>
-                    <div class="pyeong-change up" id="pyeong-logistics-change2">--</div>
-                </div>
-                <div class="pyeong-value"><span id="pyeong-logistics-val2">--</span> <span class="pyeong-unit">만원/평</span></div>
-                <div class="pyeong-bar-wrap"><div class="pyeong-bar" id="pyeong-logistics-bar2" style="width:0%; background: linear-gradient(90deg, #38bdf8, #0ea5e9);"></div></div>
-                <div class="pyeong-bar-label"><span>재료 52%</span><span>노무 25%</span></div>
+            <div class="chart-container">
+                <canvas id="financeChart"></canvas>
             </div>
         </div>
 
@@ -2360,7 +2043,7 @@
             <div class="card-header">
                 <div>
                     <div class="card-title">CROSS-METRIC CORRELATION</div>
-                    <div class="card-subtitle">지표 간 상관관계 <span id="corrDataInfo" class="card-timestamp"></span></div>
+                    <div class="card-subtitle">지표 간 상관관계 분석 <span id="corrDataInfo" class="card-timestamp"></span></div>
                 </div>
             </div>
             <div class="correlation-layout correlation-layout-top">
@@ -2389,13 +2072,6 @@
             </div>
         </div>
 
-        <!-- Hidden chart canvases (still needed for data) -->
-        <div style="display:none;">
-            <canvas id="energyChart"></canvas>
-            <canvas id="financeChart"></canvas>
-        </div>
-        </div><!-- /col-right -->
-
         <!-- Simulation Panel -->
         <div class="card simulation-card" id="simulationPopup">
             <div class="card-header">
@@ -2409,7 +2085,6 @@
                 </div>
             </div>
             <div class="simulation-panel">
-                <!-- ═══ TOP BAR: Controls + KPI ═══ -->
                 <div class="sim-top-bar">
                     <div class="sim-top-controls">
                         <div>
@@ -2454,15 +2129,10 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- ═══ 3-COLUMN BODY ═══ -->
                 <div class="sim-body-3col">
-                    <!-- LEFT: 파라미터 설정 + 전파경로 -->
                     <div class="sim-col">
-                        <!-- Parameter Section -->
                         <div class="sim-col-section" style="flex:0 0 auto;">
                             <div class="sim-col-section-title">파라미터 설정</div>
-                            <!-- Presets -->
                             <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;">
                                 <button class="sim-preset-btn" onclick="loadPreset('baseline')" style="font-size:10px;padding:3px 8px;">기준</button>
                                 <button class="sim-preset-btn" onclick="loadPreset('fxShock')" style="font-size:10px;padding:3px 8px;">환율급등</button>
@@ -2471,161 +2141,77 @@
                                 <button class="sim-preset-btn" onclick="loadPreset('rateHike')" style="font-size:10px;padding:3px 8px;">금리</button>
                                 <button class="sim-preset-btn" onclick="loadPreset('allShock')" style="font-size:10px;padding:3px 8px;">복합</button>
                             </div>
-                            <!-- Tab Navigation -->
                             <div class="sim-tabs" style="margin-bottom:6px;">
                                 <button class="sim-tab active" onclick="switchSimTab('params')" style="padding:4px 10px;font-size:10px;">파라미터</button>
                                 <button class="sim-tab" onclick="switchSimTab('sensitivity')" style="padding:4px 10px;font-size:10px;">민감도</button>
                                 <button class="sim-tab" onclick="switchSimTab('montecarlo')" style="padding:4px 10px;font-size:10px;">M.Carlo</button>
                             </div>
-                            <!-- Tab: Params -->
                             <div class="sim-tab-content active" id="simTabParams">
                                 <div style="display:flex;flex-direction:column;gap:6px;">
-                                    <div>
-                                        <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
-                                            <label class="sim-control-label" style="font-size:10px;">환율 충격 (%)</label>
-                                            <span class="sim-control-label" id="sliderValFx" style="color:#38bdf8;font-size:10px;">+5.0%</span>
-                                        </div>
-                                        <input type="range" id="shockFx" min="-10" max="15" step="0.5" value="5" oninput="updateSliderLabel('Fx')" style="width:100%;accent-color:#38bdf8;">
-                                    </div>
-                                    <div>
-                                        <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
-                                            <label class="sim-control-label" style="font-size:10px;">유가 충격 (%)</label>
-                                            <span class="sim-control-label" id="sliderValOil" style="color:#22c55e;font-size:10px;">+8.0%</span>
-                                        </div>
-                                        <input type="range" id="shockOil" min="-10" max="50" step="1" value="8" oninput="updateSliderLabel('Oil')" style="width:100%;accent-color:#22c55e;">
-                                    </div>
-                                    <div>
-                                        <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
-                                            <label class="sim-control-label" style="font-size:10px;">PPI 충격 (%)</label>
-                                            <span class="sim-control-label" id="sliderValPpi" style="color:#a78bfa;font-size:10px;">+2.0%</span>
-                                        </div>
-                                        <input type="range" id="shockPpi" min="-10" max="10" step="0.5" value="2" oninput="updateSliderLabel('Ppi')" style="width:100%;accent-color:#a78bfa;">
-                                    </div>
-                                    <div>
-                                        <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
-                                            <label class="sim-control-label" style="font-size:10px;">노무비 충격 (%)</label>
-                                            <span class="sim-control-label" id="sliderValLabor" style="color:#f59e0b;font-size:10px;">+1.5%</span>
-                                        </div>
-                                        <input type="range" id="shockLabor" min="-2" max="10" step="0.5" value="1.5" oninput="updateSliderLabel('Labor')" style="width:100%;accent-color:#f59e0b;">
-                                    </div>
-                                    <div>
-                                        <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
-                                            <label class="sim-control-label" style="font-size:10px;">금리 변화 (%p)</label>
-                                            <span class="sim-control-label" id="sliderValRate" style="color:#fb7185;font-size:10px;">+0.5%p</span>
-                                        </div>
-                                        <input type="range" id="shockRate" min="-2" max="2" step="0.25" value="0.5" oninput="updateSliderLabel('Rate')" style="width:100%;accent-color:#fb7185;">
-                                    </div>
+                                    <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><label class="sim-control-label" style="font-size:10px;">환율 충격 (%)</label><span class="sim-control-label" id="sliderValFx" style="color:#38bdf8;font-size:10px;">+5.0%</span></div><input type="range" id="shockFx" min="-10" max="15" step="0.5" value="5" oninput="updateSliderLabel('Fx')" style="width:100%;accent-color:#38bdf8;"></div>
+                                    <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><label class="sim-control-label" style="font-size:10px;">유가 충격 (%)</label><span class="sim-control-label" id="sliderValOil" style="color:#22c55e;font-size:10px;">+8.0%</span></div><input type="range" id="shockOil" min="-10" max="50" step="1" value="8" oninput="updateSliderLabel('Oil')" style="width:100%;accent-color:#22c55e;"></div>
+                                    <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><label class="sim-control-label" style="font-size:10px;">PPI 충격 (%)</label><span class="sim-control-label" id="sliderValPpi" style="color:#a78bfa;font-size:10px;">+2.0%</span></div><input type="range" id="shockPpi" min="-10" max="10" step="0.5" value="2" oninput="updateSliderLabel('Ppi')" style="width:100%;accent-color:#a78bfa;"></div>
+                                    <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><label class="sim-control-label" style="font-size:10px;">노무비 충격 (%)</label><span class="sim-control-label" id="sliderValLabor" style="color:#f59e0b;font-size:10px;">+1.5%</span></div><input type="range" id="shockLabor" min="-2" max="10" step="0.5" value="1.5" oninput="updateSliderLabel('Labor')" style="width:100%;accent-color:#f59e0b;"></div>
+                                    <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><label class="sim-control-label" style="font-size:10px;">금리 변화 (%p)</label><span class="sim-control-label" id="sliderValRate" style="color:#fb7185;font-size:10px;">+0.5%p</span></div><input type="range" id="shockRate" min="-2" max="2" step="0.25" value="0.5" oninput="updateSliderLabel('Rate')" style="width:100%;accent-color:#fb7185;"></div>
                                 </div>
                                 <div style="display:flex;gap:4px;margin-top:8px;">
                                     <button class="sim-button" onclick="runSimulation()" style="flex:1;padding:6px;font-size:11px;">실행</button>
                                     <button class="sim-button" onclick="runComparison()" style="flex:1;padding:6px;font-size:11px;background:linear-gradient(90deg,#6b3fa0,#8b5cf6);">비교</button>
                                 </div>
-                                <div style="margin-top:4px;padding:4px 6px;border:1px dashed #22324a;border-radius:4px;font-size:8px;color:#5a7a9a;" id="modelInfoBox">
-                                    Gaussian IRF | ARDL-OLS | Local Projections
-                                </div>
-                                <div style="margin-top:3px;padding:4px 6px;border-radius:4px;font-size:8px;background:rgba(251,113,133,0.06);border:1px solid #2a1520;color:#6a829f;" id="modelStatsBox">
-                                    모델 통계: 실행 후 표시
-                                </div>
+                                <div style="margin-top:4px;padding:4px 6px;border:1px dashed #22324a;border-radius:4px;font-size:8px;color:#5a7a9a;" id="modelInfoBox">Gaussian IRF | ARDL-OLS | Local Projections</div>
+                                <div style="margin-top:3px;padding:4px 6px;border-radius:4px;font-size:8px;background:rgba(251,113,133,0.06);border:1px solid #2a1520;color:#6a829f;" id="modelStatsBox">모델 통계: 실행 후 표시</div>
                             </div>
-                            <!-- Tab: Sensitivity -->
                             <div class="sim-tab-content" id="simTabSensitivity">
                                 <div style="display:flex;flex-direction:column;gap:6px;">
-                                    <div>
-                                        <label class="sim-control-label" style="font-size:10px;">분석 대상</label>
-                                        <select class="sim-input" id="sensitivityVar" style="font-size:11px;padding:5px;">
-                                            <option value="fx">환율</option>
-                                            <option value="oil" selected>유가</option>
-                                            <option value="ppi">생산자물가</option>
-                                            <option value="labor">노무비</option>
-                                            <option value="policyRate">기준금리</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="sim-control-label" style="font-size:10px;">측정 시점</label>
-                                        <select class="sim-input" id="sensitivityHorizon" style="font-size:11px;padding:5px;">
-                                            <option value="2">3M</option>
-                                            <option value="5">6M</option>
-                                            <option value="11" selected>12M</option>
-                                        </select>
-                                    </div>
+                                    <div><label class="sim-control-label" style="font-size:10px;">분석 대상</label><select class="sim-input" id="sensitivityVar" style="font-size:11px;padding:5px;"><option value="fx">환율</option><option value="oil" selected>유가</option><option value="ppi">생산자물가</option><option value="labor">노무비</option><option value="policyRate">기준금리</option></select></div>
+                                    <div><label class="sim-control-label" style="font-size:10px;">측정 시점</label><select class="sim-input" id="sensitivityHorizon" style="font-size:11px;padding:5px;"><option value="2">3M</option><option value="5">6M</option><option value="11" selected>12M</option></select></div>
                                 </div>
                                 <button class="sim-button" onclick="runSensitivity()" style="width:100%;margin-top:6px;padding:6px;font-size:11px;">민감도 분석</button>
                                 <div id="sensitivityResult" style="margin-top:6px;"></div>
                             </div>
-                            <!-- Tab: Monte Carlo -->
                             <div class="sim-tab-content" id="simTabMonteCarlo">
                                 <div style="display:flex;flex-direction:column;gap:6px;">
-                                    <div>
-                                        <label class="sim-control-label" style="font-size:10px;">횟수</label>
-                                        <select class="sim-input" id="mcIterations" style="font-size:11px;padding:5px;">
-                                            <option value="100">100회</option>
-                                            <option value="500" selected>500회</option>
-                                            <option value="1000">1,000회</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="sim-control-label" style="font-size:10px;">유가 변동성 (σ%)</label>
-                                        <input type="number" class="sim-input" id="mcOilVol" value="5" step="1" style="font-size:11px;padding:5px;">
-                                    </div>
-                                    <div>
-                                        <label class="sim-control-label" style="font-size:10px;">환율 변동성 (σ%)</label>
-                                        <input type="number" class="sim-input" id="mcFxVol" value="3" step="1" style="font-size:11px;padding:5px;">
-                                    </div>
+                                    <div><label class="sim-control-label" style="font-size:10px;">횟수</label><select class="sim-input" id="mcIterations" style="font-size:11px;padding:5px;"><option value="100">100회</option><option value="500" selected>500회</option><option value="1000">1,000회</option></select></div>
+                                    <div><label class="sim-control-label" style="font-size:10px;">유가 변동성 (σ%)</label><input type="number" class="sim-input" id="mcOilVol" value="5" step="1" style="font-size:11px;padding:5px;"></div>
+                                    <div><label class="sim-control-label" style="font-size:10px;">환율 변동성 (σ%)</label><input type="number" class="sim-input" id="mcFxVol" value="3" step="1" style="font-size:11px;padding:5px;"></div>
                                 </div>
                                 <button class="sim-button" onclick="runMonteCarlo()" style="width:100%;margin-top:6px;padding:6px;font-size:11px;background:linear-gradient(90deg,#0d7377,#14919b);">Monte Carlo</button>
                                 <div id="monteCarloResult" style="margin-top:6px;"></div>
                             </div>
                         </div>
-
-                        <!-- Transmission Mechanism -->
                         <div class="sim-col-section" style="flex:1 1 0;min-height:0;overflow-y:auto;">
                             <div class="sim-col-section-title">전파경로</div>
                             <div id="mechDynamic" style="min-height:100px;"></div>
                         </div>
                     </div>
-
-                    <!-- CENTER: 분석결과 -->
                     <div class="sim-col">
                         <div class="sim-col-section" style="flex:1;display:flex;flex-direction:column;min-height:0;">
                             <div class="sim-col-section-title">분석결과</div>
                             <div id="simResults" class="sim-results" style="display:block;border:none;padding:0;background:none;">
-                                <!-- Pressure Signal -->
                                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
                                     <span style="font-size:11px;font-weight:700;letter-spacing:0.4px;padding:3px 10px;border-radius:4px;border:1px solid;" id="simPressureBadge">대기중</span>
                                     <span style="font-size:10px;color:#8ea3c1;" id="simPressureSummary">시뮬레이션을 실행하세요</span>
                                 </div>
-                                <div id="periodMethodDesc" style="padding:4px 6px;background:rgba(56,189,248,0.06);border:1px solid #13304d;border-radius:4px;margin-bottom:6px;font-size:9px;color:#7f93ad;">
-                                    전체 60개월 데이터로 3가지 방법론의 전망을 비교합니다.
-                                </div>
-                                <!-- Attribution Table -->
+                                <div id="periodMethodDesc" style="padding:4px 6px;background:rgba(56,189,248,0.06);border:1px solid #13304d;border-radius:4px;margin-bottom:6px;font-size:9px;color:#7f93ad;">전체 60개월 데이터로 3가지 방법론의 전망을 비교합니다.</div>
                                 <div style="max-height:130px;overflow-y:auto;margin-bottom:6px;">
                                     <table style="width:100%;font-size:10px;border-collapse:collapse;">
-                                        <thead>
-                                            <tr style="color:#8ea3c1;text-transform:uppercase;letter-spacing:0.3px;">
-                                                <th style="text-align:left;padding:3px 5px;border-bottom:1px solid #22324a;">변수</th>
-                                                <th style="text-align:right;padding:3px 5px;border-bottom:1px solid #22324a;">변화</th>
-                                                <th style="text-align:right;padding:3px 5px;border-bottom:1px solid #22324a;">기여도</th>
-                                                <th style="text-align:right;padding:3px 5px;border-bottom:1px solid #22324a;">시차</th>
-                                                <th style="text-align:left;padding:3px 5px;border-bottom:1px solid #22324a;">경로</th>
-                                            </tr>
-                                        </thead>
+                                        <thead><tr style="color:#8ea3c1;text-transform:uppercase;letter-spacing:0.3px;">
+                                            <th style="text-align:left;padding:3px 5px;border-bottom:1px solid #22324a;">변수</th>
+                                            <th style="text-align:right;padding:3px 5px;border-bottom:1px solid #22324a;">변화</th>
+                                            <th style="text-align:right;padding:3px 5px;border-bottom:1px solid #22324a;">기여도</th>
+                                            <th style="text-align:right;padding:3px 5px;border-bottom:1px solid #22324a;">시차</th>
+                                            <th style="text-align:left;padding:3px 5px;border-bottom:1px solid #22324a;">경로</th>
+                                        </tr></thead>
                                         <tbody id="simAttributionBody"></tbody>
                                     </table>
                                 </div>
-                                <!-- Charts -->
                                 <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:6px;flex:1;min-height:0;">
-                                    <div class="chart-container" style="height:280px;">
-                                        <canvas id="simulationChart"></canvas>
-                                    </div>
-                                    <div class="chart-container" style="height:280px;">
-                                        <canvas id="simulationChart2"></canvas>
-                                    </div>
+                                    <div class="chart-container" style="height:280px;"><canvas id="simulationChart"></canvas></div>
+                                    <div class="chart-container" style="height:280px;"><canvas id="simulationChart2"></canvas></div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- RIGHT: 부동산별 가격상승영향 -->
                     <div class="sim-col">
                         <div class="sim-col-section" style="flex:1;display:flex;flex-direction:column;min-height:0;">
                             <div class="sim-col-section-title">부동산별 가격상승영향</div>
@@ -2855,25 +2441,12 @@
                     advanced: 10 + Math.max(0, idx - 20) * 0.08 + cycB * 0.6,
                     infra: 16 + cycC * 0.9
                 });
-                // Per-pyeong unit costs based on 2025 market data + macro driver sensitivity
-                // apt: RC구조, 고마감 → 노무비 33% × laborSensitivity 1.05 = 높은 노무 민감도
-                const residentialUnit = 780 + (labor - 100) * 8.5 + (cement - 100) * 3.2
-                    + (steel - 100) * 2.8 + (importPrice - 100) * 3.0 + (policyRate - 1.25) * 9;
-                // logistics: 철골구조, 최저마감 → 재료비 52%, 철강 민감도 최고
-                const logisticsUnit = 380 + (steel - 100) * 9.2 + (labor - 100) * 3.0
-                    + (importPrice - 100) * 2.5 + (policyRate - 1.25) * 4.5;
-                // office: SRC구조, 커튼월 → 재료비 46%, 철강+설비 민감
-                const officeUnit = 950 + (steel - 100) * 5.8 + (labor - 100) * 5.2
-                    + (importPrice - 100) * 5.5 + (policyRate - 1.25) * 8;
-                // officetel: RC구조, 중고급마감, 설비 집약 → 설비·마감 민감
-                const hospitalityUnit = 850 + (labor - 100) * 6.8 + (importPrice - 100) * 4.8
-                    + (cement - 100) * 2.2 + (steel - 100) * 2.0 + (policyRate - 1.25) * 7;
-                // knowledge(지산센터): RC/SRC 혼합, 저마감 → 철강+구조체 민감
-                const advancedUnit = 520 + (steel - 100) * 6.5 + (labor - 100) * 4.2
-                    + (importPrice - 100) * 3.8 + (policyRate - 1.25) * 5;
-                // commercial(상가): RC구조, 중마감 → 노무비 34%로 노무 민감
-                const infraUnit = 680 + (labor - 100) * 7.5 + (steel - 100) * 3.5
-                    + (cement - 100) * 3.0 + (importPrice - 100) * 2.2 + (policyRate - 1.25) * 6;
+                const residentialUnit = 710 + (labor - 100) * 7.2 + (cement - 100) * 2.5 + (policyRate - 1.25) * 9;
+                const logisticsUnit = 560 + (steel - 100) * 7.8 + (labor - 100) * 4.1 + (policyRate - 1.25) * 6.5;
+                const officeUnit = 770 + (steel - 100) * 3.2 + (labor - 100) * 5.6 + (importPrice - 100) * 3.8;
+                const hospitalityUnit = 840 + (labor - 100) * 6.3 + (importPrice - 100) * 3.2 + (cement - 100) * 1.6;
+                const advancedUnit = 1010 + (steel - 100) * 3.5 + (labor - 100) * 5.8 + (importPrice - 100) * 4.5;
+                const infraUnit = 645 + (steel - 100) * 4.8 + (cement - 100) * 2.7 + (labor - 100) * 3.4;
                 const weightedPy = residentialUnit * (shares.residential / 100) + logisticsUnit * (shares.logistics / 100)
                     + officeUnit * (shares.office / 100) + hospitalityUnit * (shares.hospitality / 100)
                     + advancedUnit * (shares.advanced / 100) + infraUnit * (shares.infra / 100);
@@ -3292,221 +2865,10 @@
         // No mock news pool — all news comes from /api/news RSS feeds
         
         // Initialize
-        /* ═══════════════════════════════════════════════════════
-         *  Per-Pyeong Construction Cost Display (Easy Zone)
-         *
-         *  Sources:
-         *    - 2025 건물신축단가표 (한국부동산원)
-         *    - 하도급공사 원가 실적 1,164건 분석 (대한전문건설협회)
-         *    - 건설업 시중노임단가 2020-2025 (대한건설협회)
-         *
-         *  원가 구성 = 재료비 + 노무비 + 경비
-         *    하도급 평균: 재료비 35.6%, 노무비 36.0%, 경비 28.4%
-         *    유형별 차이: 구조방식(RC/SRC/S), 마감수준, 설비집약도
-         *
-         *  노무비 5Y 상승률 (2020→2025):
-         *    형틀목공 +26.3%, 철근공 +20.4%, 용접공 +24.3%
-         *    보통인부 +22.8%, 조력공 +28.1% → 연평균 ~4.1%
-         * ═══════════════════════════════════════════════════════ */
-        const PYEONG_TYPES = {
-            apt: {
-                simKey: 'residentialUnit', label: '아파트', baseline: 780,
-                // 신축단가 ₩1,880,518/㎡≈621만/평, 시장가 700~1,000만
-                materialPct: 42, laborPct: 33, overheadPct: 25,
-                // 재료비 세부: 구조체(콘크리트+철근) 30%, 마감재 20%, 설비 18%
-                // RC구조, 고급마감, 노동집약적 마감공정 多
-                materials: { steel: 12, concrete: 18, finishing: 20, equipment: 18, other: 32 },
-                laborSensitivity: 1.05, steelHeavy: false
-            },
-            officetel: {
-                simKey: 'hospitalityUnit', label: '오피스텔', baseline: 850,
-                // 신축단가 ₩1,920,232/㎡≈634만/평, 시장가 750~950만
-                materialPct: 44, laborPct: 31, overheadPct: 25,
-                // 재료비: 구조체 26%, 마감재 22%, 설비(급배수·전기) 22%
-                materials: { steel: 10, concrete: 16, finishing: 22, equipment: 22, other: 30 },
-                laborSensitivity: 0.98, steelHeavy: false
-            },
-            commercial: {
-                simKey: 'infraUnit', label: '상가', baseline: 680,
-                // 신축단가 ₩1,868,123/㎡≈616만/평, 시장가 600~800만
-                materialPct: 40, laborPct: 34, overheadPct: 26,
-                // 재료비: 구조체 32%, 마감재 16%, 설비 14%
-                materials: { steel: 14, concrete: 18, finishing: 16, equipment: 14, other: 38 },
-                laborSensitivity: 1.08, steelHeavy: false
-            },
-            office: {
-                simKey: 'officeUnit', label: '오피스', baseline: 950,
-                // 시장가 800~1,200만 (커튼월, SRC, 고층)
-                materialPct: 46, laborPct: 30, overheadPct: 24,
-                // 재료비: 구조체(철골+RC) 28%, 외장(커튼월) 14%, 설비(HVAC) 22%
-                materials: { steel: 22, concrete: 12, finishing: 14, equipment: 22, other: 30 },
-                laborSensitivity: 0.92, steelHeavy: true
-            },
-            knowledge: {
-                simKey: 'advancedUnit', label: '지산센터', baseline: 520,
-                // 신축단가 공장 ₩1,038,000/㎡≈343만/평, 시장가 450~650만
-                materialPct: 45, laborPct: 30, overheadPct: 25,
-                // 재료비: 구조체(RC/SRC) 36%, 마감재 12%, 설비 15%
-                materials: { steel: 20, concrete: 16, finishing: 12, equipment: 15, other: 37 },
-                laborSensitivity: 0.90, steelHeavy: true
-            },
-            logistics: {
-                simKey: 'logisticsUnit', label: '물류센터', baseline: 380,
-                // 신축단가 창고 ₩847,857/㎡≈280만/평, 시장가 300~450만
-                materialPct: 52, laborPct: 25, overheadPct: 23,
-                // 재료비: 구조체(철골) 44%, 마감재 6%, 설비 11%
-                materials: { steel: 38, concrete: 6, finishing: 6, equipment: 11, other: 39 },
-                laborSensitivity: 0.75, steelHeavy: true
-            }
-        };
-
-        function updatePerPyeongDisplay() {
-            const series = loadMacroHistory();
-            if (!series || series.length < 13) return;
-            const latest = series[series.length - 1];
-            const yearAgo = series[series.length - 13];
-            const maxVal = Math.max(...Object.values(PYEONG_TYPES).map(t => latest[t.simKey] || t.baseline));
-
-            Object.entries(PYEONG_TYPES).forEach(([key, cfg]) => {
-                const val = Math.round(latest[cfg.simKey] || cfg.baseline);
-                const prevVal = Math.round(yearAgo[cfg.simKey] || cfg.baseline);
-                const yoy = ((val - prevVal) / prevVal * 100).toFixed(1);
-
-                const valEl = document.getElementById('pyeong-' + key + '-val');
-                const changeEl = document.getElementById('pyeong-' + key + '-change');
-                const barEl = document.getElementById('pyeong-' + key + '-bar');
-
-                if (valEl) valEl.textContent = val.toLocaleString();
-                if (changeEl) {
-                    changeEl.textContent = (yoy >= 0 ? '+' : '') + yoy + '% YoY';
-                    changeEl.className = 'pyeong-change ' + (yoy >= 0 ? 'up' : 'down');
-                }
-                if (barEl) barEl.style.width = Math.round(val / maxVal * 100) + '%';
-
-                // Also update right-column pyeong cards (id suffix "2")
-                const valEl2 = document.getElementById('pyeong-' + key + '-val2');
-                const changeEl2 = document.getElementById('pyeong-' + key + '-change2');
-                const barEl2 = document.getElementById('pyeong-' + key + '-bar2');
-                if (valEl2) valEl2.textContent = val.toLocaleString();
-                if (changeEl2) {
-                    changeEl2.textContent = (yoy >= 0 ? '+' : '') + yoy + '% YoY';
-                    changeEl2.className = 'pyeong-change ' + (yoy >= 0 ? 'up' : 'down');
-                }
-                if (barEl2) barEl2.style.width = Math.round(val / maxVal * 100) + '%';
-            });
-        }
-
-        function showPyeongDetail(typeKey) {
-            const cfg = PYEONG_TYPES[typeKey];
-            if (!cfg) return;
-            const series = loadMacroHistory();
-            if (!series || series.length < 2) return;
-
-            const vals = series.map(r => Math.round(r[cfg.simKey] || cfg.baseline));
-            const months = series.map(r => r.month);
-            const latest = vals[vals.length - 1];
-            const high = Math.max(...vals);
-            const low = Math.min(...vals);
-            const avg = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
-            const m = cfg.materials || {};
-
-            document.getElementById('modalTitle').textContent = cfg.label + ' 평당 공사비 상세';
-            document.getElementById('modalCurrent').textContent = latest.toLocaleString() + '만원/평';
-            const totalChg = ((latest - vals[0]) / vals[0] * 100).toFixed(1);
-            document.getElementById('modalChange').textContent = (totalChg >= 0 ? '+' : '') + totalChg + '% (5Y)';
-            document.getElementById('modalChange').className = totalChg >= 0 ? 'up' : 'down';
-            document.getElementById('modalHigh').textContent = high.toLocaleString() + '만원';
-            document.getElementById('modalLow').textContent = low.toLocaleString() + '만원';
-            document.getElementById('modalAvg').textContent = avg.toLocaleString() + '만원';
-            document.getElementById('modalVol').textContent =
-                '재료 ' + cfg.materialPct + '% / 노무 ' + cfg.laborPct + '% / 경비 ' + (cfg.overheadPct || 25) + '%';
-
-            // Show material composition breakdown instead of correlation
-            const corrSection = document.getElementById('modalCorrelationSection');
-            if (corrSection) {
-                corrSection.style.display = 'block';
-                const titleEl = corrSection.querySelector('div');
-                if (titleEl) titleEl.textContent = '원가 구성 및 재료비 세부 비중';
-                const barsEl = document.getElementById('modalCorrBars');
-                if (barsEl) {
-                    const matColors = { steel: '#38bdf8', concrete: '#a78bfa', finishing: '#f59e0b', equipment: '#22c55e', other: '#6b7280' };
-                    const matLabels = { steel: '철강·철근', concrete: '콘크리트·시멘트', finishing: '마감재', equipment: '설비(전기·기계)', other: '기타' };
-                    let html = '<div style="width:100%">';
-                    // 원가 3분할 바
-                    html += '<div style="font-size:9px;color:#8ea9cc;margin-bottom:4px;">직접공사비 구성</div>';
-                    html += '<div style="display:flex;height:18px;border-radius:4px;overflow:hidden;margin-bottom:8px;">';
-                    html += '<div style="width:' + cfg.materialPct + '%;background:#38bdf8;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#0a0f18;">재료 ' + cfg.materialPct + '%</div>';
-                    html += '<div style="width:' + cfg.laborPct + '%;background:#f59e0b;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#0a0f18;">노무 ' + cfg.laborPct + '%</div>';
-                    html += '<div style="width:' + (cfg.overheadPct || 25) + '%;background:#6b7280;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#e5eefc;">경비 ' + (cfg.overheadPct || 25) + '%</div>';
-                    html += '</div>';
-                    // 재료비 세부 구성 바
-                    html += '<div style="font-size:9px;color:#8ea9cc;margin-bottom:4px;">재료비 세부 구성 (재료비 ' + cfg.materialPct + '% 중)</div>';
-                    Object.entries(m).forEach(([k, pct]) => {
-                        const c = matColors[k] || '#6b7280';
-                        html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">';
-                        html += '<span style="font-size:8px;color:#8ea9cc;min-width:80px;">' + (matLabels[k] || k) + '</span>';
-                        html += '<div style="flex:1;height:12px;background:rgba(255,255,255,0.04);border-radius:3px;overflow:hidden;">';
-                        html += '<div style="width:' + pct + '%;height:100%;background:' + c + ';border-radius:3px;"></div></div>';
-                        html += '<span style="font-size:9px;font-weight:700;color:' + c + ';min-width:28px;text-align:right;">' + pct + '%</span>';
-                        html += '</div>';
-                    });
-                    // 노무비 민감도 설명
-                    html += '<div style="margin-top:8px;padding:6px 8px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:5px;font-size:9px;color:#d4a86a;">';
-                    html += '<strong>노무비 민감도 ' + (cfg.laborSensitivity || 1.0).toFixed(2) + '×</strong> — ';
-                    if (cfg.laborSensitivity > 1.0) {
-                        html += '마감공정 多, 다공종 투입 → 노임 상승에 <span style="color:#ff4d6d">민감</span>';
-                    } else if (cfg.laborSensitivity < 0.85) {
-                        html += '철골조립 위주, 공종 단순 → 노임 영향 <span style="color:#00d084">상대적 적음</span>';
-                    } else {
-                        html += '표준 수준의 노무비 민감도';
-                    }
-                    html += '<br>5년간 건설노임 연평균 +4.1% 상승 (보통인부 +22.8%, 형틀목공 +26.3%)';
-                    html += '</div>';
-                    html += '</div>';
-                    barsEl.innerHTML = html;
-                }
-            }
-
-            // Draw chart
-            if (chartLibraryAvailable) {
-                const canvas = document.getElementById('modalChart');
-                if (modalChart) modalChart.destroy();
-                modalChart = new Chart(canvas, {
-                    type: 'line',
-                    data: {
-                        labels: months,
-                        datasets: [{
-                            label: cfg.label + ' (만원/평)',
-                            data: vals,
-                            borderColor: '#4ec9ff',
-                            backgroundColor: 'rgba(78, 201, 255, 0.08)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.3,
-                            pointRadius: 0,
-                            pointHoverRadius: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: { ticks: { color: '#6a829f', font: { size: 10 }, maxTicksLimit: 10 }, grid: { color: 'rgba(255,255,255,0.04)' } },
-                            y: { ticks: { color: '#6a829f', font: { size: 10 }, callback: v => v.toLocaleString() }, grid: { color: 'rgba(255,255,255,0.04)' } }
-                        }
-                    }
-                });
-            }
-
-            document.getElementById('detailModal').classList.add('active');
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
             updateTimestamp();
             initLiveNews();
             initMapAssets();
-            updatePerPyeongDisplay();
-            renderMechanism();
             setInterval(updateTimestamp, 1000);
             setInterval(updateMarketData, 5000);
             if (window.location.protocol === 'file:') {
@@ -3644,8 +3006,6 @@
 
             // Update war status bars from real market data
             updateWarBarsFromData();
-            updatePerPyeongDisplay();
-            renderMechanism();
         }
 
         function applyValueWithPct(id, value, changeId, changePct, useGrouping) {
@@ -5147,6 +4507,8 @@
             if (method === 'all') statsHTML += ' &nbsp;|&nbsp; <span style="color:#38bdf8">■</span> Gaussian <span style="color:#f59e0b">■</span> ARDL <span style="color:#a78bfa">■</span> LP';
             document.getElementById('modelStatsBox').innerHTML = statsHTML;
 
+            document.getElementById('simResults').classList.add('active');
+
             renderMechanism();
             renderReImpact();
 
@@ -5457,29 +4819,23 @@
             const delta12 = forecast[11] ? forecast[11].deltaPct : 0;
             const latest = macroSimData[macroSimData.length - 1];
             const yearAgo = macroSimData[macroSimData.length - 13];
-
             const icons = { apt: '🏢', officetel: '🏨', commercial: '🏬', office: '🏛️', knowledge: '🏭', logistics: '📦' };
             const colors = { apt: '#4ec9ff', officetel: '#a78bfa', commercial: '#f59e0b', office: '#22c55e', knowledge: '#fb7185', logistics: '#38bdf8' };
-
             let html = '';
             const maxDelta = Math.max(...Object.values(PYEONG_TYPES).map(cfg => {
-                const matW = cfg.materialPct / 100;
-                const labW = cfg.laborPct / 100;
+                const matW = cfg.materialPct / 100, labW = cfg.laborPct / 100;
                 return Math.abs(delta12 * (matW * 0.8 + labW * cfg.laborSensitivity));
             }), 0.01);
-
             Object.entries(PYEONG_TYPES).forEach(([key, cfg]) => {
                 const val = Math.round(latest[cfg.simKey] || cfg.baseline);
                 const prevVal = Math.round(yearAgo[cfg.simKey] || cfg.baseline);
                 const yoy = ((val - prevVal) / prevVal * 100);
-                const matW = cfg.materialPct / 100;
-                const labW = cfg.laborPct / 100;
+                const matW = cfg.materialPct / 100, labW = cfg.laborPct / 100;
                 const typeImpact = delta12 * (matW * 0.8 + labW * cfg.laborSensitivity);
                 const impactWon = Math.round(val * typeImpact / 100);
                 const barW = Math.min(100, Math.round(Math.abs(typeImpact) / maxDelta * 100));
                 const impactColor = typeImpact > 0 ? '#ff6b00' : typeImpact < 0 ? '#22c55e' : '#5a7a9a';
                 const c = colors[key];
-
                 html += `<div class="re-impact-card" onclick="showPyeongDetail('${key}')">
                     <div class="re-impact-icon">${icons[key]}</div>
                     <div class="re-impact-info">
@@ -5493,23 +4849,18 @@
                     </div>
                 </div>`;
             });
-
-            // Summary row
             const avgImpact = delta12;
             html += `<div style="margin-top:6px;padding:6px 8px;background:rgba(255,179,71,0.06);border:1px solid rgba(255,179,71,0.2);border-radius:5px;text-align:center;">
                 <div style="font-size:8px;color:#ffb347;text-transform:uppercase;letter-spacing:0.5px;">건설공사비 평균 영향</div>
                 <div style="font-size:16px;font-weight:700;font-family:'JetBrains Mono',monospace;color:${avgImpact > 0 ? '#ff6b00' : '#22c55e'};">${avgImpact >= 0 ? '+' : ''}${avgImpact.toFixed(2)}%</div>
                 <div style="font-size:8px;color:#5a7a9a;">재료비·노무비 민감도 반영</div>
             </div>`;
-
             container.innerHTML = html;
         }
 
         function renderMechanism() {
             const container = document.getElementById('mechDynamic');
-            const mainContainer = document.getElementById('mainMechanism');
-            if (!container && !mainContainer) return;
-            if (!macroSimData || macroSimData.length < 2) return;
+            if (!container) return;
             const shocks = getSimShocks();
             const forecast = buildScenarioForecast(macroSimData, shocks);
             const attribution = buildAttribution(macroSimData);
@@ -5581,8 +4932,7 @@
                 <div class="mech-dyn-target-sub">${driverData.filter(d => Math.abs(d.impact) > 0.01).length}개 변수 활성 | 분석 기간: ${range}</div>
             </div>`;
 
-            if (container) container.innerHTML = html;
-            if (mainContainer) mainContainer.innerHTML = html;
+            container.innerHTML = html;
         }
 
         function mechShowDetail(indicator) {
