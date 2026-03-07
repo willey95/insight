@@ -383,6 +383,7 @@
         .simulation-card.active {
             display: flex !important;
             flex-direction: column !important;
+            overflow: hidden !important;
         }
 
         /* ── Sim Topbar (unified controls + KPIs + actions) ── */
@@ -575,19 +576,22 @@
         /* ── Sim 3-Column Body ── */
         .sim-body-3col {
             display: grid !important;
-            grid-template-columns: 280px 1fr 280px !important;
-            gap: 6px;
-            flex: 1;
-            min-height: 0;
-            overflow: hidden;
-            height: 100%;
+            grid-template-columns: 200px 1fr 200px !important;
+            grid-template-rows: 1fr !important;
+            gap: 6px !important;
+            flex: 1 1 0 !important;
+            min-height: 0 !important;
+            max-height: 100% !important;
+            overflow: hidden !important;
         }
         .sim-col {
             display: flex;
             flex-direction: column;
             gap: 5px;
             min-height: 0;
+            max-height: 100%;
             overflow-y: auto;
+            overflow-x: hidden;
         }
         .sim-col::-webkit-scrollbar { width: 3px; }
         .sim-col::-webkit-scrollbar-track { background: transparent; }
@@ -1467,15 +1471,15 @@
             text-overflow: ellipsis;
         }
 
-        /* Simulation Panel */
+        /* Simulation Panel — must fill remaining height below topbar */
         .simulation-panel {
             background: rgba(5, 9, 16, 0.6);
-            padding: 8px 10px;
+            padding: 6px 8px;
             border-radius: 0;
             margin-top: 0;
             min-height: 0;
-            overflow: auto;
-            flex: 1;
+            overflow: hidden;
+            flex: 1 1 0;
             display: flex;
             flex-direction: column;
         }
@@ -2584,9 +2588,9 @@
                     <button class="sim-btn-close" onclick="closeSimulationPopup()">×</button>
                 </div>
             </div>
-            <div class="simulation-panel">
-                <div class="sim-body-3col">
-                    <div class="sim-col">
+            <div class="simulation-panel" style="flex:1 1 0;min-height:0;overflow:hidden;display:flex;flex-direction:column;">
+                <div class="sim-body-3col" style="display:grid !important;grid-template-columns:200px 1fr 200px;gap:6px;flex:1 1 0;min-height:0;overflow:hidden;">
+                    <div class="sim-col" style="overflow-y:auto;min-height:0;">
                         <div class="sim-col-section" style="flex:0 0 auto;">
                             <div class="sim-accordion-title" onclick="toggleAccordion(this)">파라미터 설정</div>
                             <div class="sim-accordion-body">
@@ -5414,12 +5418,32 @@
         }
 
         function openSimulationPopup() {
-            document.getElementById('simulationPopup').classList.add('active');
+            const popup = document.getElementById('simulationPopup');
+            popup.classList.add('active');
+            // Force 3-column layout via JS (CSS alone doesn't work reliably)
+            forceSimLayout();
             renderMechanism();
             renderReImpact(); renderPfImpact();
             setTimeout(() => {
                 try { runSimulation(); } catch(e) { console.error('Auto-run sim failed:', e); }
             }, 300);
+        }
+
+        function forceSimLayout() {
+            const popup = document.getElementById('simulationPopup');
+            if (!popup) return;
+            // Force popup to flex column
+            popup.style.cssText += ';display:flex!important;flex-direction:column!important;overflow:hidden!important;';
+            // Force panel
+            const panel = popup.querySelector('.simulation-panel');
+            if (panel) panel.style.cssText = 'flex:1 1 0;min-height:0;overflow:hidden;display:flex;flex-direction:column;padding:6px 8px;background:rgba(5,9,16,0.6);';
+            // Force 3-col grid
+            const grid = popup.querySelector('.sim-body-3col');
+            if (grid) grid.style.cssText = 'display:grid!important;grid-template-columns:200px 1fr 200px!important;gap:6px;flex:1 1 0;min-height:0;overflow:hidden;';
+            // Force each col
+            const cols = popup.querySelectorAll('.sim-col');
+            cols.forEach(col => { col.style.cssText = 'overflow-y:auto;min-height:0;display:flex;flex-direction:column;gap:5px;'; });
+            console.log('[SIM] forceSimLayout applied:', grid?.style.cssText);
         }
 
         function closeSimulationPopup() {
