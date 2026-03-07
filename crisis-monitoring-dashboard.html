@@ -341,13 +341,13 @@
 
         .corr-top-labels {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(9, 1fr);
             gap: 4px;
         }
 
         .corr-left-labels {
             display: grid;
-            grid-template-rows: repeat(7, 26px);
+            grid-template-rows: repeat(9, 26px);
             gap: 3px;
         }
 
@@ -1302,7 +1302,7 @@
         /* Correlation Matrix */
         .correlation-matrix {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(9, 1fr);
             grid-auto-rows: 26px;
             gap: 3px;
             margin-top: 4px;
@@ -2014,7 +2014,7 @@
             }
 
             .corr-left-labels {
-                grid-template-rows: repeat(7, 22px);
+                grid-template-rows: repeat(9, 22px);
             }
 
             .correlation-matrix {
@@ -2357,7 +2357,9 @@
             <div class="correlation-layout correlation-layout-top">
                 <div></div>
                 <div class="corr-top-labels">
-                    <div class="corr-label">유가</div>
+                    <div class="corr-label">WTI</div>
+                    <div class="corr-label">Brent</div>
+                    <div class="corr-label">금</div>
                     <div class="corr-label">금리</div>
                     <div class="corr-label">환율</div>
                     <div class="corr-label">건설</div>
@@ -2368,7 +2370,9 @@
             </div>
             <div class="correlation-layout correlation-layout-main">
                 <div class="corr-left-labels">
-                    <div class="corr-label corr-left-label">유가</div>
+                    <div class="corr-label corr-left-label">WTI</div>
+                    <div class="corr-label corr-left-label">Brent</div>
+                    <div class="corr-label corr-left-label">금</div>
                     <div class="corr-label corr-left-label">금리</div>
                     <div class="corr-label corr-left-label">환율</div>
                     <div class="corr-label corr-left-label">건설</div>
@@ -4404,8 +4408,8 @@
         }
 
         function showCorrelationDetail(i, j, correlation) {
-            const labels = correlationPayload?.labels || ['유가', '금리', '환율', '건설자재', '부동산'];
-            const keys = correlationPayload?.keys || ['wti', 'fedfunds', 'usdkrw', 'construction', 'realestate'];
+            const labels = correlationPayload?.labels || ['WTI', 'Brent', '금', '금리', '환율', '건설주', '부동산', 'VIX', '10Y'];
+            const keys = correlationPayload?.keys || ['wti', 'brent', 'gold', 'fedfunds', 'usdkrw', 'construction', 'realestate', 'vix', 'us10y'];
 
             if (correlation === null) {
                 alert(`${labels[i]} vs ${labels[j]}\n데이터 로딩 중...`);
@@ -4609,8 +4613,8 @@
             // Cross-correlation bars
             const corrSection = document.getElementById('modalCorrelationSection');
             const corrBars = document.getElementById('modalCorrBars');
-            const corrKeys = correlationPayload?.keys || ['wti', 'fedfunds', 'usdkrw', 'construction', 'realestate'];
-            const corrLabels = correlationPayload?.labels || ['WTI 원유', 'Fed 기준금리', 'USD/KRW', '건설주 평균(5사)', '부동산(KB금융)'];
+            const corrKeys = correlationPayload?.keys || ['wti', 'brent', 'gold', 'fedfunds', 'usdkrw', 'construction', 'realestate', 'vix', 'us10y'];
+            const corrLabels = correlationPayload?.labels || ['WTI', 'Brent', '금', '금리', '환율', '건설주', '부동산', 'VIX', '10Y'];
             const myHistKey = histKeyMap[indicator];
             const myData = myHistKey ? (correlationHistory[myHistKey] || []) : [];
 

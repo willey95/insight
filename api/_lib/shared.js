@@ -891,8 +891,8 @@ function pearsonCorrelation(x, y) {
 
 async function buildCorrelationPayload() {
     const warnings = [];
-    const keys = ['wti', 'fedfunds', 'usdkrw', 'construction', 'realestate', 'vix', 'us10y'];
-    const labels = ['WTI 원유', 'Fed 기준금리', 'USD/KRW', '건설주 평균(5사)', '부동산(KB금융)', 'VIX 공포지수', 'US 10Y 국채'];
+    const keys = ['wti', 'brent', 'gold', 'fedfunds', 'usdkrw', 'construction', 'realestate', 'vix', 'us10y'];
+    const labels = ['WTI', 'Brent', '금', '기준금리', '환율', '건설주', '부동산', 'VIX', '10Y'];
 
     // Fetch all 5 construction stocks for averaging
     const constructionTickers = {
@@ -906,6 +906,8 @@ async function buildCorrelationPayload() {
 
     const seriesPromises = {
         wti: fetchYahooMonthly('CL%3DF').catch(e => { warnings.push(`WTI 5Y: ${e.message}`); return null; }),
+        brent: fetchYahooMonthly('BZ%3DF').catch(e => { warnings.push(`Brent 5Y: ${e.message}`); return null; }),
+        gold: fetchYahooMonthly('GC%3DF').catch(e => { warnings.push(`Gold 5Y: ${e.message}`); return null; }),
         fedfunds: fetchFredMonthly('FEDFUNDS').catch(e => { warnings.push(`FEDFUNDS 5Y: ${e.message}`); return null; }),
         usdkrw: fetchYahooMonthly('USDKRW%3DX').catch(e => { warnings.push(`USDKRW 5Y: ${e.message}`); return null; }),
         constructionStocks: Promise.all(constructionPromises),
@@ -987,6 +989,136 @@ async function buildCorrelationPayload() {
     };
 }
 
+// ─── ECOS Monthly (5Y) ──────────────────────────────────────────────────────
+
+async function fetchEcosMonthly(seriesId, itemCode) {
+    if (!ECOS_API_KEY) return null;
+    const now = new Date();
+    const endYear = now.getFullYear();
+    const endMonth = String(now.getMonth() + 1).padStart(2, '0');
+    const end = `${endYear}${endMonth}`;
+    const start = `${endYear - 5}01`;
+    const url =
+        `https://ecos.bok.or.kr/api/StatisticSearch/${ECOS_API_KEY}/json/kr/1/600/` +
+        `${seriesId}/M/${start}/${end}/${itemCode}`;
+    const data = await fetchJson(url);
+    const rows = data?.StatisticSearch?.row;
+    if (!Array.isArray(rows)) return null;
+    const points = [];
+    for (const row of rows) {
+        const val = toNumber(row?.DATA_VALUE);
+        if (val === null) continue;
+        const t = String(row.TIME || '');
+        const month = t.length >= 6 ? `${t.slice(0, 4)}-${t.slice(4, 6)}` : null;
+        if (month) points.push({ month, value: val });
+    }
+    return points;
+}
+
+// ─── Build 5Y History for ALL indicators ─────────────────────────────────────
+
+async function buildHistoryPayload() {
+    const warnings = [];
+    const safe = (p, label) => p.catch(e => { warnings.push(`${label}: ${e.message}`); return null; });
+
+    // Construction stocks for averaging
+    const constTickers = {
+        hyundaie: '000720.KS', daewooec: '047040.KS', dlenc: '375500.KS',
+        gsenc: '006360.KS', poscoenc: '034220.KS'
+    };
+
+    // Fetch all in parallel
+    const [
+        wti, brent, gas, gold, silver, steel,
+        fedfunds, libor,
+        usdkrw,
+        kospi, kosdaq, nasdaq, sp500, dow,
+        vix, us10y, us2y,
+        realestate,
+        bok, housingIdx,
+        ...constStocks
+    ] = await Promise.all([
+        // Commodities
+        safe(fetchYahooMonthly('CL%3DF'), 'WTI'),
+        safe(fetchYahooMonthly('BZ%3DF'), 'Brent'),
+        safe(fetchYahooMonthly('NG%3DF'), 'NatGas'),
+        safe(fetchYahooMonthly('GC%3DF'), 'Gold'),
+        safe(fetchYahooMonthly('SI%3DF'), 'Silver'),
+        safe(fetchYahooMonthly('HRC%3DF'), 'Steel'),
+        // Rates
+        safe(fetchFredMonthly('FEDFUNDS'), 'FedFunds'),
+        safe(fetchFredMonthly('USD3MTD156N'), 'LIBOR'),
+        // FX
+        safe(fetchYahooMonthly('USDKRW%3DX'), 'USD/KRW'),
+        // Indices
+        safe(fetchYahooMonthly('%5EKS11'), 'KOSPI'),
+        safe(fetchYahooMonthly('%5EKQ11'), 'KOSDAQ'),
+        safe(fetchYahooMonthly('%5EIXIC'), 'NASDAQ'),
+        safe(fetchYahooMonthly('%5EGSPC'), 'S&P500'),
+        safe(fetchYahooMonthly('%5EDJI'), 'DOW'),
+        // Macro
+        safe(fetchYahooMonthly('%5EVIX'), 'VIX'),
+        safe(fetchYahooMonthly('%5ETNX'), 'US10Y'),
+        safe(fetchYahooMonthly('%5EIRX'), 'US2Y'),
+        // Real estate
+        safe(fetchYahooMonthly('105560.KS'), 'KB금융'),
+        // ECOS
+        safe(fetchEcosMonthly('722Y001', '0101000'), 'BOK기준금리'),
+        safe(fetchEcosMonthly('901Y009', 'H01'), '주택매매가격'),
+        // Construction stocks (individual)
+        ...Object.entries(constTickers).map(([name, ticker]) =>
+            safe(fetchYahooMonthly(ticker), name)
+        )
+    ]);
+
+    // Build construction average (normalized base 100)
+    const validConst = constStocks.filter(s => s && s.length > 0);
+    let constructionAvg = null;
+    if (validConst.length > 0) {
+        const monthSets = validConst.map(s => new Set(s.map(p => p.month)));
+        let common = [...monthSets[0]];
+        for (let i = 1; i < monthSets.length; i++) common = common.filter(m => monthSets[i].has(m));
+        common.sort();
+        const norm = validConst.map(stock => {
+            const byM = {}; for (const p of stock) byM[p.month] = p.value;
+            const vals = common.map(m => byM[m]);
+            const base = vals[0] || 1;
+            return vals.map(v => (v / base) * 100);
+        });
+        constructionAvg = common.map((month, i) => ({
+            month, value: Math.round(norm.reduce((s, n) => s + n[i], 0) / norm.length * 100) / 100
+        }));
+    }
+
+    // LNG from Brent (JCC formula)
+    const lng = brent ? brent.map(p => ({
+        month: p.month,
+        value: Math.round((0.1485 * p.value + 0.5) * 100) / 100
+    })) : null;
+
+    const series = {
+        wti, brent, gas, lng, gold, silver, steel,
+        fedfunds, libor, bok,
+        usdkrw,
+        kospi, kosdaq, nasdaq, sp500, dow,
+        vix, us10y, us2y,
+        realestate, housingIdx,
+        constructionAvg
+    };
+
+    // Add individual construction stocks
+    const constNames = Object.keys(constTickers);
+    constNames.forEach((name, i) => { series[name] = constStocks[i]; });
+
+    // Filter out nulls
+    const result = {};
+    for (const [k, v] of Object.entries(series)) {
+        if (v && v.length > 0) result[k] = v;
+    }
+
+    return { series: result, timestamp: new Date().toISOString(), warnings };
+}
+
 // ─── Exports ────────────────────────────────────────────────────────────────
 
 module.exports = {
@@ -998,5 +1130,6 @@ module.exports = {
     buildIndicatorsPayload,
     buildNewsPayload,
     buildMilitaryPayload,
-    buildCorrelationPayload
+    buildCorrelationPayload,
+    buildHistoryPayload
 };
