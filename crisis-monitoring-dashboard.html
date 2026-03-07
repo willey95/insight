@@ -2457,6 +2457,7 @@
                 </div>
             </div>
             <button class="popup-launch" onclick="openSimulationPopup()">시뮬레이션</button>
+            <button class="popup-launch" onclick="openGuidePresentation()" style="margin-top:3px;background:rgba(56,189,248,0.06);border-color:rgba(56,189,248,0.25);color:#38bdf8;">GUIDE</button>
         </div>
 
         <!-- Energy Trend -->
@@ -6712,5 +6713,514 @@
             });
         });
     </script>
+
+<!-- ═══════════════════════════════════════════════════
+     GUIDE PRESENTATION — Steve Jobs Style
+     ═══════════════════════════════════════════════════ -->
+<div id="guidePresentation" style="display:none;position:fixed;inset:0;z-index:99999;background:#000;">
+    <!-- Slide container -->
+    <div id="guideSlides" style="width:100%;height:100%;position:relative;overflow:hidden;"></div>
+    <!-- Navigation -->
+    <div id="guideNav" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;z-index:100001;">
+        <button onclick="guideGo(-1)" style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);color:#fff;font-size:16px;cursor:pointer;transition:all 0.2s;">‹</button>
+        <span id="guidePageNum" style="color:rgba(255,255,255,0.4);font-size:12px;font-family:'IBM Plex Mono',monospace;min-width:60px;text-align:center;">1 / 20</span>
+        <button onclick="guideGo(1)" style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);color:#fff;font-size:16px;cursor:pointer;transition:all 0.2s;">›</button>
+    </div>
+    <!-- Close -->
+    <button onclick="closeGuide()" style="position:fixed;top:16px;right:20px;z-index:100001;background:none;border:none;color:rgba(255,255,255,0.4);font-size:28px;cursor:pointer;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">✕</button>
+</div>
+
+<script>
+(function() {
+    const GUIDE_SLIDES = [
+        // ─── PART 1: WHY ───
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:14px;letter-spacing:6px;color:rgba(56,189,248,0.6);text-transform:uppercase;margin-bottom:24px;">Crisis Monitoring Dashboard</div>
+                <div style="font-size:clamp(32px,5vw,64px);font-weight:800;color:#fff;text-align:center;line-height:1.2;max-width:800px;">
+                    왜 국내 건설사가<br><span style="color:#38bdf8;">해외 지표</span>에<br>신경 써야 하는가
+                </div>
+                <div style="margin-top:40px;font-size:14px;color:rgba(255,255,255,0.3);letter-spacing:2px;">→ 키보드 방향키로 넘기세요</div>
+            </div>` },
+
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:clamp(28px,4vw,52px);font-weight:800;color:#fff;text-align:center;line-height:1.3;max-width:900px;">
+                    2025년 6월,<br><span style="color:#ff4d6d;">이란 전쟁</span> 발발
+                </div>
+                <div style="margin-top:32px;font-size:clamp(14px,2vw,20px);color:rgba(255,255,255,0.5);text-align:center;max-width:700px;line-height:1.8;">
+                    유가 +40% 급등 — 환율 1,450원 돌파 — 철강 수입가 3개월 내 +22%<br>
+                    <span style="color:#f59e0b;">국내 건설공사비 지수: 6개월 만에 +4.8% 상승</span>
+                </div>
+            </div>` },
+
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:clamp(24px,3.5vw,44px);font-weight:700;color:#fff;text-align:center;line-height:1.4;max-width:800px;">
+                    유가가 오르면<br>건설공사비는 <span style="color:#ff4d6d;">3~6개월 후</span> 오릅니다
+                </div>
+                <div style="margin-top:40px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;">
+                    <div style="padding:12px 20px;border-radius:8px;background:rgba(255,77,109,0.12);border:1px solid rgba(255,77,109,0.3);">
+                        <div style="font-size:11px;color:#ff4d6d;letter-spacing:1px;">유가 +30%</div>
+                    </div>
+                    <div style="color:rgba(255,255,255,0.3);font-size:24px;">→</div>
+                    <div style="padding:12px 20px;border-radius:8px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);">
+                        <div style="font-size:11px;color:#f59e0b;letter-spacing:1px;">수입물가 +13%</div>
+                    </div>
+                    <div style="color:rgba(255,255,255,0.3);font-size:24px;">→</div>
+                    <div style="padding:12px 20px;border-radius:8px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);">
+                        <div style="font-size:11px;color:#f59e0b;letter-spacing:1px;">철강 +11%</div>
+                    </div>
+                    <div style="color:rgba(255,255,255,0.3);font-size:24px;">→</div>
+                    <div style="padding:12px 20px;border-radius:8px;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);">
+                        <div style="font-size:11px;color:#38bdf8;letter-spacing:1px;">건설공사비 ↑</div>
+                    </div>
+                </div>
+                <div style="margin-top:32px;font-size:14px;color:rgba(255,255,255,0.35);text-align:center;">
+                    환율·금리·PPI도 동시에 연쇄 반응합니다
+                </div>
+            </div>` },
+
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:clamp(24px,3.5vw,44px);font-weight:700;color:#fff;text-align:center;line-height:1.4;max-width:800px;">
+                    이건 유가만의 문제가 아닙니다
+                </div>
+                <div style="margin-top:36px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;max-width:700px;width:100%;">
+                    <div style="padding:16px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);text-align:center;">
+                        <div style="font-size:24px;margin-bottom:6px;">🛢</div>
+                        <div style="font-size:13px;color:#f59e0b;font-weight:700;">국제유가</div>
+                        <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">에너지·운송·자재비</div>
+                    </div>
+                    <div style="padding:16px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);text-align:center;">
+                        <div style="font-size:24px;margin-bottom:6px;">💱</div>
+                        <div style="font-size:13px;color:#38bdf8;font-weight:700;">환율</div>
+                        <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">수입자재 단가 직결</div>
+                    </div>
+                    <div style="padding:16px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);text-align:center;">
+                        <div style="font-size:24px;margin-bottom:6px;">📈</div>
+                        <div style="font-size:13px;color:#a78bfa;font-weight:700;">금리</div>
+                        <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">PF금융·사업성</div>
+                    </div>
+                    <div style="padding:16px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);text-align:center;">
+                        <div style="font-size:24px;margin-bottom:6px;">😨</div>
+                        <div style="font-size:13px;color:#ff4d6d;font-weight:700;">VIX 공포지수</div>
+                        <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">투자심리·공급망</div>
+                    </div>
+                </div>
+                <div style="margin-top:28px;font-size:15px;color:rgba(255,255,255,0.5);text-align:center;">
+                    <span style="color:#f59e0b;">10개 지표</span>가 동시에 움직이며 건설공사비에 영향
+                </div>
+            </div>` },
+
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:clamp(20px,3vw,36px);font-weight:700;color:rgba(255,255,255,0.4);text-align:center;line-height:1.5;max-width:700px;">
+                    우크라이나 전쟁 때<br>우리는 <span style="color:#ff4d6d;">6개월이 지나서야</span> 알았습니다.
+                </div>
+                <div style="margin-top:36px;font-size:clamp(28px,4vw,52px);font-weight:800;color:#fff;text-align:center;">
+                    "공사비가 왜 이렇게 올랐지?"
+                </div>
+                <div style="margin-top:32px;font-size:14px;color:rgba(255,255,255,0.3);text-align:center;">
+                    2022.02 러시아 침공 → 2022.08 국내 건설공사비 지수 역대 최고치 경신
+                </div>
+            </div>` },
+
+        // ─── PART 2: THE PROBLEM ───
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:14px;letter-spacing:6px;color:rgba(245,158,11,0.5);text-transform:uppercase;margin-bottom:24px;">The Problem</div>
+                <div style="font-size:clamp(28px,4vw,52px);font-weight:800;color:#fff;text-align:center;line-height:1.3;max-width:800px;">
+                    전문 모니터링 도구가<br><span style="color:#f59e0b;">없었습니다</span>
+                </div>
+            </div>` },
+
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:clamp(20px,3vw,36px);font-weight:700;color:#fff;text-align:center;line-height:1.5;max-width:800px;margin-bottom:40px;">
+                    지금까지의 현실
+                </div>
+                <div style="display:flex;flex-direction:column;gap:16px;max-width:600px;width:100%;">
+                    <div style="display:flex;align-items:center;gap:16px;padding:16px 20px;border-radius:8px;background:rgba(255,77,109,0.06);border:1px solid rgba(255,77,109,0.15);">
+                        <div style="font-size:24px;min-width:36px;text-align:center;">❌</div>
+                        <div><div style="color:#fb7185;font-size:14px;font-weight:700;">엑셀 수동 관리</div><div style="color:rgba(255,255,255,0.35);font-size:11px;margin-top:2px;">매주 수작업으로 유가·환율 취합, 이미 지난 데이터</div></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:16px;padding:16px 20px;border-radius:8px;background:rgba(255,77,109,0.06);border:1px solid rgba(255,77,109,0.15);">
+                        <div style="font-size:24px;min-width:36px;text-align:center;">❌</div>
+                        <div><div style="color:#fb7185;font-size:14px;font-weight:700;">지표 간 연결고리 없음</div><div style="color:rgba(255,255,255,0.35);font-size:11px;margin-top:2px;">유가·환율·금리를 따로 봄 → 복합 충격 감지 불가</div></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:16px;padding:16px 20px;border-radius:8px;background:rgba(255,77,109,0.06);border:1px solid rgba(255,77,109,0.15);">
+                        <div style="font-size:24px;min-width:36px;text-align:center;">❌</div>
+                        <div><div style="color:#fb7185;font-size:14px;font-weight:700;">예측 모델 부재</div><div style="color:rgba(255,255,255,0.35);font-size:11px;margin-top:2px;">"올랐다"는 알지만 "앞으로 얼마나?"는 모름</div></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:16px;padding:16px 20px;border-radius:8px;background:rgba(255,77,109,0.06);border:1px solid rgba(255,77,109,0.15);">
+                        <div style="font-size:24px;min-width:36px;text-align:center;">❌</div>
+                        <div><div style="color:#fb7185;font-size:14px;font-weight:700;">대응 시점 놓침</div><div style="color:rgba(255,255,255,0.35);font-size:11px;margin-top:2px;">충격이 건설비에 도달하면 이미 계약·입찰 종료</div></div>
+                    </div>
+                </div>
+            </div>` },
+
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:clamp(18px,2.5vw,28px);color:rgba(255,255,255,0.4);text-align:center;margin-bottom:20px;">
+                    Bloomberg Terminal 연간 이용료
+                </div>
+                <div style="font-size:clamp(48px,7vw,80px);font-weight:900;color:#fff;text-align:center;">
+                    $25,000
+                </div>
+                <div style="margin-top:12px;font-size:16px;color:rgba(255,255,255,0.35);text-align:center;">
+                    약 3,400만원 / 년 — 그마저도 건설 특화가 아닙니다
+                </div>
+                <div style="margin-top:40px;font-size:clamp(18px,2.5vw,28px);color:rgba(255,255,255,0.3);text-align:center;">
+                    대기업 리스크 관리팀도<br>건설 원가 전용 도구는 <span style="color:#ff4d6d;">보유하고 있지 않습니다</span>
+                </div>
+            </div>` },
+
+        // ─── PART 3: THE SOLUTION ───
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:14px;letter-spacing:6px;color:rgba(52,211,153,0.5);text-transform:uppercase;margin-bottom:24px;">The Solution</div>
+                <div style="font-size:clamp(28px,4vw,52px);font-weight:800;color:#fff;text-align:center;line-height:1.3;max-width:900px;">
+                    <span style="color:#38bdf8;">Crisis Monitoring Dashboard</span>
+                </div>
+                <div style="margin-top:20px;font-size:clamp(16px,2.5vw,24px);color:rgba(255,255,255,0.5);text-align:center;">
+                    대기업도 갖지 못한 건설 원가 위기 모니터링 시스템
+                </div>
+            </div>` },
+
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:clamp(22px,3vw,36px);font-weight:700;color:#fff;text-align:center;margin-bottom:36px;">
+                    10개 핵심 지표를 <span style="color:#38bdf8;">실시간</span> 추적
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;max-width:750px;width:100%;">
+                    ${[
+                        { k:'국제유가 (WTI/Brent)', w:'0.07', c:'#22c55e' },
+                        { k:'원/달러 환율', w:'0.12', c:'#38bdf8' },
+                        { k:'생산자물가 (PPI)', w:'0.13', c:'#a78bfa' },
+                        { k:'수입물가', w:'0.18', c:'#f59e0b' },
+                        { k:'건설노임', w:'0.19', c:'#fb7185' },
+                        { k:'철강 가격', w:'0.14', c:'#60a5fa' },
+                        { k:'시멘트', w:'0.05', c:'#94a3b8' },
+                        { k:'기준금리', w:'0.07', c:'#f472b6' },
+                        { k:'VIX 공포지수', w:'0.02', c:'#ef4444' },
+                        { k:'US 10Y 국채', w:'0.03', c:'#8b5cf6' }
+                    ].map(d => '<div style="padding:10px;border-radius:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-align:center;"><div style="font-size:12px;color:'+d.c+';font-weight:700;">'+d.k+'</div><div style="font-size:18px;font-weight:800;color:#fff;margin-top:4px;font-family:IBM Plex Mono,monospace;">'+d.w+'</div><div style="font-size:8px;color:rgba(255,255,255,0.25);letter-spacing:1px;">PASS-THROUGH</div></div>').join('')}
+                </div>
+                <div style="margin-top:20px;font-size:12px;color:rgba(255,255,255,0.3);">가중치 합계 = 1.00 — Yahoo Finance, FRED, ECOS 실시간 연동</div>
+            </div>` },
+
+        // ─── PART 4: MODEL ───
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:14px;letter-spacing:6px;color:rgba(167,139,250,0.5);text-transform:uppercase;margin-bottom:24px;">The Model</div>
+                <div style="font-size:clamp(24px,3.5vw,44px);font-weight:800;color:#fff;text-align:center;line-height:1.3;max-width:800px;">
+                    3가지 분석 엔진이<br><span style="color:#a78bfa;">동시에</span> 작동합니다
+                </div>
+            </div>` },
+
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="display:flex;gap:16px;max-width:900px;width:100%;flex-wrap:wrap;justify-content:center;">
+                    <div style="flex:1;min-width:220px;padding:24px;border-radius:12px;background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.2);">
+                        <div style="font-size:11px;color:#38bdf8;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Method 1</div>
+                        <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:12px;">Gaussian IRF</div>
+                        <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.7;">
+                            충격반응함수 기반<br>
+                            각 지표별 시차(1~5개월)와<br>확산폭(σ)을 모델링<br>
+                            <span style="color:#38bdf8;font-weight:600;">→ 빠른 진단, 경로 설명에 최적</span>
+                        </div>
+                    </div>
+                    <div style="flex:1;min-width:220px;padding:24px;border-radius:12px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);">
+                        <div style="font-size:11px;color:#f59e0b;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Method 2</div>
+                        <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:12px;">ARDL-OLS</div>
+                        <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.7;">
+                            자기회귀분포시차 모형<br>
+                            β = (X'X)⁻¹X'y<br>데이터 기반 계수 추정<br>
+                            <span style="color:#f59e0b;font-weight:600;">→ 실무형 베이스라인 전망</span>
+                        </div>
+                    </div>
+                    <div style="flex:1;min-width:220px;padding:24px;border-radius:12px;background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.2);">
+                        <div style="font-size:11px;color:#a78bfa;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Method 3</div>
+                        <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:12px;">Local Projections</div>
+                        <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.7;">
+                            Jordà (2005) 방식<br>
+                            각 시점(h)별 직접 추정<br>비선형 반응 포착 가능<br>
+                            <span style="color:#a78bfa;font-weight:600;">→ 극단 충격·스트레스 테스트</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top:24px;font-size:13px;color:rgba(255,255,255,0.35);text-align:center;">
+                    3가지 방법론의 수렴·괴리 자체가 의사결정 정보입니다
+                </div>
+            </div>` },
+
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:clamp(22px,3vw,36px);font-weight:700;color:#fff;text-align:center;margin-bottom:12px;">
+                    충격 전달 경로 — DAG
+                </div>
+                <div style="font-size:14px;color:rgba(255,255,255,0.4);text-align:center;margin-bottom:32px;">
+                    5개 슬라이더 입력 → 10개 변수 자동 파생 → 12개월 전망
+                </div>
+                <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:24px 32px;max-width:700px;width:100%;font-family:'IBM Plex Mono',monospace;font-size:13px;color:rgba(255,255,255,0.7);line-height:2;">
+                    <span style="color:#38bdf8;">수입물가</span> = 환율×0.45 + 유가×0.35 + PPI×0.20<br>
+                    <span style="color:#60a5fa;">철 강</span>&nbsp;&nbsp;&nbsp; = 수입물가×0.40 + PPI×0.35 + 유가×0.15<br>
+                    <span style="color:#94a3b8;">시멘트</span>&nbsp;&nbsp; = PPI×0.55 + 유가×0.25<br>
+                    <br>
+                    <span style="color:rgba(255,255,255,0.3);">행렬 표현:</span> <span style="color:#f59e0b;">s¹ = (I + W + W²) · s⁰</span><br>
+                    <span style="color:rgba(255,255,255,0.3);">W³ = 0 (DAG depth 2, nilpotent)</span>
+                </div>
+            </div>` },
+
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:clamp(22px,3vw,36px);font-weight:700;color:#fff;text-align:center;margin-bottom:12px;">
+                    원가 축 vs 사업성 축
+                </div>
+                <div style="font-size:14px;color:rgba(255,255,255,0.4);text-align:center;margin-bottom:32px;">
+                    같은 충격이 두 가지 다른 결과를 만듭니다
+                </div>
+                <div style="display:flex;gap:24px;max-width:700px;width:100%;flex-wrap:wrap;justify-content:center;">
+                    <div style="flex:1;min-width:240px;padding:24px;border-radius:12px;background:rgba(255,77,109,0.06);border:1px solid rgba(255,77,109,0.2);text-align:center;">
+                        <div style="font-size:13px;color:#fb7185;letter-spacing:2px;margin-bottom:12px;">원가 축</div>
+                        <div style="font-size:36px;font-weight:800;color:#ff6b00;">+25.0%</div>
+                        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px;line-height:1.6;">유가 급등 → 에너지비 +18%<br>공급망 차질 → 자재비 +6%<br>금융비용 → +1%</div>
+                    </div>
+                    <div style="flex:1;min-width:240px;padding:24px;border-radius:12px;background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.2);text-align:center;">
+                        <div style="font-size:13px;color:#a78bfa;letter-spacing:2px;margin-bottom:12px;">사업성 축</div>
+                        <div style="font-size:36px;font-weight:800;color:#a78bfa;">−11.8%</div>
+                        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px;line-height:1.6;">금리 상승 → 주택수요 둔화<br>미분양 증가 → 사업성 악화<br><span style="color:#f59e0b;">비용↑과 수요↓은 별개 축</span></div>
+                    </div>
+                </div>
+            </div>` },
+
+        // ─── PART 5: HOW TO USE ───
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:14px;letter-spacing:6px;color:rgba(56,189,248,0.5);text-transform:uppercase;margin-bottom:24px;">How to Use</div>
+                <div style="font-size:clamp(28px,4vw,52px);font-weight:800;color:#fff;text-align:center;line-height:1.3;max-width:800px;">
+                    사용법
+                </div>
+            </div>` },
+
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:clamp(20px,3vw,32px);font-weight:700;color:#fff;text-align:center;margin-bottom:32px;">
+                    Step 1. 대시보드에서 현황 파악
+                </div>
+                <div style="display:flex;flex-direction:column;gap:12px;max-width:600px;width:100%;">
+                    <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:8px;background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.12);">
+                        <div style="font-size:20px;min-width:32px;text-align:center;">🌍</div>
+                        <div style="color:rgba(255,255,255,0.7);font-size:13px;"><span style="color:#38bdf8;font-weight:700;">세계 지도</span> — 분쟁·재해 발생 시 실시간 히트맵 변화</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:8px;background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.12);">
+                        <div style="font-size:20px;min-width:32px;text-align:center;">📊</div>
+                        <div style="color:rgba(255,255,255,0.7);font-size:13px;"><span style="color:#38bdf8;font-weight:700;">지표 카드</span> — 유가·환율·금리 등 핵심 수치와 5Y 추이</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:8px;background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.12);">
+                        <div style="font-size:20px;min-width:32px;text-align:center;">🔴</div>
+                        <div style="color:rgba(255,255,255,0.7);font-size:13px;"><span style="color:#38bdf8;font-weight:700;">위기 등급</span> — 실시간 CRISIS LEVEL 표시</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:8px;background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.12);">
+                        <div style="font-size:20px;min-width:32px;text-align:center;">📰</div>
+                        <div style="color:rgba(255,255,255,0.7);font-size:13px;"><span style="color:#38bdf8;font-weight:700;">뉴스 피드</span> — GDELT 기반 글로벌 위기 뉴스 자동 수집</div>
+                    </div>
+                </div>
+            </div>` },
+
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:clamp(20px,3vw,32px);font-weight:700;color:#fff;text-align:center;margin-bottom:32px;">
+                    Step 2. 시뮬레이션 실행
+                </div>
+                <div style="display:flex;flex-direction:column;gap:12px;max-width:600px;width:100%;">
+                    <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:8px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.12);">
+                        <div style="font-size:28px;font-weight:900;color:#f59e0b;min-width:32px;text-align:center;">1</div>
+                        <div style="color:rgba(255,255,255,0.7);font-size:13px;"><span style="color:#f59e0b;font-weight:700;">프리셋 선택</span> — 유가급등 / 환율급등 / 복합 / 심각한 전쟁</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:8px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.12);">
+                        <div style="font-size:28px;font-weight:900;color:#f59e0b;min-width:32px;text-align:center;">2</div>
+                        <div style="color:rgba(255,255,255,0.7);font-size:13px;"><span style="color:#f59e0b;font-weight:700;">슬라이더 조절</span> — 유가 ±30%, 환율 ±15%, 금리 ±1.5%p</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:8px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.12);">
+                        <div style="font-size:28px;font-weight:900;color:#f59e0b;min-width:32px;text-align:center;">3</div>
+                        <div style="color:rgba(255,255,255,0.7);font-size:13px;"><span style="color:#f59e0b;font-weight:700;">결과 확인</span> — 3M/6M/12M 공사비 영향 + PF등급별 금리</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:8px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.12);">
+                        <div style="font-size:28px;font-weight:900;color:#f59e0b;min-width:32px;text-align:center;">4</div>
+                        <div style="color:rgba(255,255,255,0.7);font-size:13px;"><span style="color:#f59e0b;font-weight:700;">민감도·몬테카를로</span> — 단일변수 스윕 + 확률분포 tail risk</div>
+                    </div>
+                </div>
+            </div>` },
+
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:clamp(20px,3vw,32px);font-weight:700;color:#fff;text-align:center;margin-bottom:32px;">
+                    Step 3. 전달 메커니즘 확인
+                </div>
+                <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px 24px;max-width:650px;width:100%;">
+                    <div style="font-size:13px;color:rgba(255,255,255,0.6);line-height:2.0;">
+                        각 지표를 클릭하면 <span style="color:#38bdf8;font-weight:700;">전파 경로</span>를 볼 수 있습니다:<br><br>
+                        <span style="color:#22c55e;">유가</span> → 에너지·운송비 → 자재비 → 건설공사비<br>
+                        <span style="color:#38bdf8;">환율</span> → 수입물가 → 철강·비철 → 건설공사비<br>
+                        <span style="color:#a78bfa;">PPI</span> → 제조원가 → 시멘트·철강·수입물가 → 건설공사비<br>
+                        <span style="color:#fb7185;">노무비</span> → 직접공사비 → 건설공사비 (가장 즉각적)<br>
+                        <span style="color:#f472b6;">금리</span> → PF금리 → 사업성·착공 → 단가 체감<br><br>
+                        <span style="color:#f59e0b;">각 경로의 가중치(w), 시차(lag), 기여도를 실시간 표시</span>
+                    </div>
+                </div>
+            </div>` },
+
+        // ─── PART 6: FUTURE ───
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:14px;letter-spacing:6px;color:rgba(52,211,153,0.5);text-transform:uppercase;margin-bottom:24px;">What's Next</div>
+                <div style="font-size:clamp(24px,3.5vw,44px);font-weight:800;color:#fff;text-align:center;line-height:1.3;max-width:800px;">
+                    향후 정착 방향
+                </div>
+            </div>` },
+
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:clamp(20px,3vw,32px);font-weight:700;color:#fff;text-align:center;margin-bottom:36px;">
+                    사건이 발생하면<br><span style="color:#38bdf8;">지도가 먼저 반응합니다</span>
+                </div>
+                <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:800px;">
+                    <div style="width:120px;height:80px;border-radius:8px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.15);display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                        <div style="font-size:9px;color:rgba(255,255,255,0.4);">평상시</div>
+                        <div style="font-size:24px;margin-top:4px;">🌍</div>
+                        <div style="font-size:8px;color:#34d399;margin-top:2px;">STABLE</div>
+                    </div>
+                    <div style="color:rgba(255,255,255,0.3);font-size:20px;">→</div>
+                    <div style="width:120px;height:80px;border-radius:8px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                        <div style="font-size:9px;color:rgba(255,255,255,0.4);">분쟁 발생</div>
+                        <div style="font-size:24px;margin-top:4px;">🔥</div>
+                        <div style="font-size:8px;color:#f59e0b;margin-top:2px;">WATCH</div>
+                    </div>
+                    <div style="color:rgba(255,255,255,0.3);font-size:20px;">→</div>
+                    <div style="width:120px;height:80px;border-radius:8px;background:rgba(255,77,109,0.08);border:1px solid rgba(255,77,109,0.15);display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                        <div style="font-size:9px;color:rgba(255,255,255,0.4);">전쟁 확산</div>
+                        <div style="font-size:24px;margin-top:4px;">⚔️</div>
+                        <div style="font-size:8px;color:#ff4d6d;margin-top:2px;">HIGH PRESSURE</div>
+                    </div>
+                    <div style="color:rgba(255,255,255,0.3);font-size:20px;">→</div>
+                    <div style="width:120px;height:80px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                        <div style="font-size:9px;color:rgba(255,255,255,0.4);">시뮬레이션</div>
+                        <div style="font-size:24px;margin-top:4px;">📈</div>
+                        <div style="font-size:8px;color:#38bdf8;margin-top:2px;">자동 분석</div>
+                    </div>
+                </div>
+                <div style="margin-top:28px;font-size:13px;color:rgba(255,255,255,0.35);text-align:center;max-width:600px;line-height:1.7;">
+                    히트맵·마커·뉴스가 실시간 갱신되며<br>
+                    <span style="color:#f59e0b;">사건 발생 → 지표 변동 → 시뮬레이션 결과</span>까지<br>
+                    하나의 화면에서 확인할 수 있습니다
+                </div>
+            </div>` },
+
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:clamp(20px,3vw,32px);font-weight:700;color:#fff;text-align:center;margin-bottom:36px;">
+                    로드맵
+                </div>
+                <div style="display:flex;flex-direction:column;gap:14px;max-width:550px;width:100%;">
+                    <div style="display:flex;align-items:center;gap:14px;">
+                        <div style="min-width:48px;height:48px;border-radius:50%;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);display:flex;align-items:center;justify-content:center;font-size:11px;color:#34d399;font-weight:800;">NOW</div>
+                        <div><div style="font-size:14px;color:#fff;font-weight:700;">실시간 지표 + 3-Method 시뮬레이션</div><div style="font-size:11px;color:rgba(255,255,255,0.35);">Yahoo Finance / FRED / ECOS 연동 완료</div></div>
+                    </div>
+                    <div style="width:1px;height:12px;background:rgba(255,255,255,0.1);margin-left:24px;"></div>
+                    <div style="display:flex;align-items:center;gap:14px;">
+                        <div style="min-width:48px;height:48px;border-radius:50%;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);display:flex;align-items:center;justify-content:center;font-size:10px;color:#38bdf8;font-weight:800;">Q3</div>
+                        <div><div style="font-size:14px;color:#fff;font-weight:700;">자동 알림 시스템</div><div style="font-size:11px;color:rgba(255,255,255,0.35);">임계치 초과 시 Slack/이메일 자동 발송</div></div>
+                    </div>
+                    <div style="width:1px;height:12px;background:rgba(255,255,255,0.1);margin-left:24px;"></div>
+                    <div style="display:flex;align-items:center;gap:14px;">
+                        <div style="min-width:48px;height:48px;border-radius:50%;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);display:flex;align-items:center;justify-content:center;font-size:10px;color:#f59e0b;font-weight:800;">Q4</div>
+                        <div><div style="font-size:14px;color:#fff;font-weight:700;">프로젝트별 원가 연동</div><div style="font-size:11px;color:rgba(255,255,255,0.35);">개별 사업장 자재 구성비에 맞춘 맞춤 시뮬레이션</div></div>
+                    </div>
+                    <div style="width:1px;height:12px;background:rgba(255,255,255,0.1);margin-left:24px;"></div>
+                    <div style="display:flex;align-items:center;gap:14px;">
+                        <div style="min-width:48px;height:48px;border-radius:50%;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.3);display:flex;align-items:center;justify-content:center;font-size:10px;color:#a78bfa;font-weight:800;">'27</div>
+                        <div><div style="font-size:14px;color:#fff;font-weight:700;">AI 예측 고도화</div><div style="font-size:11px;color:rgba(255,255,255,0.35);">뉴스 NLP + 위성 데이터 + ML 기반 조기 경보</div></div>
+                    </div>
+                </div>
+            </div>` },
+
+        // ─── CLOSING ───
+        { bg: '#000', content: `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;">
+                <div style="font-size:clamp(28px,4.5vw,56px);font-weight:900;color:#fff;text-align:center;line-height:1.3;max-width:800px;">
+                    위기는 항상<br>해외에서 시작됩니다
+                </div>
+                <div style="margin-top:32px;font-size:clamp(16px,2.5vw,24px);color:rgba(255,255,255,0.45);text-align:center;max-width:600px;">
+                    이제 <span style="color:#38bdf8;font-weight:700;">미리 보고, 미리 대응</span>하세요.
+                </div>
+                <div style="margin-top:48px;padding:14px 36px;border-radius:8px;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);cursor:pointer;transition:all 0.3s;" onclick="closeGuide();openSimulationPopup();">
+                    <div style="font-size:14px;color:#38bdf8;font-weight:700;letter-spacing:1px;">시뮬레이션 시작하기 →</div>
+                </div>
+                <div style="margin-top:24px;font-size:11px;color:rgba(255,255,255,0.2);">ESC로 닫기</div>
+            </div>` }
+    ];
+
+    let _guideIdx = 0;
+    const _container = () => document.getElementById('guideSlides');
+    const _pres = () => document.getElementById('guidePresentation');
+
+    function renderSlide(idx, dir) {
+        const c = _container();
+        const slide = GUIDE_SLIDES[idx];
+        const el = document.createElement('div');
+        el.style.cssText = 'position:absolute;inset:0;background:' + slide.bg + ';opacity:0;transition:opacity 0.5s ease,transform 0.5s ease;transform:translateX(' + (dir > 0 ? '40px' : dir < 0 ? '-40px' : '0') + ');';
+        el.innerHTML = slide.content;
+        c.appendChild(el);
+        requestAnimationFrame(() => { el.style.opacity = '1'; el.style.transform = 'translateX(0)'; });
+        // Remove old slides
+        Array.from(c.children).forEach(child => {
+            if (child !== el) {
+                child.style.opacity = '0';
+                child.style.transform = 'translateX(' + (dir > 0 ? '-40px' : '40px') + ')';
+                setTimeout(() => child.remove(), 500);
+            }
+        });
+        document.getElementById('guidePageNum').textContent = (idx + 1) + ' / ' + GUIDE_SLIDES.length;
+    }
+
+    window.openGuidePresentation = function() {
+        _guideIdx = 0;
+        _pres().style.display = 'block';
+        renderSlide(0, 0);
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.closeGuide = function() {
+        _pres().style.display = 'none';
+        _container().innerHTML = '';
+        document.body.style.overflow = '';
+    };
+
+    window.guideGo = function(dir) {
+        const next = _guideIdx + dir;
+        if (next < 0 || next >= GUIDE_SLIDES.length) return;
+        _guideIdx = next;
+        renderSlide(_guideIdx, dir);
+    };
+
+    // Keyboard nav
+    document.addEventListener('keydown', function(e) {
+        if (_pres().style.display !== 'block') return;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); guideGo(1); }
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); guideGo(-1); }
+        if (e.key === 'Escape') { closeGuide(); }
+    });
+
+    // Swipe support for mobile
+    let _touchX = 0;
+    _pres().addEventListener('touchstart', e => { _touchX = e.touches[0].clientX; }, { passive: true });
+    _pres().addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - _touchX;
+        if (Math.abs(dx) > 50) guideGo(dx < 0 ? 1 : -1);
+    }, { passive: true });
+})();
+</script>
 </body>
 </html>
