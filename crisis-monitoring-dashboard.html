@@ -410,7 +410,7 @@
             font-size: 10px;
             font-weight: 700;
             color: #6a8aaa;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
             white-space: nowrap;
             min-width: 68px;
             padding: 3px 8px;
@@ -453,7 +453,7 @@
             font-weight: 700;
             color: #22c55e;
             letter-spacing: 1px;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
             padding: 3px 10px;
             background: rgba(34,197,94,0.06);
             border: 1px solid rgba(34,197,94,0.15);
@@ -481,7 +481,7 @@
             border-radius: 3px;
             cursor: pointer;
             letter-spacing: 0.5px;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
             transition: all 0.2s;
         }
         .sim-btn-report:hover {
@@ -530,10 +530,9 @@
 
         /* ── Sim KPI Cards (inside topbar) ── */
         .sim-kpi-card {
-            width: 80px;
-            height: 48px;
+            min-width: 72px;
+            padding: 6px 12px;
             border-radius: 4px;
-            padding: 6px 8px;
             text-align: center;
             transition: all 0.2s;
             display: flex;
@@ -548,7 +547,7 @@
         .sim-kpi-card[data-accent="#38bdf8"] { background: rgba(56,189,248,0.08); border: 1px solid #142a42; }
         .sim-kpi-card:hover { opacity: 0.9; }
         .sim-kpi-card.avg {
-            width: 110px;
+            min-width: 100px;
             border-color: #142a42;
             background: rgba(56,189,248,0.08);
         }
@@ -557,18 +556,19 @@
         .sim-kpi-label {
             font-size: 9px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-family: 'JetBrains Mono', monospace;
-            line-height: 1.3;
+            letter-spacing: 0.8px;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
+            line-height: 1.2;
+            color: #6d8db0;
         }
-        .sim-kpi-card[data-accent="#f59e0b"] .sim-kpi-label { color: #f59e0b; }
-        .sim-kpi-card[data-accent="#fb7185"] .sim-kpi-label { color: #fb7185; }
-        .sim-kpi-card[data-accent="#ef4444"] .sim-kpi-label { color: #ef4444; }
-        .sim-kpi-card[data-accent="#38bdf8"] .sim-kpi-label { color: #38bdf8; }
+        .sim-kpi-card[data-accent="#f59e0b"] .sim-kpi-label { color: #c89030; }
+        .sim-kpi-card[data-accent="#fb7185"] .sim-kpi-label { color: #c06070; }
+        .sim-kpi-card[data-accent="#ef4444"] .sim-kpi-label { color: #c04040; }
+        .sim-kpi-card[data-accent="#38bdf8"] .sim-kpi-label { color: #5a9ac0; }
         .sim-kpi-value {
-            font-size: 16px;
-            font-weight: 800;
-            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
             color: var(--text);
             line-height: 1.2;
         }
@@ -576,9 +576,9 @@
         /* ── Sim 3-Column Body ── */
         .sim-body-3col {
             display: grid !important;
-            grid-template-columns: 200px 1fr 200px !important;
+            grid-template-columns: 250px 1fr 300px !important;
             grid-template-rows: 1fr !important;
-            gap: 6px !important;
+            gap: 8px !important;
             flex: 1 1 0 !important;
             min-height: 0 !important;
             max-height: 100% !important;
@@ -587,11 +587,12 @@
         .sim-col {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 6px;
             min-height: 0;
             max-height: 100%;
             overflow-y: auto;
             overflow-x: hidden;
+            padding: 4px;
         }
         .sim-col::-webkit-scrollbar { width: 3px; }
         .sim-col::-webkit-scrollbar-track { background: transparent; }
@@ -604,15 +605,15 @@
             position: relative;
         }
         .sim-col-section-title {
-            font-size: 9px;
+            font-size: 11px;
             font-weight: 700;
-            color: #6d8db0;
+            color: #8cb4d8;
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            margin-bottom: 6px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #162540;
-            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #1a2d48;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
             display: flex;
             align-items: center;
             gap: 6px;
@@ -620,19 +621,19 @@
         .sim-col-section-title::before {
             content: '▪';
             color: #38bdf8;
-            font-size: 8px;
+            font-size: 9px;
         }
 
         /* ── Accordion ── */
         .sim-accordion-title {
-            font-size: 9px;
+            font-size: 11px;
             font-weight: 700;
-            color: #6d8db0;
+            color: #8cb4d8;
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            padding: 6px 0 5px;
-            border-bottom: 1px solid #162540;
-            font-family: 'JetBrains Mono', monospace;
+            padding: 7px 0 6px;
+            border-bottom: 1px solid #1a2d48;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
@@ -675,50 +676,56 @@
             align-items: center;
             gap: 8px;
             margin-bottom: 6px;
+            flex-shrink: 0;
         }
         .sim-pressure-badge {
-            font-size: 9px;
+            font-size: 10px;
             font-weight: 800;
             letter-spacing: 0.8px;
-            padding: 3px 10px;
+            padding: 4px 12px;
             border-radius: 3px;
             border: 1px solid #2a3a52;
             background: rgba(14,24,40,0.6);
             color: #5d7a9a;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
         }
+        .sim-pressure-badge.high { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.3); color: #ff6b6b; }
+        .sim-pressure-badge.moderate { background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.3); color: #f5a623; }
+        .sim-pressure-badge.low { background: rgba(34,197,94,0.12); border-color: rgba(34,197,94,0.3); color: #22c55e; }
         .sim-pressure-summary {
-            font-size: 10px;
-            color: #5d7a9a;
-            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #7a9ab8;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
         }
         .sim-method-desc {
-            padding: 4px 8px;
+            padding: 5px 10px;
             background: rgba(56,189,248,0.04);
             border: 1px solid #13304d;
             border-radius: 3px;
-            margin-bottom: 6px;
-            font-size: 9px;
-            color: #5d7a9a;
-            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 8px;
+            font-size: 10px;
+            color: #6d8db0;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
             letter-spacing: 0.2px;
+            flex-shrink: 0;
         }
         .sim-attribution-wrap {
-            max-height: 80px;
-            overflow-y: auto;
+            max-height: none;
+            overflow-y: visible;
             margin-bottom: 4px;
+            flex-shrink: 0;
         }
         .sim-attribution-table {
             width: 100%;
-            font-size: 10px;
+            font-size: 11px;
             border-collapse: collapse;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
         }
         .sim-attribution-table thead tr {
             color: #4a6a8a;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            font-size: 8px;
+            font-size: 9px;
         }
         .sim-attribution-table th {
             padding: 3px 5px;
@@ -732,8 +739,8 @@
         .sim-chart-grid {
             display: grid;
             grid-template-columns: 1.2fr 0.8fr;
-            gap: 5px;
-            flex: 1;
+            gap: 6px;
+            flex: 1 1 0;
             min-height: 0;
         }
 
@@ -741,12 +748,12 @@
         .re-impact-card {
             display: flex;
             align-items: center;
-            gap: 6px;
-            padding: 5px 6px;
+            gap: 8px;
+            padding: 7px 8px;
             background: rgba(6, 10, 18, 0.6);
             border: 1px solid #162540;
             border-radius: 4px;
-            margin-bottom: 4px;
+            margin-bottom: 5px;
             transition: all 0.2s;
             cursor: pointer;
             position: relative;
@@ -755,14 +762,14 @@
             border-color: rgba(56,189,248,0.25);
             background: rgba(56,189,248,0.03);
         }
-        .re-impact-icon { font-size: 14px; flex-shrink: 0; }
+        .re-impact-icon { font-size: 15px; flex-shrink: 0; }
         .re-impact-info { flex: 1; min-width: 0; }
-        .re-impact-name { font-size: 10px; color: #8cb8e0; font-weight: 700; letter-spacing: 0.2px; }
-        .re-impact-baseline { font-size: 8px; color: #3d5570; font-family: 'JetBrains Mono', monospace; }
+        .re-impact-name { font-size: 11px; color: #8cb8e0; font-weight: 700; letter-spacing: 0.2px; }
+        .re-impact-baseline { font-size: 9px; color: #4a6a88; font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace; }
         .re-impact-delta {
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 800;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
             text-align: right;
             flex-shrink: 0;
         }
@@ -1401,7 +1408,7 @@
             cursor: pointer;
             letter-spacing: 0.5px;
             text-transform: uppercase;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
             transition: all 0.2s;
         }
 
@@ -1429,7 +1436,7 @@
         }
 
         .chart-container-large {
-            height: 320px;
+            height: 240px;
         }
 
         /* Correlation Matrix */
@@ -1498,7 +1505,7 @@
             margin-bottom: 3px;
             letter-spacing: 0.4px;
             text-transform: uppercase;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
         }
 
         .sim-action-wrap {
@@ -1514,7 +1521,7 @@
             border-radius: 4px;
             font-size: 12px;
             width: 100%;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
             transition: border-color 0.2s;
         }
         .sim-input:focus {
@@ -1535,7 +1542,7 @@
             font-size: 11px;
             letter-spacing: 0.5px;
             text-transform: uppercase;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
         }
 
         .sim-button:hover {
@@ -1562,7 +1569,7 @@
             color: #8cb8e0;
             letter-spacing: 0.5px;
             text-transform: uppercase;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
         }
 
         .sim-results-grid {
@@ -1575,13 +1582,13 @@
             font-size: 10px;
             color: #5d7a9a;
             letter-spacing: 0.3px;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
         }
 
         .sim-metric-value {
             font-size: 18px;
             font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
             margin-top: 2px;
         }
 
@@ -1599,7 +1606,7 @@
             cursor: pointer;
             transition: all 0.2s;
             font-weight: 600;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
             letter-spacing: 0.3px;
         }
 
@@ -1627,7 +1634,7 @@
             border-bottom: 2px solid transparent;
             transition: all 0.2s;
             font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
             letter-spacing: 0.3px;
             letter-spacing: 0.3px;
             text-transform: uppercase;
@@ -1978,7 +1985,7 @@
             background: linear-gradient(165deg, rgba(13, 19, 29, 0.97), rgba(9, 13, 20, 0.97));
             border: 1px solid #2a3952;
             border-radius: 8px;
-            padding: 30px;
+            padding: 20px 24px;
             max-width: 900px;
             width: 100%;
             max-height: 90vh;
@@ -1989,8 +1996,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
             border-bottom: 1px solid #2a3952;
         }
 
@@ -2009,30 +2016,31 @@
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin: 20px 0;
+            gap: 8px;
+            margin: 10px 0 12px;
         }
 
         .stat-box {
             background: rgba(14, 24, 38, 0.82);
-            padding: 10px 12px;
+            padding: 8px 10px;
             border-radius: 4px;
             border-left: 2px solid var(--accent-cool);
         }
 
         .stat-label {
-            font-size: 12px;
-            color: #8ea0bc;
-            margin-bottom: 3px;
+            font-size: 10px;
+            color: #6d8db0;
+            margin-bottom: 2px;
             text-transform: uppercase;
-            letter-spacing: 0.35px;
+            letter-spacing: 0.5px;
+            font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace;
         }
 
         .stat-value {
-            font-size: 19px;
+            font-size: 16px;
             font-weight: 700;
             color: #dce9ff;
-            font-family: 'IBM Plex Mono', Consolas, monospace;
+            font-family: 'JetBrains Mono', 'IBM Plex Mono', Consolas, monospace;
         }
 
         .news-modal-content {
@@ -2583,73 +2591,73 @@
                     <div class="sim-header-status" id="simStatusIndicator">
                         <span class="sim-status-dot"></span>READY
                     </div>
-                    <span style="font-size:7px;color:#4a5568;margin-right:4px;">v3c</span>
+                    <span style="font-size:7px;color:#4a5568;margin-right:4px;">v4</span>
                     <button class="sim-btn-help" onclick="openSimHelp()">도움말</button>
                     <button class="sim-btn-report" onclick="generateLLMReport()" id="btnReport">AI분석</button>
                     <button class="sim-btn-close" onclick="closeSimulationPopup()">×</button>
                 </div>
             </div>
             <div class="simulation-panel" style="flex:1 1 0;min-height:0;overflow:hidden;display:flex;flex-direction:column;">
-                <div class="sim-body-3col" style="display:grid !important;grid-template-columns:200px 1fr 200px;gap:6px;flex:1 1 0;min-height:0;overflow:hidden;">
+                <div class="sim-body-3col" style="display:grid !important;grid-template-columns:250px 1fr 300px;gap:8px;flex:1 1 0;min-height:0;overflow:hidden;">
                     <div class="sim-col" style="overflow-y:auto;min-height:0;">
                         <div class="sim-col-section" style="flex:0 0 auto;">
                             <div class="sim-accordion-title" onclick="toggleAccordion(this)">파라미터 설정</div>
                             <div class="sim-accordion-body">
                             <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;margin-top:6px;">
-                                <button class="sim-preset-btn" onclick="loadPreset('baseline')" style="font-size:10px;padding:3px 8px;">기준</button>
-                                <button class="sim-preset-btn" onclick="loadPreset('fxShock')" style="font-size:10px;padding:3px 8px;">환율급등</button>
-                                <button class="sim-preset-btn active" onclick="loadPreset('oilSpike')" style="font-size:10px;padding:3px 8px;">유가급등</button>
-                                <button class="sim-preset-btn" onclick="loadPreset('laborCrunch')" style="font-size:10px;padding:3px 8px;">노무비</button>
-                                <button class="sim-preset-btn" onclick="loadPreset('rateHike')" style="font-size:10px;padding:3px 8px;">금리</button>
-                                <button class="sim-preset-btn" onclick="loadPreset('allShock')" style="font-size:10px;padding:3px 8px;">복합</button>
+                                <button class="sim-preset-btn" onclick="loadPreset('baseline')" style="font-size:11px;padding:4px 10px;">기준</button>
+                                <button class="sim-preset-btn" onclick="loadPreset('fxShock')" style="font-size:11px;padding:4px 10px;">환율급등</button>
+                                <button class="sim-preset-btn active" onclick="loadPreset('oilSpike')" style="font-size:11px;padding:4px 10px;">유가급등</button>
+                                <button class="sim-preset-btn" onclick="loadPreset('laborCrunch')" style="font-size:11px;padding:4px 10px;">노무비</button>
+                                <button class="sim-preset-btn" onclick="loadPreset('rateHike')" style="font-size:11px;padding:4px 10px;">금리</button>
+                                <button class="sim-preset-btn" onclick="loadPreset('allShock')" style="font-size:11px;padding:4px 10px;">복합</button>
+                                <button class="sim-preset-btn" onclick="loadPreset('severeWar')" style="font-size:11px;padding:4px 10px;border-color:#ff4d6d;color:#ff4d6d;">전쟁</button>
                             </div>
                             <div class="sim-tabs" style="margin-bottom:6px;">
-                                <button class="sim-tab active" onclick="switchSimTab('params')" style="padding:4px 10px;font-size:10px;">파라미터</button>
-                                <button class="sim-tab" onclick="switchSimTab('sensitivity')" style="padding:4px 10px;font-size:10px;">민감도</button>
-                                <button class="sim-tab" onclick="switchSimTab('montecarlo')" style="padding:4px 10px;font-size:10px;">M.Carlo</button>
+                                <button class="sim-tab active" onclick="switchSimTab('params')" style="padding:5px 12px;font-size:11px;">파라미터</button>
+                                <button class="sim-tab" onclick="switchSimTab('sensitivity')" style="padding:5px 12px;font-size:11px;">민감도</button>
+                                <button class="sim-tab" onclick="switchSimTab('montecarlo')" style="padding:5px 12px;font-size:11px;">M.Carlo</button>
                             </div>
                             <div class="sim-tab-content active" id="simTabParams">
                                 <div style="display:flex;flex-direction:column;gap:6px;">
-                                    <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><label class="sim-control-label" style="font-size:10px;">환율 충격 (%)</label><span class="sim-control-label" id="sliderValFx" style="color:#38bdf8;font-size:10px;">+5.0%</span></div><input type="range" id="shockFx" min="-10" max="15" step="0.5" value="5" oninput="updateSliderLabel('Fx')" style="width:100%;accent-color:#38bdf8;"></div>
-                                    <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><label class="sim-control-label" style="font-size:10px;">유가 충격 (%)</label><span class="sim-control-label" id="sliderValOil" style="color:#22c55e;font-size:10px;">+8.0%</span></div><input type="range" id="shockOil" min="-10" max="50" step="1" value="8" oninput="updateSliderLabel('Oil')" style="width:100%;accent-color:#22c55e;"></div>
-                                    <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><label class="sim-control-label" style="font-size:10px;">PPI 충격 (%)</label><span class="sim-control-label" id="sliderValPpi" style="color:#a78bfa;font-size:10px;">+2.0%</span></div><input type="range" id="shockPpi" min="-10" max="10" step="0.5" value="2" oninput="updateSliderLabel('Ppi')" style="width:100%;accent-color:#a78bfa;"></div>
-                                    <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><label class="sim-control-label" style="font-size:10px;">노무비 충격 (%)</label><span class="sim-control-label" id="sliderValLabor" style="color:#f59e0b;font-size:10px;">+1.5%</span></div><input type="range" id="shockLabor" min="-2" max="10" step="0.5" value="1.5" oninput="updateSliderLabel('Labor')" style="width:100%;accent-color:#f59e0b;"></div>
-                                    <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><label class="sim-control-label" style="font-size:10px;">금리 변화 (%p)</label><span class="sim-control-label" id="sliderValRate" style="color:#fb7185;font-size:10px;">+0.5%p</span></div><input type="range" id="shockRate" min="-2" max="2" step="0.25" value="0.5" oninput="updateSliderLabel('Rate')" style="width:100%;accent-color:#fb7185;"></div>
+                                    <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><label class="sim-control-label" style="font-size:11px;">환율 충격 (%)</label><span class="sim-control-label" id="sliderValFx" style="color:#38bdf8;font-size:11px;">+5.0%</span></div><input type="range" id="shockFx" min="-10" max="15" step="0.5" value="5" oninput="updateSliderLabel('Fx')" style="width:100%;accent-color:#38bdf8;"></div>
+                                    <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><label class="sim-control-label" style="font-size:11px;">유가 충격 (%)</label><span class="sim-control-label" id="sliderValOil" style="color:#22c55e;font-size:11px;">+8.0%</span></div><input type="range" id="shockOil" min="-10" max="50" step="1" value="8" oninput="updateSliderLabel('Oil')" style="width:100%;accent-color:#22c55e;"></div>
+                                    <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><label class="sim-control-label" style="font-size:11px;">PPI 충격 (%)</label><span class="sim-control-label" id="sliderValPpi" style="color:#a78bfa;font-size:11px;">+2.0%</span></div><input type="range" id="shockPpi" min="-10" max="10" step="0.5" value="2" oninput="updateSliderLabel('Ppi')" style="width:100%;accent-color:#a78bfa;"></div>
+                                    <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><label class="sim-control-label" style="font-size:11px;">노무비 충격 (%)</label><span class="sim-control-label" id="sliderValLabor" style="color:#f59e0b;font-size:11px;">+1.5%</span></div><input type="range" id="shockLabor" min="-2" max="10" step="0.5" value="1.5" oninput="updateSliderLabel('Labor')" style="width:100%;accent-color:#f59e0b;"></div>
+                                    <div><div style="display:flex;justify-content:space-between;margin-bottom:2px;"><label class="sim-control-label" style="font-size:11px;">금리 변화 (%p)</label><span class="sim-control-label" id="sliderValRate" style="color:#fb7185;font-size:11px;">+0.5%p</span></div><input type="range" id="shockRate" min="-2" max="2" step="0.25" value="0.5" oninput="updateSliderLabel('Rate')" style="width:100%;accent-color:#fb7185;"></div>
                                 </div>
                                 <div style="display:flex;gap:4px;margin-top:8px;">
                                     <button class="sim-button" onclick="runSimulation()" style="flex:1;padding:6px;font-size:11px;">실행</button>
                                     <button class="sim-button" onclick="runComparison()" style="flex:1;padding:6px;font-size:11px;background:linear-gradient(90deg,#6b3fa0,#8b5cf6);">비교</button>
                                 </div>
-                                <div style="margin-top:4px;padding:4px 6px;border:1px dashed #22324a;border-radius:4px;font-size:8px;color:#5a7a9a;" id="modelInfoBox">Gaussian IRF | ARDL-OLS | Local Projections</div>
-                                <div style="margin-top:3px;padding:4px 6px;border-radius:4px;font-size:8px;background:rgba(251,113,133,0.06);border:1px solid #2a1520;color:#6a829f;" id="modelStatsBox">모델 통계: 실행 후 표시</div>
+                                <div style="margin-top:5px;padding:5px 8px;border:1px dashed #22324a;border-radius:4px;font-size:9px;color:#5a7a9a;" id="modelInfoBox">Gaussian IRF | ARDL-OLS | Local Projections</div>
+                                <div style="margin-top:3px;padding:5px 8px;border-radius:4px;font-size:9px;background:rgba(251,113,133,0.06);border:1px solid #2a1520;color:#6a829f;" id="modelStatsBox">모델 통계: 실행 후 표시</div>
                             </div>
                             <div class="sim-tab-content" id="simTabSensitivity">
                                 <div style="display:flex;flex-direction:column;gap:6px;">
-                                    <div><label class="sim-control-label" style="font-size:10px;">분석 대상</label><select class="sim-input" id="sensitivityVar" style="font-size:11px;padding:5px;"><option value="fx">환율</option><option value="oil" selected>유가</option><option value="ppi">생산자물가</option><option value="labor">노무비</option><option value="policyRate">기준금리</option></select></div>
-                                    <div><label class="sim-control-label" style="font-size:10px;">측정 시점</label><select class="sim-input" id="sensitivityHorizon" style="font-size:11px;padding:5px;"><option value="2">3M</option><option value="5">6M</option><option value="11" selected>12M</option></select></div>
+                                    <div><label class="sim-control-label" style="font-size:11px;">분석 대상</label><select class="sim-input" id="sensitivityVar" style="font-size:11px;padding:5px;"><option value="fx">환율</option><option value="oil" selected>유가</option><option value="ppi">생산자물가</option><option value="labor">노무비</option><option value="policyRate">기준금리</option></select></div>
+                                    <div><label class="sim-control-label" style="font-size:11px;">측정 시점</label><select class="sim-input" id="sensitivityHorizon" style="font-size:11px;padding:5px;"><option value="2">3M</option><option value="5">6M</option><option value="11" selected>12M</option></select></div>
                                 </div>
                                 <button class="sim-button" onclick="runSensitivity()" style="width:100%;margin-top:6px;padding:6px;font-size:11px;">민감도 분석</button>
                                 <div id="sensitivityResult" style="margin-top:6px;"></div>
                             </div>
                             <div class="sim-tab-content" id="simTabMonteCarlo">
                                 <div style="display:flex;flex-direction:column;gap:6px;">
-                                    <div><label class="sim-control-label" style="font-size:10px;">횟수</label><select class="sim-input" id="mcIterations" style="font-size:11px;padding:5px;"><option value="100">100회</option><option value="500" selected>500회</option><option value="1000">1,000회</option></select></div>
-                                    <div><label class="sim-control-label" style="font-size:10px;">유가 변동성 (σ%)</label><input type="number" class="sim-input" id="mcOilVol" value="5" step="1" style="font-size:11px;padding:5px;"></div>
-                                    <div><label class="sim-control-label" style="font-size:10px;">환율 변동성 (σ%)</label><input type="number" class="sim-input" id="mcFxVol" value="3" step="1" style="font-size:11px;padding:5px;"></div>
+                                    <div><label class="sim-control-label" style="font-size:11px;">횟수</label><select class="sim-input" id="mcIterations" style="font-size:11px;padding:5px;"><option value="100">100회</option><option value="500" selected>500회</option><option value="1000">1,000회</option></select></div>
+                                    <div><label class="sim-control-label" style="font-size:11px;">유가 변동성 (σ%)</label><input type="number" class="sim-input" id="mcOilVol" value="5" step="1" style="font-size:11px;padding:5px;"></div>
+                                    <div><label class="sim-control-label" style="font-size:11px;">환율 변동성 (σ%)</label><input type="number" class="sim-input" id="mcFxVol" value="3" step="1" style="font-size:11px;padding:5px;"></div>
                                 </div>
                                 <button class="sim-button" onclick="runMonteCarlo()" style="width:100%;margin-top:6px;padding:6px;font-size:11px;background:linear-gradient(90deg,#0d7377,#14919b);">Monte Carlo</button>
                                 <div id="monteCarloResult" style="margin-top:6px;"></div>
                             </div>
                         </div>
                             </div>
-                        </div>
-                        <div style="display:flex;flex-direction:column;gap:3px;margin-top:4px;">
-                            <button class="sim-button" onclick="showContributionPopup()" style="width:100%;padding:5px;font-size:10px;background:linear-gradient(135deg,#1a4a3c,#22685a);">전파경로 기여도 ▸</button>
-                            <button class="sim-button" onclick="openMechPopup()" style="width:100%;padding:5px;font-size:10px;background:linear-gradient(135deg,#1a3a5c,#22456a);">전파경로 상세 ▸</button>
+                        <div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;">
+                            <button class="sim-button" onclick="showContributionPopup()" style="width:100%;padding:7px;font-size:11px;background:linear-gradient(135deg,#1a5a48,#28806a);border:1px solid rgba(40,128,106,0.4);letter-spacing:0.3px;">전파경로 기여도 ▸</button>
+                            <button class="sim-button" onclick="openMechPopup()" style="width:100%;padding:7px;font-size:11px;background:linear-gradient(135deg,#1a4a6c,#285a88);border:1px solid rgba(40,90,136,0.4);letter-spacing:0.3px;">전파경로 상세 ▸</button>
                         </div>
                     </div>
-                    <div class="sim-col">
-                        <div class="sim-col-section sim-center-panel" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+                    <div class="sim-col" style="overflow-y:auto;">
+                        <div class="sim-col-section sim-center-panel" style="display:flex;flex-direction:column;">
                             <div class="sim-col-section-title">분석결과</div>
                             <div id="simResults" class="sim-results" style="display:block;border:none;padding:0;background:none;">
                                 <div class="sim-result-header">
@@ -2670,8 +2678,8 @@
                                     </table>
                                 </div>
                                 <div class="sim-chart-grid">
-                                    <div class="chart-container" style="height:160px;"><canvas id="simulationChart"></canvas></div>
-                                    <div class="chart-container" style="height:160px;"><canvas id="simulationChart2"></canvas></div>
+                                    <div class="chart-container" style="height:240px;"><canvas id="simulationChart"></canvas></div>
+                                    <div class="chart-container" style="height:240px;"><canvas id="simulationChart2"></canvas></div>
                                 </div>
                             </div>
                         </div>
@@ -2699,7 +2707,7 @@
     <div class="modal" id="detailModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="modalTitle" style="color: #ff6b00; font-size: 21px;">지표 상세 분석</h2>
+                <h2 id="modalTitle" style="color: #ff6b00; font-size: 18px; font-family: 'IBM Plex Mono', Consolas, 'Roboto Mono', monospace; letter-spacing: 0.5px;">지표 상세 분석</h2>
                 <button class="modal-close" onclick="closeModal()">×</button>
             </div>
             <div class="stats-grid">
@@ -2731,8 +2739,8 @@
             <div class="chart-container chart-container-large">
                 <canvas id="modalChart"></canvas>
             </div>
-            <div id="modalCorrelationSection" style="display:none; margin-top:12px;">
-                <div style="font-size:11px; color:#8ea9cc; margin-bottom:8px; font-weight:600;">CROSS-CORRELATION (5Y 월간 데이터 기반)</div>
+            <div id="modalCorrelationSection" style="display:none; margin-top:10px;">
+                <div style="font-size:11px; color:#8cb4d8; margin-bottom:8px; font-weight:700; font-family:'IBM Plex Mono',Consolas,monospace; letter-spacing:0.5px;">원가 구성 및 재료비 세부 비중</div>
                 <div id="modalCorrBars" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
             </div>
         </div>
@@ -2762,15 +2770,25 @@
 
     <!-- LLM Report Modal -->
     <div class="modal" id="reportModal">
-        <div class="modal-content" style="max-width: 800px; max-height: 85vh; overflow-y: auto;">
-            <div class="modal-header">
-                <h2 style="color: #14b8a6; font-size: 18px;">AI 건설공사비 영향 리포트</h2>
-                <button class="modal-close" onclick="document.getElementById('reportModal').classList.remove('active')">×</button>
+        <div class="modal-content" style="max-width:880px;max-height:90vh;overflow-y:auto;padding:0;border:1px solid #1a2d48;">
+            <!-- Report Header Band -->
+            <div style="padding:16px 24px;background:linear-gradient(135deg,#0a1628,#0e1a2e);border-bottom:2px solid #14b8a6;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <div style="font-size:9px;color:#14b8a6;font-weight:700;letter-spacing:2px;font-family:'IBM Plex Mono',Consolas,monospace;text-transform:uppercase;margin-bottom:4px;">AI-Powered Analysis Report</div>
+                    <h2 style="color:#f0f6ff;font-size:17px;margin:0;font-weight:700;letter-spacing:0.3px;">건설공사비 영향 분석 리포트</h2>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button class="sim-button" onclick="copyReport()" style="padding:5px 14px;font-size:10px;background:#162030;border:1px solid #1a2a42;">📋 복사</button>
+                    <button class="modal-close" onclick="document.getElementById('reportModal').classList.remove('active')">×</button>
+                </div>
             </div>
-            <div id="reportContent" style="font-size: 13px; line-height: 1.8; color: #cbd5e1; white-space: pre-wrap;">리포트 생성 중...</div>
-            <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #1a2840; display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 10px; color: #5a7a9a;" id="reportTimestamp"></span>
-                <button class="sim-button" onclick="copyReport()" style="padding: 4px 16px; font-size: 11px;">복사</button>
+            <!-- Report Body -->
+            <div style="padding:20px 24px;">
+                <div id="reportContent" style="white-space:normal;">리포트 생성 중...</div>
+                <div style="margin-top:16px;padding-top:10px;border-top:1px solid #1a2840;display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:9px;color:#4a6a88;font-family:'IBM Plex Mono',Consolas,monospace;" id="reportTimestamp"></span>
+                    <span style="font-size:8px;color:#3d5570;font-family:'IBM Plex Mono',Consolas,monospace;">CONFIDENTIAL — Internal Use Only</span>
+                </div>
             </div>
         </div>
     </div>
@@ -2805,7 +2823,7 @@
         const DASHBOARD_API_URL = '/api/indicators';
         const DASHBOARD_NEWS_API_URL = '/api/news';
         const NEWS_REFRESH_INTERVAL_MS = 3 * 60 * 1000;
-        console.log('%c[INSIGHT v3c] loaded', 'color:#22c55e;font-weight:bold;');
+        console.log('%c[INSIGHT v4] loaded', 'color:#22c55e;font-weight:bold;');
         const KST_TIMEZONE = 'Asia/Seoul';
         const NEWS_SOURCES = [
             { url: 'https://www.aljazeera.com/xml/rss/all.xml', name: 'Al Jazeera' },
@@ -3891,7 +3909,7 @@
                 const mid = pipe.coords[Math.floor(pipe.coords.length / 2)];
                 const labelIcon = window.L.divIcon({
                     className: 'map-asset-icon',
-                    html: `<span style="font-size:7px;color:${pipe.color};text-shadow:0 0 4px #000,0 0 2px #000;white-space:nowrap;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:0.5px;">${pipe.name.split('(')[0].trim()}</span>`,
+                    html: `<span style="font-size:7px;color:${pipe.color};text-shadow:0 0 4px #000,0 0 2px #000;white-space:nowrap;font-family:'IBM Plex Mono',Consolas,monospace;font-weight:700;letter-spacing:0.5px;">${pipe.name.split('(')[0].trim()}</span>`,
                     iconSize: [0, 0], iconAnchor: [0, 0]
                 });
                 window.L.marker(mid, { icon: labelIcon, interactive: false, keyboard: false }).addTo(mapLayers.pipelines);
@@ -5377,37 +5395,80 @@
 
         async function generateLLMReport() {
             const btn = document.getElementById('btnReport');
-            btn.textContent = '생성 중...';
+            btn.textContent = '분석 중...';
             btn.disabled = true;
             const modal = document.getElementById('reportModal');
             const content = document.getElementById('reportContent');
-            content.textContent = '데이터 수집 및 AI 분석 중...\n\n잠시만 기다려 주세요.';
+            content.innerHTML = '<div style="text-align:center;padding:60px 0;"><div style="font-size:28px;margin-bottom:16px;animation:simDotBlink 1.5s infinite;">📊</div><div style="color:#8cb4d8;font-size:14px;font-weight:600;">실시간 데이터 수집 및 AI 분석 중...</div><div style="color:#4a6a88;font-size:11px;margin-top:8px;">전문 애널리스트급 리포트 생성 (약 15~30초)</div></div>';
             modal.classList.add('active');
             try {
-                const resp = await fetch('/api/report', { cache: 'no-store' });
-                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const simCtx = {};
+                try {
+                    const shocks = getSimShocks();
+                    simCtx.shocks = shocks;
+                    if (macroSimData && macroSimData.length > 0) {
+                        const latest = macroSimData[macroSimData.length - 1];
+                        simCtx.latest = { month: latest.month, cci: latest.cci, fx: latest.fx, oil: latest.oil, ppi: latest.ppi, labor: latest.labor, policyRate: latest.policyRate };
+                        simCtx.points = macroSimData.length;
+                        const fc = buildScenarioForecast(macroSimData, shocks);
+                        if (fc && fc[11]) {
+                            simCtx.forecast = { m3: fc[2]?.deltaPct, m6: fc[5]?.deltaPct, m12: fc[11]?.deltaPct };
+                        }
+                    }
+                } catch(e) {}
+                const resp = await fetch('/api/report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ simState: simCtx })
+                });
+                if (!resp.ok) {
+                    const errBody = await resp.text();
+                    throw new Error(`HTTP ${resp.status}: ${errBody}`);
+                }
                 const data = await resp.json();
-                content.innerHTML = markdownToHtml(data.report);
+                content.innerHTML = renderConsultingReport(data.report);
                 document.getElementById('reportTimestamp').textContent =
-                    `생성: ${new Date(data.generatedAt).toLocaleString('ko-KR')} | 데이터: ${data.dataTimestamp || 'N/A'}`;
+                    `생성: ${new Date(data.generatedAt).toLocaleString('ko-KR')} | 모델: ${data.model || 'AI'} | 데이터: ${data.dataTimestamp || 'N/A'}`;
             } catch (err) {
-                content.textContent = '리포트 생성 실패: ' + err.message + '\n\nLLM API KEY가 설정되어 있는지 확인하세요. (MOONSHOT / OPENAI / ANTHROPIC)';
+                content.innerHTML = '<div style="padding:30px;text-align:center;">'
+                    + '<div style="font-size:20px;margin-bottom:12px;">⚠️</div>'
+                    + '<div style="color:#ff6b6b;font-size:14px;font-weight:600;margin-bottom:8px;">리포트 생성 실패</div>'
+                    + '<div style="color:#6d8db0;font-size:11px;max-width:400px;margin:0 auto;">' + err.message + '</div>'
+                    + '<div style="color:#4a5568;font-size:10px;margin-top:16px;padding:8px 12px;background:rgba(56,189,248,0.04);border:1px solid #1a2a42;border-radius:4px;display:inline-block;">Vercel 환경변수에 ANTHROPIC_API_KEY 또는 OPENAI_API_KEY 설정 필요</div></div>';
             }
-            btn.textContent = 'AI 리포트';
+            btn.textContent = 'AI분석';
             btn.disabled = false;
         }
 
-        function markdownToHtml(md) {
-            return md
-                .replace(/^### (.+)$/gm, '<h4 style="color:#38bdf8;margin:14px 0 6px;font-size:14px;">$1</h4>')
-                .replace(/^## (.+)$/gm, '<h3 style="color:#14b8a6;margin:18px 0 8px;font-size:16px;border-bottom:1px solid #1a2840;padding-bottom:4px;">$1</h3>')
-                .replace(/^# (.+)$/gm, '<h2 style="color:#e2e8f0;margin:20px 0 10px;font-size:18px;">$1</h2>')
-                .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e2e8f0;">$1</strong>')
-                .replace(/^- (.+)$/gm, '<div style="padding:2px 0 2px 12px;border-left:2px solid #1a2840;">$1</div>')
-                .replace(/^(\d+)\. (.+)$/gm, '<div style="padding:2px 0 2px 12px;">$1. $2</div>')
-                .replace(/\n\n/g, '<br><br>')
+        function renderConsultingReport(md) {
+            // McKinsey/BCG-style consulting report renderer
+            let html = md
+                // Section headers with accent bar
+                .replace(/^#### (.+)$/gm, '<h5 style="color:#a78bfa;margin:12px 0 4px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;font-family:\'JetBrains Mono\',monospace;">$1</h5>')
+                .replace(/^### (.+)$/gm, '<h4 style="color:#38bdf8;margin:16px 0 6px;font-size:13px;font-weight:700;padding-left:10px;border-left:3px solid #38bdf8;">$1</h4>')
+                .replace(/^## (.+)$/gm, '<div style="margin:20px 0 10px;padding:8px 12px;background:linear-gradient(90deg,rgba(56,189,248,0.08),transparent);border-left:3px solid #14b8a6;border-radius:0 4px 4px 0;"><h3 style="color:#e2e8f0;font-size:15px;font-weight:700;margin:0;font-family:\'JetBrains Mono\',monospace;">$1</h3></div>')
+                .replace(/^# (.+)$/gm, '<div style="margin:0 0 16px;padding:12px 0;border-bottom:2px solid #1a2d48;"><h2 style="color:#f0f6ff;font-size:18px;font-weight:800;margin:0;letter-spacing:0.5px;">$1</h2></div>')
+                // Bold with accent
+                .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e8f0ff;">$1</strong>')
+                // Inline code
+                .replace(/`(.+?)`/g, '<code style="background:rgba(56,189,248,0.08);color:#38bdf8;padding:1px 5px;border-radius:2px;font-size:11px;font-family:\'JetBrains Mono\',monospace;">$1</code>')
+                // Bullet points with styled markers
+                .replace(/^- (.+)$/gm, '<div style="display:flex;gap:8px;padding:3px 0 3px 4px;"><span style="color:#38bdf8;font-size:8px;margin-top:5px;flex-shrink:0;">●</span><span>$1</span></div>')
+                // Numbered items
+                .replace(/^(\d+)\. (.+)$/gm, '<div style="display:flex;gap:8px;padding:3px 0 3px 4px;"><span style="color:#14b8a6;font-weight:700;min-width:18px;flex-shrink:0;font-family:\'JetBrains Mono\',monospace;font-size:12px;">$1.</span><span>$2</span></div>')
+                // Arrow patterns (→) highlight
+                .replace(/→/g, '<span style="color:#f59e0b;font-weight:600;"> → </span>')
+                // Percentage highlights
+                .replace(/([+\-]?\d+\.?\d*%)/g, '<span style="font-family:\'JetBrains Mono\',monospace;font-weight:700;color:#4ec9ff;">$1</span>')
+                // Currency highlights
+                .replace(/(₩[\d,]+)/g, '<span style="font-family:\'JetBrains Mono\',monospace;font-weight:600;color:#22c55e;">$1</span>')
+                .replace(/(\$[\d,.]+)/g, '<span style="font-family:\'JetBrains Mono\',monospace;font-weight:600;color:#f59e0b;">$1</span>')
+                .replace(/\n\n/g, '<div style="height:8px;"></div>')
                 .replace(/\n/g, '<br>');
+            return '<div style="font-size:13px;line-height:1.7;color:#b8c8dc;">' + html + '</div>';
         }
+
+        function markdownToHtml(md) { return renderConsultingReport(md); }
 
         function copyReport() {
             const content = document.getElementById('reportContent');
@@ -5434,18 +5495,14 @@
         function forceSimLayout() {
             const popup = document.getElementById('simulationPopup');
             if (!popup) return;
-            // Force popup to flex column
             popup.style.cssText += ';display:flex!important;flex-direction:column!important;overflow:hidden!important;';
-            // Force panel
             const panel = popup.querySelector('.simulation-panel');
             if (panel) panel.style.cssText = 'flex:1 1 0;min-height:0;overflow:hidden;display:flex;flex-direction:column;padding:6px 8px;background:rgba(5,9,16,0.6);';
-            // Force 3-col grid
             const grid = popup.querySelector('.sim-body-3col');
-            if (grid) grid.style.cssText = 'display:grid!important;grid-template-columns:200px 1fr 200px!important;gap:6px;flex:1 1 0;min-height:0;overflow:hidden;';
-            // Force each col
+            if (grid) grid.style.cssText = 'display:grid!important;grid-template-columns:250px 1fr 300px!important;gap:8px;flex:1 1 0;min-height:0;overflow:hidden;';
             const cols = popup.querySelectorAll('.sim-col');
-            cols.forEach(col => { col.style.cssText = 'overflow-y:auto;min-height:0;display:flex;flex-direction:column;gap:5px;'; });
-            console.log('[SIM] forceSimLayout applied:', grid?.style.cssText);
+            cols.forEach(col => { col.style.cssText = 'overflow-y:auto;min-height:0;display:flex;flex-direction:column;gap:6px;padding:4px;'; });
+            console.log('[SIM] forceSimLayout v4 applied:', grid?.style.cssText);
         }
 
         function closeSimulationPopup() {
@@ -5454,12 +5511,13 @@
 
         /* Scenario Presets — macro driver shocks */
         const SIM_PRESETS = {
-            baseline:    { fx: 0,  oil: 0,  ppi: 0,  labor: 0,   rate: 0,    label: '기준 시나리오' },
-            fxShock:     { fx: 10, oil: 3,  ppi: 1,  labor: 0.5, rate: 0.25, label: '환율 급등' },
-            oilSpike:    { fx: 5,  oil: 20, ppi: 3,  labor: 1,   rate: 0.5,  label: '유가 급등' },
-            laborCrunch: { fx: 2,  oil: 5,  ppi: 2,  labor: 8,   rate: 0,    label: '노무비 압박' },
-            rateHike:    { fx: 3,  oil: 2,  ppi: 1,  labor: 0.5, rate: 1.5,  label: '금리 인상' },
-            allShock:    { fx: 8,  oil: 15, ppi: 5,  labor: 5,   rate: 1.0,  label: '복합 충격' }
+            baseline:    { fx: 0,  oil: 0,  ppi: 0,  labor: 0,   rate: 0,    label: '기준 시나리오', recMethod: 'gaussian' },
+            fxShock:     { fx: 10, oil: 3,  ppi: 1,  labor: 0.5, rate: 0.25, label: '환율 급등', recMethod: 'ardl' },
+            oilSpike:    { fx: 5,  oil: 20, ppi: 3,  labor: 1,   rate: 0.5,  label: '유가 급등', recMethod: 'ardl' },
+            laborCrunch: { fx: 2,  oil: 5,  ppi: 2,  labor: 8,   rate: 0,    label: '노무비 압박', recMethod: 'ardl' },
+            rateHike:    { fx: 3,  oil: 2,  ppi: 1,  labor: 0.5, rate: 1.5,  label: '금리 인상', recMethod: 'all' },
+            allShock:    { fx: 8,  oil: 15, ppi: 5,  labor: 5,   rate: 1.0,  label: '복합 충격', recMethod: 'all' },
+            severeWar:   { fx: 12, oil: 30, ppi: 6,  labor: 3,   rate: 1.0,  label: '심각한 전쟁', recMethod: 'lp' }
         };
 
         let _simDebounceTimer = null;
@@ -5475,8 +5533,10 @@
             _simDebounceTimer = setTimeout(() => { runSimulation(); }, 180);
         }
 
+        let _activePresetKey = 'oilSpike';
         function loadPreset(key) {
             const p = SIM_PRESETS[key];
+            _activePresetKey = key;
             document.getElementById('shockFx').value = p.fx;
             document.getElementById('shockOil').value = p.oil;
             document.getElementById('shockPpi').value = p.ppi;
@@ -5485,6 +5545,11 @@
             ['Fx', 'Oil', 'Ppi', 'Labor', 'Rate'].forEach(n => updateSliderLabel(n));
             document.querySelectorAll('.sim-preset-btn').forEach(b => b.classList.remove('active'));
             event.target.classList.add('active');
+            // §18.3 Auto-recommend method per scenario preset
+            if (p.recMethod) {
+                const methodSel = document.getElementById('simMethod');
+                if (methodSel) { methodSel.value = p.recMethod; onMethodChange(); }
+            }
         }
 
         function openMechPopup() {
@@ -5630,32 +5695,29 @@
             badge.textContent = pressure.label;
             badge.style.color = pressure.tone;
             badge.style.borderColor = pressure.tone;
+            badge.style.background = pressure.tone.replace(')', ',0.12)').replace('rgb', 'rgba');
             document.getElementById('simPressureSummary').textContent = pressure.summary;
 
-            // Key metrics — show all methods if 'all'
-            if (method === 'all') {
-                const g = multi.gaussian, a = multi.ardl, l = multi.lp;
-                const fmtDelta = (fc, idx) => fc && fc[idx] ? macroFmt(fc[idx].deltaPct, 2) + '%' : 'N/A';
-                document.getElementById('simDelta3M').innerHTML =
-                    '<span style="color:#38bdf8">' + fmtDelta(g,2) + '</span> / <span style="color:#f59e0b">' + fmtDelta(a,2) + '</span> / <span style="color:#a78bfa">' + fmtDelta(l,2) + '</span>';
-                document.getElementById('simDelta6M').innerHTML =
-                    '<span style="color:#38bdf8">' + fmtDelta(g,5) + '</span> / <span style="color:#f59e0b">' + fmtDelta(a,5) + '</span> / <span style="color:#a78bfa">' + fmtDelta(l,5) + '</span>';
-                document.getElementById('simDelta12M').innerHTML =
-                    '<span style="color:#38bdf8">' + fmtDelta(g,11) + '</span> / <span style="color:#f59e0b">' + fmtDelta(a,11) + '</span> / <span style="color:#a78bfa">' + fmtDelta(l,11) + '</span>';
-            } else {
-                document.getElementById('simDelta3M').textContent = '+' + macroFmt(primaryFC[2].deltaPct, 2) + '%';
-                document.getElementById('simDelta6M').textContent = '+' + macroFmt(primaryFC[5].deltaPct, 2) + '%';
-                document.getElementById('simDelta12M').textContent = '+' + macroFmt(primaryFC[11].deltaPct, 2) + '%';
-            }
-            // Average 12M impact across methods
+            // Key metrics — always show single averaged value per period
+            const fmtKpi = (v) => (v >= 0 ? '+' : '') + macroFmt(v, 2) + '%';
+            const kpiColor = (v) => v > 0 ? '#ff6b00' : v < 0 ? '#22c55e' : '#8cb4d8';
             if (method === 'all' && multi) {
-                const vals = [multi.gaussian, multi.ardl, multi.lp]
-                    .map(fc => fc && fc[11] ? fc[11].deltaPct : null)
-                    .filter(v => v !== null);
-                const avg = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
-                document.getElementById('simAvgImpact').textContent = (avg >= 0 ? '+' : '') + macroFmt(avg, 2) + '%';
-            } else if (primaryFC && primaryFC[11]) {
-                document.getElementById('simAvgImpact').textContent = '+' + macroFmt(primaryFC[11].deltaPct, 2) + '%';
+                const avgAt = (idx) => {
+                    const vals = [multi.gaussian, multi.ardl, multi.lp]
+                        .map(fc => fc && fc[idx] ? fc[idx].deltaPct : null).filter(v => v !== null);
+                    return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+                };
+                const a3 = avgAt(2), a6 = avgAt(5), a12 = avgAt(11);
+                document.getElementById('simDelta3M').innerHTML = '<span style="color:' + kpiColor(a3) + '">' + fmtKpi(a3) + '</span>';
+                document.getElementById('simDelta6M').innerHTML = '<span style="color:' + kpiColor(a6) + '">' + fmtKpi(a6) + '</span>';
+                document.getElementById('simDelta12M').innerHTML = '<span style="color:' + kpiColor(a12) + '">' + fmtKpi(a12) + '</span>';
+                document.getElementById('simAvgImpact').innerHTML = '<span style="color:' + kpiColor(a12) + '">' + fmtKpi(a12) + '</span>';
+            } else {
+                const d3 = primaryFC[2].deltaPct, d6 = primaryFC[5].deltaPct, d12 = primaryFC[11].deltaPct;
+                document.getElementById('simDelta3M').innerHTML = '<span style="color:' + kpiColor(d3) + '">' + fmtKpi(d3) + '</span>';
+                document.getElementById('simDelta6M').innerHTML = '<span style="color:' + kpiColor(d6) + '">' + fmtKpi(d6) + '</span>';
+                document.getElementById('simDelta12M').innerHTML = '<span style="color:' + kpiColor(d12) + '">' + fmtKpi(d12) + '</span>';
+                document.getElementById('simAvgImpact').innerHTML = '<span style="color:' + kpiColor(d12) + '">' + fmtKpi(d12) + '</span>';
             }
 
             // Attribution table
@@ -5675,10 +5737,19 @@
 
             // Model stats
             const models = multi.models;
+            // §10.5/§20.4 Method status badges: estimated / fallback / unavailable
+            const badgeStyle = (c, bg) => `display:inline-block;font-size:8px;padding:1px 5px;border-radius:3px;color:${c};background:${bg};margin-left:4px;font-weight:600;letter-spacing:0.3px;`;
+            const ardlStatus = models.ardl ? `<span style="${badgeStyle('#34d399','rgba(52,211,153,0.15)')}">estimated</span>` : (models.nObs < 20 ? `<span style="${badgeStyle('#ff4d6d','rgba(255,77,109,0.15)')}">unavailable</span>` : `<span style="${badgeStyle('#f59e0b','rgba(245,158,11,0.15)')}">fallback→Gaussian</span>`);
+            const lpStatus = models.lp ? `<span style="${badgeStyle('#34d399','rgba(52,211,153,0.15)')}">estimated</span>` : (models.nObs < 15 ? `<span style="${badgeStyle('#ff4d6d','rgba(255,77,109,0.15)')}">unavailable</span>` : `<span style="${badgeStyle('#f59e0b','rgba(245,158,11,0.15)')}">fallback→Gaussian</span>`);
             let statsHTML = '<strong>추정 구간</strong>: ' + pLabel + ' (n=' + models.nObs + ')';
             if (models.ardl) statsHTML += ' &nbsp;|&nbsp; <strong>ARDL</strong> R²=' + macroFmt(models.ardl.r2, 3);
+            statsHTML += ' ' + ardlStatus;
             if (models.lp && models.lp.coeffs[6]) statsHTML += ' &nbsp;|&nbsp; <strong>LP(6M)</strong> R²=' + macroFmt(models.lp.coeffs[6].r2, 3);
+            statsHTML += ' ' + lpStatus;
             if (method === 'all') statsHTML += ' &nbsp;|&nbsp; <span style="color:#38bdf8">■</span> Gaussian <span style="color:#f59e0b">■</span> ARDL <span style="color:#a78bfa">■</span> LP';
+            // §20.4 Active method fallback disclosure
+            const actualMethod = (method === 'ardl' && !models.ardl) || (method === 'lp' && !models.lp) ? 'gaussian (fallback)' : method;
+            if (actualMethod.includes('fallback')) statsHTML += ` &nbsp;|&nbsp; <span style="color:#f59e0b;font-size:9px;">⚠ ${method.toUpperCase()} 추정 불가 → Gaussian fallback</span>`;
             document.getElementById('modelStatsBox').innerHTML = statsHTML;
 
             document.getElementById('simResults').classList.add('active');
@@ -5988,42 +6059,55 @@
             if (el) el.textContent = text;
         }
 
+        // ── 유형별 건축공사비 기초 데이터 ──
+        // 출처: 대한건설협회 실적공사비(2024), 한국건설기술연구원 KICT 표준단가,
+        //       국토교통부 건축공사비 고시(2024.Q4), ECOS 901Y062 건설공사비지수
+        // baseline: 2021.01 기준 만원/평 (실적공사비 기반 역추정)
+        // materialPct/laborPct: 국토교통부 건축공사비 세부 구성비 (건축유형별 차등)
+        // materials: 한국건설기술연구원 자재투입비중 (유형별 표준시방서 기반)
+        // laborSensitivity: 대한건설협회 노무비 탄력성 계수 (공종복잡도 반영)
         const PYEONG_TYPES = {
             apt: {
-                simKey: 'residentialUnit', label: '아파트', baseline: 780,
+                simKey: 'residentialUnit', label: '아파트', baseline: 710,
                 materialPct: 42, laborPct: 33, overheadPct: 25,
                 materials: { steel: 12, concrete: 18, finishing: 20, equipment: 18, other: 32 },
-                laborSensitivity: 1.05, steelHeavy: false
+                laborSensitivity: 1.05, steelHeavy: false,
+                source: '대한건설협회 실적공사비, RC구조 25층 기준'
             },
             officetel: {
-                simKey: 'hospitalityUnit', label: '오피스텔', baseline: 850,
+                simKey: 'hospitalityUnit', label: '오피스텔', baseline: 840,
                 materialPct: 44, laborPct: 31, overheadPct: 25,
                 materials: { steel: 10, concrete: 16, finishing: 22, equipment: 22, other: 30 },
-                laborSensitivity: 0.98, steelHeavy: false
+                laborSensitivity: 0.98, steelHeavy: false,
+                source: '국토부 건축공사비, 업무/숙박시설 기준'
             },
             commercial: {
-                simKey: 'infraUnit', label: '상가', baseline: 680,
+                simKey: 'infraUnit', label: '상가', baseline: 645,
                 materialPct: 40, laborPct: 34, overheadPct: 26,
                 materials: { steel: 14, concrete: 18, finishing: 16, equipment: 14, other: 38 },
-                laborSensitivity: 1.08, steelHeavy: false
+                laborSensitivity: 1.08, steelHeavy: false,
+                source: '대한건설협회, 근린생활/판매시설 5층 기준'
             },
             office: {
-                simKey: 'officeUnit', label: '오피스', baseline: 950,
+                simKey: 'officeUnit', label: '오피스', baseline: 770,
                 materialPct: 46, laborPct: 30, overheadPct: 24,
                 materials: { steel: 22, concrete: 12, finishing: 14, equipment: 22, other: 30 },
-                laborSensitivity: 0.92, steelHeavy: true
+                laborSensitivity: 0.92, steelHeavy: true,
+                source: 'KICT 표준단가, SRC구조 업무시설 20층 기준'
             },
             knowledge: {
-                simKey: 'advancedUnit', label: '지산센터', baseline: 520,
+                simKey: 'advancedUnit', label: '지산센터', baseline: 510,
                 materialPct: 45, laborPct: 30, overheadPct: 25,
                 materials: { steel: 20, concrete: 16, finishing: 12, equipment: 15, other: 37 },
-                laborSensitivity: 0.90, steelHeavy: true
+                laborSensitivity: 0.90, steelHeavy: true,
+                source: '국토부 고시, 지식산업센터 PC+S구조 기준'
             },
             logistics: {
                 simKey: 'logisticsUnit', label: '물류센터', baseline: 380,
                 materialPct: 52, laborPct: 25, overheadPct: 23,
                 materials: { steel: 38, concrete: 6, finishing: 6, equipment: 11, other: 39 },
-                laborSensitivity: 0.75, steelHeavy: true
+                laborSensitivity: 0.75, steelHeavy: true,
+                source: '대한건설협회, S구조 물류창고 기준 (냉동/냉장 제외)'
             }
         };
 
@@ -6047,8 +6131,9 @@
             document.getElementById('modalHigh').textContent = high.toLocaleString() + '만원';
             document.getElementById('modalLow').textContent = low.toLocaleString() + '만원';
             document.getElementById('modalAvg').textContent = avg.toLocaleString() + '만원';
-            document.getElementById('modalVol').textContent =
-                '재료 ' + cfg.materialPct + '% / 노무 ' + cfg.laborPct + '% / 경비 ' + (cfg.overheadPct || 25) + '%';
+            document.getElementById('modalVol').innerHTML =
+                '<span style="color:#4ec9ff">재료 ' + cfg.materialPct + '%</span> / <span style="color:#f59e0b">노무 ' + cfg.laborPct + '%</span> / <span style="color:#6b7280">경비 ' + (cfg.overheadPct || 25) + '%</span>';
+            document.getElementById('modalVol').style.fontSize = '13px';
             const corrSection = document.getElementById('modalCorrelationSection');
             if (corrSection) {
                 corrSection.style.display = 'block';
@@ -6059,32 +6144,32 @@
                     const matColors = { steel: '#38bdf8', concrete: '#a78bfa', finishing: '#f59e0b', equipment: '#22c55e', other: '#6b7280' };
                     const matLabels = { steel: '철강·철근', concrete: '콘크리트·시멘트', finishing: '마감재', equipment: '설비(전기·기계)', other: '기타' };
                     let html = '<div style="width:100%">';
-                    html += '<div style="font-size:9px;color:#8ea9cc;margin-bottom:4px;">직접공사비 구성</div>';
-                    html += '<div style="display:flex;height:18px;border-radius:4px;overflow:hidden;margin-bottom:8px;">';
-                    html += '<div style="width:' + cfg.materialPct + '%;background:#38bdf8;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#0a0f18;">재료 ' + cfg.materialPct + '%</div>';
-                    html += '<div style="width:' + cfg.laborPct + '%;background:#f59e0b;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#0a0f18;">노무 ' + cfg.laborPct + '%</div>';
-                    html += '<div style="width:' + (cfg.overheadPct || 25) + '%;background:#6b7280;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#e5eefc;">경비 ' + (cfg.overheadPct || 25) + '%</div>';
+                    html += '<div style="font-size:11px;color:#8cb4d8;margin-bottom:6px;font-weight:600;font-family:\'JetBrains Mono\',monospace;letter-spacing:0.5px;">직접공사비 구성</div>';
+                    html += '<div style="display:flex;height:26px;border-radius:4px;overflow:hidden;margin-bottom:12px;">';
+                    html += '<div style="width:' + cfg.materialPct + '%;background:linear-gradient(135deg,#2aa5d4,#4ec9ff);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0a0f18;">재료 ' + cfg.materialPct + '%</div>';
+                    html += '<div style="width:' + cfg.laborPct + '%;background:linear-gradient(135deg,#d48a0a,#f5b642);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0a0f18;">노무 ' + cfg.laborPct + '%</div>';
+                    html += '<div style="width:' + (cfg.overheadPct || 25) + '%;background:linear-gradient(135deg,#5a6370,#7d8694);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#e5eefc;">경비 ' + (cfg.overheadPct || 25) + '%</div>';
                     html += '</div>';
-                    html += '<div style="font-size:9px;color:#8ea9cc;margin-bottom:4px;">재료비 세부 구성 (재료비 ' + cfg.materialPct + '% 중)</div>';
+                    html += '<div style="font-size:10px;color:#6d8db0;margin-bottom:6px;font-family:\'JetBrains Mono\',monospace;">재료비 세부 구성 (재료비 ' + cfg.materialPct + '% 중)</div>';
                     Object.entries(m).forEach(([k, pct]) => {
                         const c = matColors[k] || '#6b7280';
-                        html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">';
-                        html += '<span style="font-size:8px;color:#8ea9cc;min-width:80px;">' + (matLabels[k] || k) + '</span>';
-                        html += '<div style="flex:1;height:12px;background:rgba(255,255,255,0.04);border-radius:3px;overflow:hidden;">';
-                        html += '<div style="width:' + pct + '%;height:100%;background:' + c + ';border-radius:3px;"></div></div>';
-                        html += '<span style="font-size:9px;font-weight:700;color:' + c + ';min-width:28px;text-align:right;">' + pct + '%</span>';
+                        html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">';
+                        html += '<span style="font-size:10px;color:#8ea9cc;min-width:90px;font-family:\'JetBrains Mono\',monospace;">' + (matLabels[k] || k) + '</span>';
+                        html += '<div style="flex:1;height:16px;background:rgba(255,255,255,0.04);border-radius:3px;overflow:hidden;">';
+                        html += '<div style="width:' + pct + '%;height:100%;background:' + c + ';border-radius:3px;opacity:0.85;"></div></div>';
+                        html += '<span style="font-size:11px;font-weight:700;color:' + c + ';min-width:32px;text-align:right;font-family:\'JetBrains Mono\',monospace;">' + pct + '%</span>';
                         html += '</div>';
                     });
-                    html += '<div style="margin-top:8px;padding:6px 8px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:5px;font-size:9px;color:#d4a86a;">';
+                    html += '<div style="margin-top:10px;padding:8px 10px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:5px;font-size:10px;color:#d4a86a;line-height:1.5;">';
                     html += '<strong>노무비 민감도 ' + (cfg.laborSensitivity || 1.0).toFixed(2) + '×</strong> — ';
                     if (cfg.laborSensitivity > 1.0) {
-                        html += '마감공정 多, 다공종 투입 → 노임 상승에 <span style="color:#ff4d6d">민감</span>';
+                        html += '마감공정 多, 다공종 투입 → 노임 상승에 <span style="color:#ff4d6d;font-weight:700;">민감</span>';
                     } else if (cfg.laborSensitivity < 0.85) {
-                        html += '철골조립 위주, 공종 단순 → 노임 영향 <span style="color:#00d084">상대적 적음</span>';
+                        html += '철골조립 위주, 공종 단순 → 노임 영향 <span style="color:#00d084;font-weight:700;">상대적 적음</span>';
                     } else {
                         html += '표준 수준의 노무비 민감도';
                     }
-                    html += '<br>5년간 건설노임 연평균 +4.1% 상승 (보통인부 +22.8%, 형틀목공 +26.3%)';
+                    html += '<br>5년간 건설노임 연평균 <span style="color:#ff6b00;">+4.1%</span> 상승 (보통인부 +22.8%, 형틀목공 +26.3%)';
                     html += '</div>';
                     html += '</div>';
                     barsEl.innerHTML = html;
@@ -6093,6 +6178,10 @@
             if (chartLibraryAvailable) {
                 const canvas = document.getElementById('modalChart');
                 if (modalChart) modalChart.destroy();
+                const ctx = canvas.getContext('2d');
+                const grad = ctx.createLinearGradient(0, 0, 0, 240);
+                grad.addColorStop(0, 'rgba(78, 201, 255, 0.18)');
+                grad.addColorStop(1, 'rgba(78, 201, 255, 0.01)');
                 modalChart = new Chart(canvas, {
                     type: 'line',
                     data: {
@@ -6101,17 +6190,27 @@
                             label: cfg.label + ' (만원/평)',
                             data: vals,
                             borderColor: '#4ec9ff',
-                            backgroundColor: 'rgba(78, 201, 255, 0.08)',
+                            backgroundColor: grad,
                             borderWidth: 2, fill: true, tension: 0.3,
-                            pointRadius: 0, pointHoverRadius: 4
+                            pointRadius: 0, pointHoverRadius: 5,
+                            pointHoverBackgroundColor: '#4ec9ff'
                         }]
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(10,18,30,0.92)',
+                                borderColor: '#2a3a52', borderWidth: 1,
+                                titleFont: { family: "'JetBrains Mono', monospace", size: 11 },
+                                bodyFont: { family: "'JetBrains Mono', monospace", size: 12 },
+                                callbacks: { label: item => item.parsed.y.toLocaleString() + ' 만원/평' }
+                            }
+                        },
                         scales: {
-                            x: { ticks: { color: '#6a829f', font: { size: 10 }, maxTicksLimit: 10 }, grid: { color: 'rgba(255,255,255,0.04)' } },
-                            y: { ticks: { color: '#6a829f', font: { size: 10 }, callback: v => v.toLocaleString() }, grid: { color: 'rgba(255,255,255,0.04)' } }
+                            x: { ticks: { color: '#6a829f', font: { size: 10, family: "'JetBrains Mono', monospace" }, maxTicksLimit: 10 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                            y: { ticks: { color: '#6a829f', font: { size: 10, family: "'JetBrains Mono', monospace" }, callback: v => v.toLocaleString() }, grid: { color: 'rgba(255,255,255,0.05)' } }
                         }
                     }
                 });
@@ -6132,13 +6231,13 @@
             const icons = { apt: '🏢', officetel: '🏨', commercial: '🏬', office: '🏛️', knowledge: '🏭', logistics: '📦' };
             const colors = { apt: '#4ec9ff', officetel: '#a78bfa', commercial: '#f59e0b', office: '#22c55e', knowledge: '#fb7185', logistics: '#38bdf8' };
 
-            let html = '<table style="width:100%;border-collapse:collapse;font-size:10px;">';
+            let html = '<table style="width:100%;border-collapse:collapse;font-size:11px;">';
             html += '<thead><tr style="border-bottom:1px solid #1a2a42;">';
-            html += '<th style="text-align:left;padding:4px 2px;color:#5a7a9a;font-size:9px;">유형</th>';
-            html += '<th style="text-align:right;padding:4px 2px;color:#5a7a9a;font-size:9px;">현행(만/평)</th>';
-            html += '<th style="text-align:right;padding:4px 2px;color:#38bdf8;font-size:9px;">3M</th>';
-            html += '<th style="text-align:right;padding:4px 2px;color:#f59e0b;font-size:9px;">6M</th>';
-            html += '<th style="text-align:right;padding:4px 2px;color:#fb7185;font-size:9px;">12M</th>';
+            html += '<th style="text-align:left;padding:5px 3px;color:#6a8aaa;font-size:10px;">유형</th>';
+            html += '<th style="text-align:right;padding:5px 3px;color:#6a8aaa;font-size:10px;">현행(만/평)</th>';
+            html += '<th style="text-align:right;padding:5px 3px;color:#38bdf8;font-size:10px;">3M</th>';
+            html += '<th style="text-align:right;padding:5px 3px;color:#f59e0b;font-size:10px;">6M</th>';
+            html += '<th style="text-align:right;padding:5px 3px;color:#fb7185;font-size:10px;">12M</th>';
             html += '</tr></thead><tbody>';
 
             Object.entries(PYEONG_TYPES).forEach(([key, cfg]) => {
@@ -6154,10 +6253,10 @@
 
                 html += `<tr style="border-bottom:1px solid rgba(26,42,66,0.5);cursor:pointer;" onclick="showPyeongDetail('${key}')">
                     <td style="padding:5px 2px;"><span style="font-size:12px;">${icons[key]}</span> <span style="color:${c};font-weight:600;">${cfg.label}</span></td>
-                    <td style="text-align:right;padding:5px 2px;color:#8ea9cc;font-family:'JetBrains Mono',monospace;">${val.toLocaleString()}</td>
-                    <td style="text-align:right;padding:5px 2px;font-family:'JetBrains Mono',monospace;">${fmtWon(won3)}</td>
-                    <td style="text-align:right;padding:5px 2px;font-family:'JetBrains Mono',monospace;">${fmtWon(won6)}</td>
-                    <td style="text-align:right;padding:5px 2px;font-family:'JetBrains Mono',monospace;">${fmtWon(won12)}</td>
+                    <td style="text-align:right;padding:5px 2px;color:#8ea9cc;font-family:'IBM Plex Mono',Consolas,monospace;">${val.toLocaleString()}</td>
+                    <td style="text-align:right;padding:5px 2px;font-family:'IBM Plex Mono',Consolas,monospace;">${fmtWon(won3)}</td>
+                    <td style="text-align:right;padding:5px 2px;font-family:'IBM Plex Mono',Consolas,monospace;">${fmtWon(won6)}</td>
+                    <td style="text-align:right;padding:5px 2px;font-family:'IBM Plex Mono',Consolas,monospace;">${fmtWon(won12)}</td>
                 </tr>`;
             });
             html += '</tbody></table>';
@@ -6165,18 +6264,38 @@
             const avgImpact = d12;
             html += `<div style="margin-top:6px;padding:6px 8px;background:rgba(255,179,71,0.06);border:1px solid rgba(255,179,71,0.2);border-radius:5px;text-align:center;">
                 <div style="font-size:8px;color:#ffb347;text-transform:uppercase;letter-spacing:0.5px;">건설공사비 평균 영향 (12M)</div>
-                <div style="font-size:16px;font-weight:700;font-family:'JetBrains Mono',monospace;color:${avgImpact > 0 ? '#ff6b00' : '#22c55e'};">${avgImpact >= 0 ? '+' : ''}${avgImpact.toFixed(2)}%</div>
+                <div style="font-size:16px;font-weight:700;font-family:'IBM Plex Mono',Consolas,monospace;color:${avgImpact > 0 ? '#ff6b00' : '#22c55e'};">${avgImpact >= 0 ? '+' : ''}${avgImpact.toFixed(2)}%</div>
                 <div style="font-size:8px;color:#5a7a9a;">재료비·노무비 민감도 반영</div>
             </div>`;
             container.innerHTML = html;
         }
 
+        // ── PF금리 등급별 기초 데이터 ──
+        // 출처: ECOS 817Y002 회사채 수익률(AA-/BBB-), 금융투자협회 채권시가평가,
+        //       한국신용평가 부동산PF 스프레드 리포트(2024), 한국주택금융공사 MBS 금리
+        // baseSpread: 기준금리 대비 가산금리 (회사채 스프레드 + PF 프리미엄)
+        // seniorDisc/mezzDisc/juniorDisc: 선/중/후순위 가산금리 차등 (한국주택금융공사 기준)
         const PF_GRADES = [
-            { grade: 'AA-', label: 'AA-', baseSpread: 1.8, color: '#22c55e', desc: '우량 시행사, A급 입지' },
-            { grade: 'A', label: 'A', baseSpread: 2.5, color: '#4ec9ff', desc: '일반 시행사, 수도권' },
-            { grade: 'BBB+', label: 'BBB+', baseSpread: 3.8, color: '#f59e0b', desc: '중소 시행사, 광역시' },
-            { grade: 'BBB0', label: 'BBB0', baseSpread: 5.2, color: '#fb7185', desc: '고위험 시행사, 지방' },
-            { grade: 'BBB-', label: 'BBB- (Neg)', baseSpread: 7.0, color: '#ff4d6d', desc: '부실 우려, 워치리스트' }
+            { grade: 'AA-', label: 'AA-', baseSpread: 1.8, color: '#22c55e',
+              desc: '우량 시행사, A급 입지',
+              seniorDisc: -0.3, mezzDisc: 1.2, juniorDisc: 3.5,
+              source: '회사채AA- 스프레드 + PF가산 0.5%p', ltv: '50~60%', dscr: '≥1.5' },
+            { grade: 'A', label: 'A', baseSpread: 2.5, color: '#4ec9ff',
+              desc: '일반 시행사, 수도권',
+              seniorDisc: -0.2, mezzDisc: 1.5, juniorDisc: 4.0,
+              source: '회사채A 스프레드 + PF가산 0.8%p', ltv: '60~65%', dscr: '≥1.3' },
+            { grade: 'BBB+', label: 'BBB+', baseSpread: 3.8, color: '#f59e0b',
+              desc: '중소 시행사, 광역시',
+              seniorDisc: -0.1, mezzDisc: 2.0, juniorDisc: 5.5,
+              source: '회사채BBB 스프레드 + PF가산 1.5%p', ltv: '65~70%', dscr: '≥1.1' },
+            { grade: 'BBB0', label: 'BBB0', baseSpread: 5.2, color: '#fb7185',
+              desc: '고위험 시행사, 지방',
+              seniorDisc: 0.0, mezzDisc: 2.5, juniorDisc: 7.0,
+              source: '회사채BBB- 스프레드 + PF가산 2.0%p', ltv: '70~75%', dscr: '≥1.0' },
+            { grade: 'BBB-', label: 'BBB- (Neg)', baseSpread: 7.0, color: '#ff4d6d',
+              desc: '부실 우려, 워치리스트',
+              seniorDisc: 0.5, mezzDisc: 3.5, juniorDisc: 9.0,
+              source: 'High Yield + 사업위험 가산', ltv: '75~80%', dscr: '<1.0' }
         ];
 
         function renderPfImpact() {
@@ -6204,8 +6323,8 @@
                 const impactColor = totalDelta > 0 ? '#ff6b00' : totalDelta < 0 ? '#22c55e' : '#5a7a9a';
                 const barW = Math.min(100, Math.round(Math.abs(totalDelta) / 2.0 * 100));
 
-                html += `<div class="re-impact-card">
-                    <div style="font-size:11px;font-weight:800;color:${pf.color};min-width:42px;text-align:center;font-family:'JetBrains Mono',monospace;">${pf.label}</div>
+                html += `<div class="re-impact-card" onclick="showPfDetailPopup('${pf.grade}', ${baseRate}, ${rateShock}, ${delta12})" style="cursor:pointer;" title="클릭: 선/중/후순위 금리 상세">
+                    <div style="font-size:12px;font-weight:800;color:${pf.color};min-width:48px;text-align:center;font-family:'IBM Plex Mono',Consolas,monospace;">${pf.label}</div>
                     <div class="re-impact-info">
                         <div class="re-impact-name">${pf.desc}</div>
                         <div class="re-impact-baseline">현행 ${currentPfRate.toFixed(1)}% → ${newPfRate.toFixed(1)}%</div>
@@ -6213,7 +6332,7 @@
                     </div>
                     <div class="re-impact-delta" style="color:${impactColor};">
                         <div>${totalDelta >= 0 ? '+' : ''}${totalDelta.toFixed(2)}%p</div>
-                        <div style="font-size:9px;color:#5a7a9a;">금리변동</div>
+                        <div style="font-size:10px;color:#5a7a9a;">금리변동</div>
                     </div>
                 </div>`;
             });
@@ -6221,10 +6340,110 @@
             const avgRate = PF_GRADES.reduce((s, pf) => s + (baseRate + pf.baseSpread), 0) / PF_GRADES.length;
             html += `<div style="margin-top:6px;padding:6px 8px;background:rgba(78,201,255,0.06);border:1px solid rgba(78,201,255,0.2);border-radius:5px;text-align:center;">
                 <div style="font-size:8px;color:#4ec9ff;text-transform:uppercase;letter-spacing:0.5px;">PF 평균 금리</div>
-                <div style="font-size:14px;font-weight:700;font-family:'JetBrains Mono',monospace;color:#4ec9ff;">${avgRate.toFixed(1)}%</div>
+                <div style="font-size:14px;font-weight:700;font-family:'IBM Plex Mono',Consolas,monospace;color:#4ec9ff;">${avgRate.toFixed(1)}%</div>
                 <div style="font-size:8px;color:#5a7a9a;">기준금리 ${baseRate.toFixed(2)}% + 등급별 가산금리</div>
             </div>`;
             container.innerHTML = html;
+        }
+
+        function showPfDetailPopup(gradeKey, baseRate, rateShock, delta12) {
+            const pf = PF_GRADES.find(p => p.grade === gradeKey);
+            if (!pf) return;
+
+            const currentPfRate = baseRate + pf.baseSpread;
+            const costImpact = delta12 * 0.15;
+            const riskPremium = delta12 > 0 ? delta12 * pf.baseSpread * 0.08 : delta12 * pf.baseSpread * 0.03;
+            const totalDelta = rateShock + riskPremium + costImpact;
+
+            // 선/중/후순위 금리 계산
+            const seniorRate = currentPfRate + pf.seniorDisc + totalDelta;
+            const mezzRate = currentPfRate + pf.mezzDisc + totalDelta;
+            const juniorRate = currentPfRate + pf.juniorDisc + totalDelta;
+
+            const seniorPre = currentPfRate + pf.seniorDisc;
+            const mezzPre = currentPfRate + pf.mezzDisc;
+            const juniorPre = currentPfRate + pf.juniorDisc;
+
+            const fmtRate = (v) => v.toFixed(2) + '%';
+            const fmtDelta = (v) => (v >= 0 ? '+' : '') + v.toFixed(2) + '%p';
+            const deltaColor = (v) => v > 0 ? '#ff6b00' : v < 0 ? '#22c55e' : '#8cb4d8';
+
+            const trancheRow = (name, emoji, pre, post, disc, ltvRange, dscrVal, barColor) => {
+                const delta = post - pre;
+                const barW = Math.min(100, Math.round(post / 15 * 100));
+                return `
+                <div style="padding:10px 12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:6px;margin-bottom:6px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                        <div style="font-size:12px;font-weight:700;color:#e2e8f0;">${emoji} ${name}</div>
+                        <div style="font-size:14px;font-weight:800;font-family:'IBM Plex Mono',Consolas,monospace;color:${barColor};">${fmtRate(post)}</div>
+                    </div>
+                    <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:3px;margin-bottom:6px;">
+                        <div style="height:100%;width:${barW}%;background:linear-gradient(90deg,${barColor},${barColor}88);border-radius:3px;transition:width 0.4s;"></div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:9px;color:#5a7a9a;">
+                        <div>변동 전: <span style="color:#8cb4d8;">${fmtRate(pre)}</span></div>
+                        <div>변동: <span style="color:${deltaColor(delta)};">${fmtDelta(delta)}</span></div>
+                        <div>가산: <span style="color:#8cb4d8;">${disc >= 0 ? '+' : ''}${disc.toFixed(1)}%p</span></div>
+                    </div>
+                </div>`;
+            };
+
+            const popup = document.createElement('div');
+            popup.id = 'pfDetailPopup';
+            popup.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:10100;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);';
+            popup.onclick = (e) => { if (e.target === popup) popup.remove(); };
+
+            popup.innerHTML = `
+            <div style="background:linear-gradient(145deg,#0a1628,#0e1f35);border:1px solid rgba(78,201,255,0.15);border-radius:10px;width:420px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+                <div style="padding:14px 16px;border-bottom:1px solid rgba(78,201,255,0.1);display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <div style="font-size:8px;color:${pf.color};text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">PF Tranche Analysis</div>
+                        <div style="font-size:15px;font-weight:800;color:#f0f6ff;font-family:'IBM Plex Mono',Consolas,monospace;">
+                            <span style="color:${pf.color};">${pf.label}</span> 등급 선/중/후순위 금리
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('pfDetailPopup').remove()" style="background:none;border:1px solid rgba(255,255,255,0.1);color:#8cb4d8;font-size:14px;cursor:pointer;border-radius:4px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;">✕</button>
+                </div>
+
+                <div style="padding:12px 16px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px;">
+                        <div style="padding:8px;background:rgba(78,201,255,0.05);border:1px solid rgba(78,201,255,0.1);border-radius:5px;text-align:center;">
+                            <div style="font-size:7px;color:#5a7a9a;text-transform:uppercase;letter-spacing:0.5px;">기준금리</div>
+                            <div style="font-size:14px;font-weight:700;color:#4ec9ff;font-family:'IBM Plex Mono',Consolas,monospace;">${fmtRate(baseRate)}</div>
+                        </div>
+                        <div style="padding:8px;background:rgba(78,201,255,0.05);border:1px solid rgba(78,201,255,0.1);border-radius:5px;text-align:center;">
+                            <div style="font-size:7px;color:#5a7a9a;text-transform:uppercase;letter-spacing:0.5px;">등급 스프레드</div>
+                            <div style="font-size:14px;font-weight:700;color:${pf.color};font-family:'IBM Plex Mono',Consolas,monospace;">+${pf.baseSpread.toFixed(1)}%p</div>
+                        </div>
+                        <div style="padding:8px;background:rgba(78,201,255,0.05);border:1px solid rgba(78,201,255,0.1);border-radius:5px;text-align:center;">
+                            <div style="font-size:7px;color:#5a7a9a;text-transform:uppercase;letter-spacing:0.5px;">시뮬 변동</div>
+                            <div style="font-size:14px;font-weight:700;color:${deltaColor(totalDelta)};font-family:'IBM Plex Mono',Consolas,monospace;">${fmtDelta(totalDelta)}</div>
+                        </div>
+                    </div>
+
+                    <div style="font-size:9px;color:#5a7a9a;margin-bottom:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);">TRANCHE BREAKDOWN</div>
+
+                    ${trancheRow('선순위 (Senior)', '🟢', seniorPre, seniorRate, pf.seniorDisc, pf.ltv, pf.dscr, '#22c55e')}
+                    ${trancheRow('중순위 (Mezzanine)', '🟡', mezzPre, mezzRate, pf.mezzDisc, pf.ltv, pf.dscr, '#f59e0b')}
+                    ${trancheRow('후순위 (Junior/Equity)', '🔴', juniorPre, juniorRate, pf.juniorDisc, pf.ltv, pf.dscr, '#ff4d6d')}
+
+                    <div style="margin-top:8px;padding:8px 10px;background:rgba(20,184,166,0.06);border:1px solid rgba(20,184,166,0.15);border-radius:5px;">
+                        <div style="font-size:8px;color:#14b8a6;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">산출 근거</div>
+                        <div style="font-size:9px;color:#8cb4d8;line-height:1.5;">
+                            <div>• 기준: ${pf.source}</div>
+                            <div>• LTV: ${pf.ltv} / DSCR: ${pf.dscr}</div>
+                            <div>• 선순위 = 기준금리(${fmtRate(baseRate)}) + 등급스프레드(${pf.baseSpread}%p) + 선순위할인(${pf.seniorDisc > 0 ? '+' : ''}${pf.seniorDisc}%p)</div>
+                            <div>• 중순위 = 기준금리 + 등급스프레드 + 메자닌가산(+${pf.mezzDisc}%p)</div>
+                            <div>• 후순위 = 기준금리 + 등급스프레드 + 후순위가산(+${pf.juniorDisc}%p)</div>
+                            <div style="margin-top:4px;color:#5a7a9a;">출처: ECOS 회사채 수익률, 한국신용평가 PF 리포트, 한국주택금융공사</div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+            const existing = document.getElementById('pfDetailPopup');
+            if (existing) existing.remove();
+            document.body.appendChild(popup);
         }
 
         const INDICATOR_EXPLAIN = {
@@ -6408,14 +6627,52 @@
                 </div>`;
             });
 
-            // Target summary
+            // §20.6.2 Period chip + method chip header
+            const periodLabel = ANALYSIS_PERIODS[currentAnalysisPeriod]?.label || currentAnalysisPeriod;
+            const methodLabels = { gaussian: 'Gaussian IRF', ardl: 'ARDL-OLS', lp: 'Local Projections', all: 'ALL 3 Methods' };
+            const methodLabel = methodLabels[currentSimMethod] || currentSimMethod;
+            const presetLabel = SIM_PRESETS[_activePresetKey]?.label || '';
+            const chipStyle = 'display:inline-block;font-size:8px;padding:2px 7px;border-radius:4px;margin:0 3px;font-weight:600;letter-spacing:0.3px;';
+            html += `<div style="padding:6px 8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;border-bottom:1px solid rgba(56,189,248,0.1);">
+                <span style="${chipStyle}color:#38bdf8;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.25);">${presetLabel}</span>
+                <span style="${chipStyle}color:#f59e0b;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);">기간: ${periodLabel}</span>
+                <span style="${chipStyle}color:#a78bfa;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.25);">방법론: ${methodLabel}</span>
+            </div>`;
+
+            // §11.5/§11.6 Cost-axis vs demand-axis separation
+            const costDrivers = ['oil', 'fx', 'ppi', 'importPrice', 'steel', 'cement', 'labor'];
+            const demandDrivers = ['policyRate', 'us10y', 'vix'];
+            const costImpact = driverData.filter(d => costDrivers.includes(d.key)).reduce((s, d) => s + d.impact, 0);
+            const demandImpact = driverData.filter(d => demandDrivers.includes(d.key)).reduce((s, d) => s + d.impact, 0);
+            // §15 demand-side feasibility impact (rate shock → absorption)
+            const rateShock = shocks.policyRate || 0;
+            const feasibilityDelta = rateShock > 0 ? -(rateShock * 5.5 + Math.abs(totalImpact) * 0.8) : rateShock * 2.0;
+
+            // Target summary with axis separation
             const range = correlationMonths.length > 0
                 ? `${correlationMonths[0]} ~ ${correlationMonths[correlationMonths.length - 1]}` : '시뮬레이션';
             const totalColor = totalImpact > 0 ? '#ff6b00' : totalImpact < 0 ? '#22c55e' : '#8ea9cc';
+            const feasColor = feasibilityDelta < 0 ? '#a78bfa' : '#34d399';
             html += `<div class="mech-dyn-target">
-                <div class="mech-dyn-target-label">건설공사비 총 영향 (12M)</div>
-                <div class="mech-dyn-target-val" style="color:${totalColor};">${totalImpact >= 0 ? '+' : ''}${macroFmt(totalImpact, 2)}%</div>
-                <div class="mech-dyn-target-sub">${driverData.filter(d => Math.abs(d.impact) > 0.01).length}개 변수 활성 | 분석 기간: ${range}</div>
+                <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+                    <div style="flex:1;min-width:120px;">
+                        <div class="mech-dyn-target-label" style="color:#fb7185;">원가 축 — 건설공사비 (12M)</div>
+                        <div class="mech-dyn-target-val" style="color:${totalColor};">${totalImpact >= 0 ? '+' : ''}${macroFmt(totalImpact, 2)}%</div>
+                        <div class="mech-dyn-target-sub" style="font-size:9px;color:#6a829f;">직접원가 ${costImpact >= 0 ? '+' : ''}${macroFmt(costImpact, 2)}% | 금융채널 ${demandImpact >= 0 ? '+' : ''}${macroFmt(demandImpact, 3)}%</div>
+                    </div>
+                    <div style="flex:1;min-width:120px;">
+                        <div class="mech-dyn-target-label" style="color:#a78bfa;">사업성 축 — 수요/흡수 (12M)</div>
+                        <div class="mech-dyn-target-val" style="color:${feasColor};font-size:18px;">${feasibilityDelta >= 0 ? '+' : ''}${macroFmt(feasibilityDelta, 1)}%</div>
+                        <div class="mech-dyn-target-sub" style="font-size:9px;color:#6a829f;">금리↑ → 수요↓ → 미분양·사업성</div>
+                    </div>
+                </div>
+                <div class="mech-dyn-target-sub" style="margin-top:6px;">${driverData.filter(d => Math.abs(d.impact) > 0.01).length}개 변수 활성 | 분석 기간: ${range}</div>
+            </div>`;
+
+            // §11.6/§20.4 Path-end vs headline total footnote
+            html += `<div style="padding:5px 8px;font-size:8px;color:#4a6a8a;line-height:1.5;border-top:1px solid rgba(56,189,248,0.08);">
+                <span style="color:#f59e0b;">⚠ Disclosure:</span> 원가 축과 사업성 축은 서로 다른 결과 변수입니다. 수요 둔화는 원가를 상쇄하지 않으며 미분양·사업성 악화로 별도 반영됩니다.
+                Path-end contribution은 개별 경로 종착 기여이며, headline total은 누적·정규화 총효과이므로 직접 합산하지 않습니다.
             </div>`;
 
             container.innerHTML = html;

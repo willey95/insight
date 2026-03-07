@@ -1058,6 +1058,10 @@ async function buildHistoryPayload() {
         bok, housingIdx,
         // ECOS Korean indicators
         ppi, importPrice, constructionCostIdx, laborIdx,
+        // Construction sub-indices
+        buildingCostIdx, civilCostIdx,
+        // Bond yields for PF rates
+        bondAA, bondBBB, cd91,
         // Cement proxy (쌍용C&E stock)
         cementProxy,
         ...constStocks
@@ -1095,6 +1099,14 @@ async function buildHistoryPayload() {
         safe(fetchEcosMonthly('401Y015', '*AA'), '수입물가(총지수)'),
         safe(fetchEcosMonthly('901Y062', 'I16AA'), '건설공사비지수'),
         safe(fetchEcosMonthly('901Y062', 'I16BA'), '건설노임지수'),
+        // 건축/토목 세부 지수
+        safe(fetchEcosMonthly('901Y062', 'I16AB'), '건축공사비지수'),
+        safe(fetchEcosMonthly('901Y062', 'I16AC'), '토목공사비지수'),
+        // 회사채 수익률 (PF금리 근거)
+        safe(fetchEcosMonthly('817Y002', '010200000'), '회사채AA-'),
+        safe(fetchEcosMonthly('817Y002', '010200001'), '회사채BBB-'),
+        // CD금리 (PF 변동금리 기준)
+        safe(fetchEcosMonthly('817Y002', '010101000'), 'CD91일'),
         // Cement price proxy (쌍용C&E 004980.KS)
         safe(fetchYahooMonthly('004980.KS'), '쌍용C&E'),
         // Construction stocks (individual)
@@ -1136,6 +1148,8 @@ async function buildHistoryPayload() {
         vix, us10y, us2y,
         realestate, housingIdx,
         ppi, importPrice, constructionCostIdx, laborIdx,
+        buildingCostIdx, civilCostIdx,
+        bondAA, bondBBB, cd91,
         cementProxy,
         constructionAvg
     };
