@@ -4758,13 +4758,18 @@
                 if (!events || events.length === 0) return;
                 const { ctx, chartArea: { top, bottom }, scales: { x } } = chart;
                 const labels = chart.data.labels;
+                // Stagger label heights to avoid overlap
+                const staggerLevels = [3, 14, 25, 36];
+                let visibleIdx = 0;
                 events.forEach(ev => {
-                    // Labels are in YY-MM format, events in YYYY-MM
-                    const shortMonth = ev.month.slice(2); // "22-02"
+                    const shortMonth = ev.month.slice(2);
                     const idx = labels.indexOf(shortMonth);
                     if (idx < 0) return;
                     const xPos = x.getPixelForValue(idx);
+                    const yOffset = staggerLevels[visibleIdx % staggerLevels.length];
+                    visibleIdx++;
                     ctx.save();
+                    // Dashed vertical line
                     ctx.beginPath();
                     ctx.setLineDash([3, 3]);
                     ctx.strokeStyle = ev.color || '#ef4444';
@@ -4772,12 +4777,19 @@
                     ctx.moveTo(xPos, top);
                     ctx.lineTo(xPos, bottom);
                     ctx.stroke();
-                    // Label
+                    // Leader line from chart top to label
+                    ctx.beginPath();
                     ctx.setLineDash([]);
+                    ctx.strokeStyle = ev.color || '#ef4444';
+                    ctx.lineWidth = 0.5;
+                    ctx.moveTo(xPos, top);
+                    ctx.lineTo(xPos, top - yOffset + 6);
+                    ctx.stroke();
+                    // Label
                     ctx.fillStyle = ev.color || '#ef4444';
-                    ctx.font = '8px sans-serif';
+                    ctx.font = '9px sans-serif';
                     ctx.textAlign = 'center';
-                    ctx.fillText(ev.label, xPos, top - 3);
+                    ctx.fillText(ev.label, xPos, top - yOffset);
                     ctx.restore();
                 });
             }
@@ -5303,7 +5315,7 @@
                     options: (() => {
                         const opts = getChartOptions(hasHistory ? `5Y 월간 (${histData.length}개월)` : '데이터 수집 중...');
                         opts.plugins.warEvents = { events: WAR_EVENTS };
-                        opts.layout = { padding: { top: 14 } };
+                        opts.layout = { padding: { top: 42 } };
                         return opts;
                     })()
                 });
