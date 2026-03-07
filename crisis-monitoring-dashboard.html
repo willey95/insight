@@ -377,9 +377,9 @@
         /* Sim popup top bar */
         .sim-top-bar {
             display: flex;
-            gap: 10px;
+            gap: 6px;
             align-items: stretch;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
         .sim-top-controls {
             display: flex;
@@ -398,26 +398,26 @@
             background: rgba(12, 20, 32, 0.8);
             border: 1px solid #1f2f46;
             border-radius: 4px;
-            padding: 4px 6px;
+            padding: 4px 8px;
             text-align: center;
             transition: border-color 0.2s;
         }
         .sim-kpi-card.active-kpi { border-color: var(--accent-cool); }
         .sim-kpi-label {
-            font-size: 7px;
+            font-size: 8px;
             color: #7f93ad;
             text-transform: uppercase;
             letter-spacing: 0.3px;
             margin-bottom: 1px;
         }
         .sim-kpi-value {
-            font-size: 10px;
+            font-size: 14px;
             font-weight: 700;
             font-family: 'JetBrains Mono', monospace;
             color: var(--text);
         }
         .sim-kpi-sub {
-            font-size: 6px;
+            font-size: 7px;
             color: #5a7a9a;
             margin-top: 1px;
         }
@@ -425,8 +425,8 @@
         /* Sim 3-column body */
         .sim-body-3col {
             display: grid;
-            grid-template-columns: 330px 1fr 330px;
-            gap: 8px;
+            grid-template-columns: 300px 1fr 300px;
+            gap: 4px;
             flex: 1;
             min-height: 0;
             overflow: hidden;
@@ -434,7 +434,7 @@
         .sim-col {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
             min-height: 0;
             overflow-y: auto;
         }
@@ -444,8 +444,8 @@
         .sim-col-section {
             background: rgba(8, 13, 22, 0.7);
             border: 1px solid #1a2a42;
-            border-radius: 6px;
-            padding: 8px;
+            border-radius: 4px;
+            padding: 5px 6px;
         }
         .sim-col-section-title {
             font-size: 9px;
@@ -1952,6 +1952,13 @@
                     </div>
                     <div class="hist-range" id="hist-gold"></div>
                 </div>
+                <div class="market-item" onclick="showDetails('silver')">
+                    <div class="market-label">은 <span class="market-unit">$/oz</span></div>
+                    <div class="market-value">
+                        <span id="silver">--</span>
+                        <span class="market-change" id="silver-change">--%</span>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -2035,7 +2042,7 @@
                     </div>
                 </div>
                 <div class="market-item" onclick="showDetails('lng')">
-                    <div class="market-label">LNG(Henry Hub) <span class="market-unit">$/MMBtu</span></div>
+                    <div class="market-label">LNG(JCC연동) <span class="market-unit">$/MMBtu</span></div>
                     <div class="market-value">
                         <span id="lng">--</span>
                         <span class="market-change" id="lng-change">--%</span>
@@ -2164,8 +2171,8 @@
                 <div class="sim-body-3col">
                     <div class="sim-col">
                         <div class="sim-col-section" style="flex:0 0 auto;">
-                            <div class="sim-accordion-title" onclick="toggleAccordion(this)">파라미터 설정</div>
-                            <div class="sim-accordion-body">
+                            <div class="sim-accordion-title collapsed" onclick="toggleAccordion(this)">파라미터 설정</div>
+                            <div class="sim-accordion-body collapsed">
                             <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;margin-top:6px;">
                                 <button class="sim-preset-btn" onclick="loadPreset('baseline')" style="font-size:10px;padding:3px 8px;">기준</button>
                                 <button class="sim-preset-btn" onclick="loadPreset('fxShock')" style="font-size:10px;padding:3px 8px;">환율급등</button>
@@ -2214,11 +2221,8 @@
                         </div>
                             </div>
                         </div>
-                        <div class="sim-col-section" style="flex:1 1 0;min-height:0;overflow-y:auto;">
-                            <div class="sim-accordion-title" onclick="toggleAccordion(this)">전파경로</div>
-                            <div class="sim-accordion-body" style="margin-top:6px;">
-                            <div id="mechDynamic" style="min-height:100px;"></div>
-                            </div>
+                        <div style="margin-top:4px;">
+                            <button class="sim-button" onclick="openMechPopup()" style="width:100%;padding:5px;font-size:10px;background:linear-gradient(90deg,#1a3a5c,#22456a);">전파경로 상세 ▸</button>
                         </div>
                     </div>
                     <div class="sim-col">
@@ -2230,7 +2234,7 @@
                                     <span style="font-size:10px;color:#8ea3c1;" id="simPressureSummary">시뮬레이션을 실행하세요</span>
                                 </div>
                                 <div id="periodMethodDesc" style="padding:4px 6px;background:rgba(56,189,248,0.06);border:1px solid #13304d;border-radius:4px;margin-bottom:6px;font-size:9px;color:#7f93ad;">전체 60개월 데이터로 3가지 방법론의 전망을 비교합니다.</div>
-                                <div style="max-height:130px;overflow-y:auto;margin-bottom:6px;">
+                                <div style="max-height:80px;overflow-y:auto;margin-bottom:4px;">
                                     <table style="width:100%;font-size:10px;border-collapse:collapse;">
                                         <thead><tr style="color:#8ea3c1;text-transform:uppercase;letter-spacing:0.3px;">
                                             <th style="text-align:left;padding:3px 5px;border-bottom:1px solid #22324a;">변수</th>
@@ -2242,9 +2246,9 @@
                                         <tbody id="simAttributionBody"></tbody>
                                     </table>
                                 </div>
-                                <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:6px;flex:1;min-height:0;">
-                                    <div class="chart-container" style="height:280px;"><canvas id="simulationChart"></canvas></div>
-                                    <div class="chart-container" style="height:280px;"><canvas id="simulationChart2"></canvas></div>
+                                <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:4px;flex:1;min-height:0;">
+                                    <div class="chart-container" style="height:160px;"><canvas id="simulationChart"></canvas></div>
+                                    <div class="chart-container" style="height:160px;"><canvas id="simulationChart2"></canvas></div>
                                 </div>
                             </div>
                         </div>
@@ -2308,6 +2312,17 @@
                 <div style="font-size:11px; color:#8ea9cc; margin-bottom:8px; font-weight:600;">CROSS-CORRELATION (5Y 월간 데이터 기반)</div>
                 <div id="modalCorrBars" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- Transmission Path Popup -->
+    <div class="modal" id="mechModal">
+        <div class="modal-content" style="max-width:720px;max-height:85vh;overflow-y:auto;">
+            <div class="modal-header">
+                <h2 style="color:#4ec9ff;font-size:16px;">전파경로 상세</h2>
+                <button class="modal-close" onclick="document.getElementById('mechModal').classList.remove('active')">×</button>
+            </div>
+            <div id="mechDynamic" style="padding:8px 0;"></div>
         </div>
     </div>
 
@@ -3125,7 +3140,7 @@
 
         function applyCommodityData(commodities) {
             // Update individual energy indicators + steel, lng
-            ['wti', 'brent', 'gas', 'steel', 'lng'].forEach(key => {
+            ['wti', 'brent', 'gas', 'steel', 'lng', 'silver'].forEach(key => {
                 const point = commodities[key];
                 if (!point || !Number.isFinite(point.value)) return;
                 applyValueWithPct(key, point.value, key + '-change', point.changePct);
@@ -4222,7 +4237,8 @@
                 'wti': 'WTI 유가',
                 'brent': 'Brent 유가',
                 'gas': '천연가스',
-                'lng': 'LNG',
+                'lng': 'LNG (JCC연동)',
+                'silver': '은 가격',
                 'fedfunds': 'Fed 기준금리',
                 'bok': '한국 기준금리',
                 'libor': 'US LIBOR (3M)',
@@ -4447,6 +4463,10 @@
             ['Fx', 'Oil', 'Ppi', 'Labor', 'Rate'].forEach(n => updateSliderLabel(n));
             document.querySelectorAll('.sim-preset-btn').forEach(b => b.classList.remove('active'));
             event.target.classList.add('active');
+        }
+
+        function openMechPopup() {
+            document.getElementById('mechModal').classList.add('active');
         }
 
         function toggleAccordion(el) {

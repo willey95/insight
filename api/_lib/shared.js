@@ -738,6 +738,16 @@ async function buildIndicatorsPayload() {
     }
 
     const commodities = { ...yahooCommodities };
+
+    // JCC-linked LNG price: LNG($/MMBtu) = 0.1485 × Brent($/bbl) + 0.5
+    if (commodities.brent && Number.isFinite(commodities.brent.value)) {
+        const jccLng = 0.1485 * commodities.brent.value + 0.5;
+        const prevBrent = commodities.brent.value / (1 + (commodities.brent.changePct || 0) / 100);
+        const prevJccLng = 0.1485 * prevBrent + 0.5;
+        const jccChangePct = prevJccLng > 0 ? ((jccLng / prevJccLng) - 1) * 100 : 0;
+        commodities.lng = { value: Math.round(jccLng * 100) / 100, changePct: Math.round(jccChangePct * 100) / 100 };
+    }
+
     const gold = yahooCommodities.gold?.value ?? null;
     const goldChangePct = yahooCommodities.gold?.changePct ?? null;
 
