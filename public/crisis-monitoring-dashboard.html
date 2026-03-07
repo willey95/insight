@@ -4470,7 +4470,7 @@
             // Key metrics — show all methods if 'all'
             if (method === 'all') {
                 const g = multi.gaussian, a = multi.ardl, l = multi.lp;
-                const fmtDelta = (fc, idx) => fc ? macroFmt(fc[idx].deltaPct, 2) + '%' : 'N/A';
+                const fmtDelta = (fc, idx) => fc && fc[idx] ? macroFmt(fc[idx].deltaPct, 2) + '%' : 'N/A';
                 document.getElementById('simDelta3M').innerHTML =
                     '<span style="color:#38bdf8">' + fmtDelta(g,2) + '</span> / <span style="color:#f59e0b">' + fmtDelta(a,2) + '</span> / <span style="color:#a78bfa">' + fmtDelta(l,2) + '</span>';
                 document.getElementById('simDelta6M').innerHTML =
@@ -4675,6 +4675,8 @@
             });
             html += '</tbody></table>';
             document.getElementById('sensitivityResult').innerHTML = html;
+            renderMechanism();
+            renderReImpact();
         }
 
         /* Monte Carlo Simulation — PASS_THROUGH engine */
@@ -4766,6 +4768,8 @@
                     }
                 });
             }
+            renderMechanism();
+            renderReImpact();
         }
 
         function gaussianRandom() {
