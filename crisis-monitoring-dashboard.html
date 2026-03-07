@@ -2583,6 +2583,7 @@
                     <div class="sim-header-status" id="simStatusIndicator">
                         <span class="sim-status-dot"></span>READY
                     </div>
+                    <span style="font-size:7px;color:#4a5568;margin-right:4px;">v3c</span>
                     <button class="sim-btn-help" onclick="openSimHelp()">도움말</button>
                     <button class="sim-btn-report" onclick="generateLLMReport()" id="btnReport">AI분석</button>
                     <button class="sim-btn-close" onclick="closeSimulationPopup()">×</button>
@@ -2804,6 +2805,7 @@
         const DASHBOARD_API_URL = '/api/indicators';
         const DASHBOARD_NEWS_API_URL = '/api/news';
         const NEWS_REFRESH_INTERVAL_MS = 3 * 60 * 1000;
+        console.log('%c[INSIGHT v3c] loaded', 'color:#22c55e;font-weight:bold;');
         const KST_TIMEZONE = 'Asia/Seoul';
         const NEWS_SOURCES = [
             { url: 'https://www.aljazeera.com/xml/rss/all.xml', name: 'Al Jazeera' },
