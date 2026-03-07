@@ -107,13 +107,19 @@ const SYSTEM_PROMPT = `당신은 건설·부동산 시장 전문 애널리스트
 const USER_MSG = (context) => `다음 실시간 시장 데이터를 분석하여 건설공사비 영향 리포트를 작성해주세요.\n\n${context}`;
 
 async function callLLM(context) {
-    if (MOONSHOT_API_KEY) return callMoonshot(context);
-    if (OPENAI_API_KEY) return callOpenAI(context);
-    return callAnthropic(context);
+    const providers = [];
+    if (MOONSHOT_API_KEY) providers.push(callMoonshot);
+    if (OPENAI_API_KEY) providers.push(callOpenAI);
+    if (ANTHROPIC_API_KEY) providers.push(callAnthropic);
+    for (const fn of providers) {
+        try { return await fn(context); }
+        catch (e) { console.error(`LLM fallback: ${e.message}`); }
+    }
+    throw new Error('All LLM providers failed');
 }
 
 async function callMoonshot(context) {
-    const response = await fetch('https://api.moonshot.cn/v1/chat/completions', {
+    const response = await fetch('https://api.moonshot.ai/v1/chat/completions', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
