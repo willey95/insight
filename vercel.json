@@ -1,7 +1,5 @@
 {
-  "rewrites": [
-    { "source": "/", "destination": "/crisis-monitoring-dashboard.html" }
-  ],
+  "rewrites": [],
   "headers": [
     {
       "source": "/(.*).html",

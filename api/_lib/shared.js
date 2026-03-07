@@ -9,6 +9,7 @@ const FASTFOREX_ACCOUNT = process.env.FASTFOREX_ACCOUNT || '';
 const FASTFOREX_API_KEY = process.env.FASTFOREX_API || process.env.FASTFOREX_API_KEY || '';
 const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY || process.env.ALPHA_VANTAGE || '';
 const AISSTREAM_API_KEY = process.env.AISSTREAM_API_KEY || process.env.AISSTREAM || '';
+const MOONSHOT_API_KEY = process.env.MOONSHOT_API_KEY || '';
 
 const NEWS_SOURCES = Object.freeze([
     { url: 'https://www.aljazeera.com/xml/rss/all.xml', name: 'Al Jazeera' },
@@ -485,6 +486,128 @@ async function fetchGDELTEvents() {
     }
 }
 
+// ─── LLM Conflict Analysis (Moonshot) ────────────────────────────────────────
+
+const CONFLICT_ANALYSIS_PROMPT = `You are a geopolitical conflict analyst specializing in Middle East tensions and their impact on construction costs in South Korea.
+
+Analyze the following news articles and return a JSON object with this exact structure:
+{
+  "conflicts": [
+    {
+      "date": "YYYY-MM-DD",
+      "type": "Airstrike/Missile" | "Drone Attack" | "Naval Confrontation" | "Armed Conflict" | "Explosion" | "Sanctions/Blockade",
+      "country": "country name",
+      "location": "city or region",
+      "lat": number,
+      "lon": number,
+      "fatalities": number (estimate, 0 if unknown),
+      "intensity": number (1-10 scale),
+      "notes": "one-line summary in Korean"
+    }
+  ],
+  "overall_intensity": number (1-10),
+  "hormuz_threat_level": number (0-100, shipping lane risk %),
+  "energy_disruption_risk": number (0-100),
+  "construction_cost_impact": {
+    "score": number (0-10),
+    "factors": ["factor1 in Korean", "factor2 in Korean"]
+  },
+  "summary_kr": "2-3 sentence analysis in Korean about current conflict situation and construction cost implications"
+}
+
+Rules:
+- Only include REAL conflicts from the articles. Do not fabricate events.
+- intensity 1-3: low-level skirmish, 4-6: significant military action, 7-10: major escalation
+- hormuz_threat_level: based on naval activity near Strait of Hormuz (26°N 56°E)
+- construction_cost_impact considers: oil price pressure, shipping disruption, raw material supply chain, FX volatility
+- If no conflict articles found, return minimal values with empty conflicts array
+- Return ONLY valid JSON, no markdown or explanation`;
+
+async function analyzeConflictsWithLLM(newsItems, gdeltArticles) {
+    if (!MOONSHOT_API_KEY) {
+        return null;
+    }
+
+    const articles = [];
+
+    for (const item of (newsItems || []).slice(0, 20)) {
+        const text = `${item.title} ${item.summary || ''}`.toLowerCase();
+        const isConflict = CONFLICT_KEYWORDS.some(kw => text.includes(kw));
+        if (isConflict) {
+            articles.push(`[${item.source || 'News'}] ${item.title}${item.summary ? ' — ' + item.summary.slice(0, 150) : ''}`);
+        }
+    }
+
+    for (const item of (gdeltArticles || []).slice(0, 15)) {
+        articles.push(`[GDELT/${item.source || 'unknown'}] ${item.title}`);
+    }
+
+    if (articles.length === 0) {
+        return {
+            conflicts: [],
+            overall_intensity: 0,
+            hormuz_threat_level: 0,
+            energy_disruption_risk: 0,
+            construction_cost_impact: { score: 0, factors: [] },
+            summary_kr: '현재 중동 지역에서 주요 분쟁 뉴스가 감지되지 않았습니다.'
+        };
+    }
+
+    const userMsg = `Today: ${new Date().toISOString().split('T')[0]}\n\nArticles (${articles.length}):\n${articles.map((a, i) => `${i + 1}. ${a}`).join('\n')}`;
+
+    const response = await fetch('https://api.moonshot.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${MOONSHOT_API_KEY}`
+        },
+        body: JSON.stringify({
+            model: 'moonshot-v1-8k',
+            messages: [
+                { role: 'system', content: CONFLICT_ANALYSIS_PROMPT },
+                { role: 'user', content: userMsg }
+            ],
+            max_tokens: 2000,
+            temperature: 0.3,
+            response_format: { type: 'json_object' }
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error(`Moonshot ${response.status}: ${await response.text()}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) throw new Error('Empty LLM response');
+
+    const parsed = JSON.parse(content);
+
+    // Validate and sanitize
+    return {
+        conflicts: Array.isArray(parsed.conflicts) ? parsed.conflicts.map(c => ({
+            date: String(c.date || new Date().toISOString().split('T')[0]),
+            type: String(c.type || 'Armed Conflict'),
+            country: String(c.country || ''),
+            location: String(c.location || ''),
+            lat: Number(c.lat) || 0,
+            lon: Number(c.lon) || 0,
+            fatalities: Math.max(0, Number(c.fatalities) || 0),
+            intensity: Math.min(10, Math.max(0, Number(c.intensity) || 0)),
+            notes: String(c.notes || ''),
+            category: 'conflict'
+        })) : [],
+        overall_intensity: Math.min(10, Math.max(0, Number(parsed.overall_intensity) || 0)),
+        hormuz_threat_level: Math.min(100, Math.max(0, Number(parsed.hormuz_threat_level) || 0)),
+        energy_disruption_risk: Math.min(100, Math.max(0, Number(parsed.energy_disruption_risk) || 0)),
+        construction_cost_impact: {
+            score: Math.min(10, Math.max(0, Number(parsed.construction_cost_impact?.score) || 0)),
+            factors: Array.isArray(parsed.construction_cost_impact?.factors) ? parsed.construction_cost_impact.factors.map(String) : []
+        },
+        summary_kr: String(parsed.summary_kr || '')
+    };
+}
+
 // ─── RSS Parsing ────────────────────────────────────────────────────────────
 
 function escapeRegExp(input) {
@@ -793,17 +916,38 @@ async function buildIndicatorsPayload() {
 async function buildMilitaryPayload() {
     const warnings = [];
 
-    // Fetch news first (needed for conflict extraction)
-    const newsPayload = await buildNewsPayload().catch(err => {
-        warnings.push(`News for conflict: ${err.message}`);
-        return { items: [] };
+    // Fetch news + GDELT in parallel
+    const [newsPayload, gdeltEvents] = await Promise.all([
+        buildNewsPayload().catch(err => {
+            warnings.push(`News for conflict: ${err.message}`);
+            return { items: [] };
+        }),
+        fetchGDELTEvents().catch(err => { warnings.push(`GDELT: ${err.message}`); return []; })
+    ]);
+
+    // Keyword-based fallback extraction (always run)
+    const keywordConflicts = await fetchConflictFromNews(newsPayload).catch(err => {
+        warnings.push(`Keyword conflict: ${err.message}`);
+        return [];
     });
 
-    const [aircraft, vessels, conflicts, gdeltEvents] = await Promise.all([
+    // LLM analysis (Moonshot) — enhanced interpretation
+    let llmAnalysis = null;
+    try {
+        llmAnalysis = await analyzeConflictsWithLLM(newsPayload.items, gdeltEvents);
+    } catch (err) {
+        warnings.push(`LLM analysis: ${err.message}`);
+    }
+
+    // Merge: prefer LLM conflicts if available, fallback to keyword
+    const conflicts = (llmAnalysis?.conflicts?.length > 0)
+        ? llmAnalysis.conflicts
+        : keywordConflicts;
+
+    // Legacy API calls (often return 0 but kept for completeness)
+    const [aircraft, vessels] = await Promise.all([
         fetchAircraftOpenSky().catch(err => { warnings.push(`OpenSky: ${err.message}`); return []; }),
-        fetchVessels().catch(err => { warnings.push(`AIS: ${err.message}`); return []; }),
-        fetchConflictFromNews(newsPayload).catch(err => { warnings.push(`Conflict: ${err.message}`); return []; }),
-        fetchGDELTEvents().catch(err => { warnings.push(`GDELT: ${err.message}`); return []; })
+        fetchVessels().catch(err => { warnings.push(`AIS: ${err.message}`); return []; })
     ]);
 
     return {
@@ -811,6 +955,7 @@ async function buildMilitaryPayload() {
         vessels,
         conflicts,
         gdeltEvents,
+        llmAnalysis,
         counts: {
             aircraft: aircraft.length,
             vessels: vessels.length,
@@ -821,7 +966,8 @@ async function buildMilitaryPayload() {
         sources: [
             aircraft.length > 0 ? 'OpenSky Network' : null,
             vessels.length > 0 ? 'Digitraffic AIS' : null,
-            conflicts.length > 0 ? 'RSS-Conflict' : null,
+            llmAnalysis ? 'Moonshot LLM Analysis' : null,
+            conflicts.length > 0 ? (llmAnalysis ? null : 'RSS-Keyword') : null,
             gdeltEvents.length > 0 ? 'GDELT' : null
         ].filter(Boolean),
         warnings

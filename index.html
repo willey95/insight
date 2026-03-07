@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BSHY CCC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;900&family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Sans', 'Noto Sans KR', sans-serif;
+    background: #fff;
+  }
+
+  .page {
+    width: 400px;
+    max-width: 88vw;
+  }
+
+  .title {
+    font-size: 64px;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: 3px;
+    line-height: 0.95;
+  }
+
+  .sub {
+    font-size: 13px;
+    font-weight: 500;
+    color: #94a3b8;
+    letter-spacing: 1px;
+    margin: 24px 0 64px;
+  }
+
+  .field {
+    display: flex;
+    border-bottom: 1.5px solid #e2e8f0;
+  }
+
+  .field input {
+    flex: 1;
+    height: 44px;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    color: #0f172a;
+    letter-spacing: 3px;
+    outline: none;
+  }
+
+  .field input::placeholder {
+    color: #cbd5e1;
+    letter-spacing: 1px;
+    font-weight: 400;
+  }
+
+  .field button {
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .field button:hover { color: #0f172a; }
+
+  .field:focus-within { border-color: #0f172a; }
+
+  .err {
+    font-size: 11px;
+    color: #ef4444;
+    margin-top: 8px;
+    height: 16px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .err.on { opacity: 1; }
+
+  .shake { animation: shake 0.3s ease; }
+  @keyframes shake {
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  .page.ok { animation: out 0.5s ease forwards; }
+  @keyframes out { to { opacity: 0; transform: translateY(-16px); } }
+</style>
+</head>
+<body>
+<div class="page" id="page">
+  <div class="title">BSHY<br>CCC</div>
+  <div class="sub">Cost Crisis Center</div>
+  <div class="field" id="field">
+    <input type="password" id="pw" placeholder="Access code" autocomplete="off" autofocus>
+    <button onclick="go()">ENTER</button>
+  </div>
+  <div class="err" id="err">Invalid code</div>
+</div>
+<script>
+  const H='ef51306214d9a6361ee1d5b452e6d2bb70dc7ebb85bf9e02c3d4747fb57d6bec';
+  async function hash(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+  async function go(){
+    if(await hash(document.getElementById('pw').value)===H){
+      sessionStorage.setItem('bshy_auth','1');
+      document.getElementById('page').classList.add('ok');
+      setTimeout(()=>location.href='/crisis-monitoring-dashboard.html',400);
+    }else{
+      const f=document.getElementById('field'),e=document.getElementById('err');
+      f.classList.remove('shake');void f.offsetWidth;f.classList.add('shake');
+      e.classList.add('on');setTimeout(()=>e.classList.remove('on'),1500);
+    }
+  }
+  document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
+</script>
+</body>
+</html>

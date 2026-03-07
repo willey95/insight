@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<!-- v2026.03.07-b -->
+<!-- v2026.03.08-a -->
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crisis Monitoring Dashboard | Bloomberg Style</title>
+    <script>if(sessionStorage.getItem('bshy_auth')!=='1')window.location.replace('/');</script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
@@ -19,7 +20,7 @@
 
         :root {
             --ticker-height: 24px;
-            --header-height: 82px;
+            --header-height: 52px;
             --dashboard-gap: 8px;
             --accent: #ffb347;
             --accent-cool: #4ec9ff;
@@ -97,7 +98,7 @@
         .header {
             background: rgba(6, 10, 17, 0.92);
             backdrop-filter: blur(4px);
-            padding: 7px 10px;
+            padding: 4px 10px;
             border-bottom: 1px solid #223149;
             min-height: var(--header-height);
             position: relative;
@@ -506,20 +507,18 @@
             color: #a8d8f8;
         }
         .sim-btn-close {
-            width: 30px;
-            height: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
-            font-weight: 700;
+            font-size: 10px;
+            font-weight: 600;
             color: #ff4d6d;
             background: rgba(255,77,109,0.1);
             border: 1px solid #3a1520;
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s;
-            padding: 0;
+            padding: 4px 10px;
             line-height: 1;
         }
         .sim-btn-close:hover {
@@ -2194,7 +2193,7 @@
     <!-- Header -->
     <div class="header">
         <h1>
-            <span>CRISIS MONITORING DASHBOARD</span>
+            <span>CCC — COST CRISIS CENTER</span>
             <span class="alert-badge">⚠️ 전쟁 위기 경보</span>
             <span class="header-stock-inline" id="headerStockInline">
                 <span class="header-stock-item" onclick="showDetails('kospi')" role="button" tabindex="0"><span class="header-stock-label">KOSPI</span><span class="header-stock-value" id="kospi">--</span><span class="header-stock-change" id="kospi-change">--%</span></span>
@@ -2273,7 +2272,13 @@
                     <div class="war-bar-track"><div class="war-bar-fill" id="warBarFinance" style="width: 0%;"></div></div>
                     <div class="war-bar-value" id="warBarFinanceVal">--%</div>
                 </div>
+                <div class="war-bar">
+                    <div class="war-bar-label">건설비 영향도 <span style="font-size:9px;color:#64748b">(AI)</span></div>
+                    <div class="war-bar-track"><div class="war-bar-fill" id="warBarConstruction" style="width: 0%; background: linear-gradient(90deg, #f59e0b, #ef4444);"></div></div>
+                    <div class="war-bar-value" id="warBarConstructionVal">--%</div>
+                </div>
             </div>
+            <div id="llmSummary" style="margin-top:8px;padding:8px 10px;background:rgba(100,116,139,0.08);border-radius:4px;font-size:11px;color:#94a3b8;line-height:1.5;display:none;border-left:2px solid #f59e0b;"></div>
         </div>
 
         <!-- Live Crisis Map -->
@@ -2595,7 +2600,7 @@
                     <span style="font-size:7px;color:#4a5568;margin-right:4px;">v4</span>
                     <button class="sim-btn-help" onclick="openSimHelp()">도움말</button>
                     <button class="sim-btn-report" onclick="generateLLMReport()" id="btnReport">AI분석</button>
-                    <button class="sim-btn-close" onclick="closeSimulationPopup()">×</button>
+                    <button class="sim-btn-close" onclick="closeSimulationPopup()">닫기</button>
                 </div>
             </div>
             <div class="simulation-panel" style="flex:1 1 0;min-height:0;overflow:hidden;display:flex;flex-direction:column;">
@@ -2652,10 +2657,6 @@
                             </div>
                         </div>
                             </div>
-                        <div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;">
-                            <button class="sim-button" onclick="showContributionPopup()" style="width:100%;padding:7px;font-size:11px;background:linear-gradient(135deg,#1a5a48,#28806a);border:1px solid rgba(40,128,106,0.4);letter-spacing:0.3px;">전파경로 기여도 ▸</button>
-                            <button class="sim-button" onclick="openMechPopup()" style="width:100%;padding:7px;font-size:11px;background:linear-gradient(135deg,#1a4a6c,#285a88);border:1px solid rgba(40,90,136,0.4);letter-spacing:0.3px;">전파경로 상세 ▸</button>
-                        </div>
                     </div>
                     <div class="sim-col" style="overflow-y:auto;">
                         <div class="sim-col-section sim-center-panel" style="display:flex;flex-direction:column;">
@@ -2771,24 +2772,28 @@
 
     <!-- LLM Report Modal -->
     <div class="modal" id="reportModal">
-        <div class="modal-content" style="max-width:880px;max-height:90vh;overflow-y:auto;padding:0;border:1px solid #1a2d48;">
+        <div class="modal-content" style="max-width:960px;max-height:94vh;overflow-y:auto;padding:0;border:1px solid #1a2d48;border-radius:10px;">
             <!-- Report Header Band -->
-            <div style="padding:16px 24px;background:linear-gradient(135deg,#0a1628,#0e1a2e);border-bottom:2px solid #14b8a6;display:flex;justify-content:space-between;align-items:center;">
+            <div style="padding:18px 28px;background:linear-gradient(135deg,#0a1628 0%,#0e1a2e 60%,#0a1c28 100%);border-bottom:2px solid #14b8a6;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;">
                 <div>
-                    <div style="font-size:9px;color:#14b8a6;font-weight:700;letter-spacing:2px;font-family:'IBM Plex Mono',Consolas,monospace;text-transform:uppercase;margin-bottom:4px;">AI-Powered Analysis Report</div>
-                    <h2 style="color:#f0f6ff;font-size:17px;margin:0;font-weight:700;letter-spacing:0.3px;">건설공사비 영향 분석 리포트</h2>
+                    <div style="font-size:9px;color:#14b8a6;font-weight:700;letter-spacing:2.5px;font-family:'IBM Plex Mono',Consolas,monospace;text-transform:uppercase;margin-bottom:5px;">AI-Powered Construction Cost Analysis</div>
+                    <h2 style="color:#f0f6ff;font-size:20px;margin:0;font-weight:800;letter-spacing:0.3px;">건설공사비 영향 분석 리포트</h2>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;">
-                    <button class="sim-button" onclick="copyReport()" style="padding:5px 14px;font-size:10px;background:#162030;border:1px solid #1a2a42;">📋 복사</button>
-                    <button class="modal-close" onclick="document.getElementById('reportModal').classList.remove('active')">×</button>
+                    <button class="sim-button" onclick="copyReport()" style="padding:5px 14px;font-size:10px;background:#162030;border:1px solid #1a2a42;">복사</button>
+                    <button class="sim-button" onclick="document.getElementById('reportModal').classList.remove('active')" style="padding:5px 14px;font-size:10px;background:rgba(255,77,109,0.1);border:1px solid #3a1520;color:#ff4d6d;">닫기</button>
                 </div>
             </div>
+            <!-- Report KPI Summary (filled by JS) -->
+            <div id="reportKpiBar" style="display:none;padding:12px 28px;background:rgba(6,10,18,0.8);border-bottom:1px solid #162540;"></div>
             <!-- Report Body -->
-            <div style="padding:20px 24px;">
+            <div style="padding:24px 28px;">
                 <div id="reportContent" style="white-space:normal;">리포트 생성 중...</div>
-                <div style="margin-top:16px;padding-top:10px;border-top:1px solid #1a2840;display:flex;justify-content:space-between;align-items:center;">
-                    <span style="font-size:9px;color:#4a6a88;font-family:'IBM Plex Mono',Consolas,monospace;" id="reportTimestamp"></span>
-                    <span style="font-size:8px;color:#3d5570;font-family:'IBM Plex Mono',Consolas,monospace;">CONFIDENTIAL — Internal Use Only</span>
+                <!-- Report Charts (filled by JS) -->
+                <div id="reportCharts" style="display:none;margin-top:20px;"></div>
+                <div style="margin-top:20px;padding-top:12px;border-top:1px solid #1a2840;display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:10px;color:#4a6a88;font-family:'IBM Plex Mono',Consolas,monospace;" id="reportTimestamp"></span>
+                    <span style="font-size:9px;color:#3d5570;font-family:'IBM Plex Mono',Consolas,monospace;">CONFIDENTIAL — Internal Use Only</span>
                 </div>
             </div>
         </div>
@@ -3685,25 +3690,31 @@
 
         function updateWarBarsFromData() {
             const s = externalIndicatorState;
-            // Blockade risk: derived from military aircraft count + conflict count
-            const milEl = document.getElementById('threatMilitary');
-            const confEl = document.getElementById('threatConflict');
-            const milScore = milEl ? parseFloat(milEl.textContent) || 0 : 0;
-            const confScore = confEl ? parseFloat(confEl.textContent) || 0 : 0;
-            const blockade = Math.min(100, Math.round((milScore + confScore) * 5));
+            const c = crisisCounts;
+
+            // Blockade risk: prefer LLM hormuz_threat_level, fallback to formula
+            const blockade = (c.llmHormuz != null)
+                ? c.llmHormuz
+                : Math.min(100, Math.round((c.hormuz * 8 + c.conflicts * 2)));
             setWarBar('warBarBlockade', 'warBarBlockadeVal', blockade);
 
-            // Energy supply shock: derived from oil price change magnitude
+            // Energy supply shock: prefer LLM energy_disruption_risk, fallback to formula
             const wtiChange = Math.abs(s.wtiChangePct || 0);
             const brentChange = Math.abs(s.brentChangePct || 0);
-            const energyShock = Math.min(100, Math.round((wtiChange + brentChange) * 8));
+            const energyShock = (c.llmEnergy != null)
+                ? c.llmEnergy
+                : Math.min(100, Math.round((wtiChange + brentChange) * 8 + c.aircraft * 1.5));
             setWarBar('warBarEnergy', 'warBarEnergyVal', energyShock);
 
-            // Financial contagion: derived from FX + stock volatility
+            // Financial contagion: FX + stock volatility + fatalities severity
             const fxChange = Math.abs(s.usdkrwChangePct || 0);
             const kospiChange = Math.abs(s.kospiChangePct || 0);
-            const finContagion = Math.min(100, Math.round((fxChange + kospiChange) * 10));
+            const finContagion = Math.min(100, Math.round((fxChange + kospiChange) * 10 + c.fatalities * 0.5));
             setWarBar('warBarFinance', 'warBarFinanceVal', finContagion);
+
+            // Construction cost impact (AI): from LLM analysis
+            const constImpact = (c.llmConstruction != null) ? Math.round(c.llmConstruction * 10) : 0;
+            setWarBar('warBarConstruction', 'warBarConstructionVal', constImpact);
         }
 
         function setWarBar(fillId, valId, pct) {
@@ -4330,11 +4341,36 @@
             heatmapLayer.setLatLngs(points);
         }
 
+        // Cached crisis counts for war bar calculations
+        let crisisCounts = { aircraft: 0, conflicts: 0, fatalities: 0, vessels: 0, hormuz: 0 };
+
         function updateThreatFromMilitary(data) {
-            const aircraftCount = data.counts.aircraft || 0;
+            const llm = data.llmAnalysis;
+
+            // Include hardcoded map assets when API returns 0
+            const simAircraft = mapAssetState.filter(a => a.type === 'aircraft');
+            const simVessels = mapAssetState.filter(a => a.type === 'vessel');
+            const aircraftCount = (data.counts.aircraft || 0) + simAircraft.length;
             const conflictCount = data.counts.conflicts || 0;
             const recentFatalities = (data.conflicts || []).reduce((s, c) => s + (c.fatalities || 0), 0);
-            const vesselCount = data.counts.vessels || 0;
+            const vesselCount = (data.counts.vessels || 0) + simVessels.length;
+            const allAssets = [...(data.aircraft || []), ...(data.vessels || []), ...simAircraft, ...simVessels];
+            const hormuzAssets = allAssets.filter(a =>
+                a.lat > 24 && a.lat < 28 && a.lon > 54 && a.lon < 58
+            ).length;
+
+            // Cache for war bars — use LLM values if available
+            crisisCounts = {
+                aircraft: aircraftCount,
+                conflicts: conflictCount,
+                fatalities: recentFatalities,
+                vessels: vesselCount,
+                hormuz: hormuzAssets,
+                llmHormuz: llm?.hormuz_threat_level ?? null,
+                llmEnergy: llm?.energy_disruption_risk ?? null,
+                llmIntensity: llm?.overall_intensity ?? null,
+                llmConstruction: llm?.construction_cost_impact?.score ?? null
+            };
 
             // Military activity level
             const milEl = document.getElementById('threatMilitary');
@@ -4344,33 +4380,64 @@
                 milEl.style.color = level === 'CRITICAL' ? 'var(--down)' : level === 'HIGH' ? '#ffc56f' : 'var(--up)';
             }
 
-            // Conflict intensity
+            // Conflict intensity — use LLM overall_intensity if available
             const conflictEl = document.getElementById('threatConflict');
             if (conflictEl) {
-                const level = conflictCount > 20 ? 'CRITICAL' : conflictCount > 10 ? 'HIGH' : conflictCount > 0 ? 'MODERATE' : 'LOW';
-                conflictEl.textContent = level + ` (${conflictCount})`;
-                conflictEl.style.color = level === 'CRITICAL' ? 'var(--down)' : level === 'HIGH' ? '#ffc56f' : 'var(--up)';
+                if (llm && llm.overall_intensity != null) {
+                    const i = llm.overall_intensity;
+                    const level = i >= 8 ? 'CRITICAL' : i >= 5 ? 'HIGH' : i >= 2 ? 'MODERATE' : 'LOW';
+                    conflictEl.textContent = level + ` (${i}/10)`;
+                    conflictEl.style.color = i >= 8 ? 'var(--down)' : i >= 5 ? '#ffc56f' : 'var(--up)';
+                } else {
+                    const level = conflictCount > 20 ? 'CRITICAL' : conflictCount > 10 ? 'HIGH' : conflictCount > 0 ? 'MODERATE' : 'LOW';
+                    conflictEl.textContent = level + ` (${conflictCount})`;
+                    conflictEl.style.color = level === 'CRITICAL' ? 'var(--down)' : level === 'HIGH' ? '#ffc56f' : 'var(--up)';
+                }
             }
 
-            // Oil supply risk (based on Hormuz area activity)
+            // Oil supply risk — use LLM hormuz_threat_level if available
             const oilEl = document.getElementById('threatOilRisk');
             if (oilEl) {
-                const hormuzAssets = [...(data.aircraft || []), ...(data.vessels || [])].filter(a =>
-                    a.lat > 24 && a.lat < 28 && a.lon > 54 && a.lon < 58
-                ).length;
-                const level = hormuzAssets > 5 ? 'CRITICAL' : hormuzAssets > 2 ? 'HIGH' : hormuzAssets > 0 ? 'ELEVATED' : 'LOW';
-                oilEl.textContent = level;
-                oilEl.style.color = level === 'CRITICAL' ? 'var(--down)' : level === 'HIGH' ? '#ffc56f' : 'var(--up)';
+                if (llm && llm.hormuz_threat_level != null) {
+                    const h = llm.hormuz_threat_level;
+                    const level = h > 60 ? 'CRITICAL' : h > 30 ? 'HIGH' : h > 10 ? 'ELEVATED' : 'LOW';
+                    oilEl.textContent = level + ` (${h}%)`;
+                    oilEl.style.color = h > 60 ? 'var(--down)' : h > 30 ? '#ffc56f' : 'var(--up)';
+                } else {
+                    const level = hormuzAssets > 5 ? 'CRITICAL' : hormuzAssets > 2 ? 'HIGH' : hormuzAssets > 0 ? 'ELEVATED' : 'LOW';
+                    oilEl.textContent = level + ` (${hormuzAssets})`;
+                    oilEl.style.color = level === 'CRITICAL' ? 'var(--down)' : level === 'HIGH' ? '#ffc56f' : 'var(--up)';
+                }
             }
 
-            // Economic impact score
+            // Economic impact score — use LLM construction_cost_impact if available
             const econEl = document.getElementById('threatEconImpact');
             if (econEl) {
-                const score = Math.min(10, (aircraftCount * 0.3 + conflictCount * 0.2 + recentFatalities * 0.05 + vesselCount * 0.1)).toFixed(1);
-                econEl.textContent = score + '/10';
-                const num = parseFloat(score);
-                econEl.style.color = num > 7 ? 'var(--down)' : num > 4 ? '#ffc56f' : 'var(--up)';
+                if (llm && llm.construction_cost_impact?.score != null) {
+                    const s = llm.construction_cost_impact.score;
+                    econEl.textContent = s.toFixed(1) + '/10';
+                    econEl.style.color = s > 7 ? 'var(--down)' : s > 4 ? '#ffc56f' : 'var(--up)';
+                } else {
+                    const score = Math.min(10, (aircraftCount * 0.3 + conflictCount * 0.2 + recentFatalities * 0.05 + vesselCount * 0.1)).toFixed(1);
+                    econEl.textContent = score + '/10';
+                    const num = parseFloat(score);
+                    econEl.style.color = num > 7 ? 'var(--down)' : num > 4 ? '#ffc56f' : 'var(--up)';
+                }
             }
+
+            // LLM summary display
+            const summaryEl = document.getElementById('llmSummary');
+            if (summaryEl && llm?.summary_kr) {
+                let html = llm.summary_kr;
+                if (llm.construction_cost_impact?.factors?.length > 0) {
+                    html += '<br><span style="color:#f59e0b">▸ ' + llm.construction_cost_impact.factors.join(' · ') + '</span>';
+                }
+                summaryEl.innerHTML = html;
+                summaryEl.style.display = 'block';
+            }
+
+            // Update war bars immediately with fresh data
+            updateWarBarsFromData();
         }
 
         function initLiveNews() {
@@ -5400,23 +5467,47 @@
             btn.disabled = true;
             const modal = document.getElementById('reportModal');
             const content = document.getElementById('reportContent');
-            content.innerHTML = '<div style="text-align:center;padding:60px 0;"><div style="font-size:28px;margin-bottom:16px;animation:simDotBlink 1.5s infinite;">📊</div><div style="color:#8cb4d8;font-size:14px;font-weight:600;">실시간 데이터 수집 및 AI 분석 중...</div><div style="color:#4a6a88;font-size:11px;margin-top:8px;">전문 애널리스트급 리포트 생성 (약 15~30초)</div></div>';
+            const kpiBar = document.getElementById('reportKpiBar');
+            const chartsArea = document.getElementById('reportCharts');
+            kpiBar.style.display = 'none';
+            chartsArea.style.display = 'none';
+            content.innerHTML = '<div style="text-align:center;padding:60px 0;"><div style="font-size:32px;margin-bottom:16px;animation:simDotBlink 1.5s infinite;">📊</div><div style="color:#8cb4d8;font-size:15px;font-weight:600;">실시간 데이터 수집 및 AI 분석 중...</div><div style="color:#4a6a88;font-size:12px;margin-top:8px;">McKinsey급 전문 리포트 생성 (약 15~30초)</div></div>';
             modal.classList.add('active');
+
+            // Gather comprehensive sim context
+            const simCtx = {};
             try {
-                const simCtx = {};
-                try {
-                    const shocks = getSimShocks();
-                    simCtx.shocks = shocks;
-                    if (macroSimData && macroSimData.length > 0) {
-                        const latest = macroSimData[macroSimData.length - 1];
-                        simCtx.latest = { month: latest.month, cci: latest.cci, fx: latest.fx, oil: latest.oil, ppi: latest.ppi, labor: latest.labor, policyRate: latest.policyRate };
-                        simCtx.points = macroSimData.length;
-                        const fc = buildScenarioForecast(macroSimData, shocks);
-                        if (fc && fc[11]) {
-                            simCtx.forecast = { m3: fc[2]?.deltaPct, m6: fc[5]?.deltaPct, m12: fc[11]?.deltaPct };
-                        }
+                const shocks = getSimShocks();
+                simCtx.shocks = shocks;
+                if (macroSimData && macroSimData.length > 0) {
+                    const latest = macroSimData[macroSimData.length - 1];
+                    simCtx.latest = { month: latest.month, cci: latest.cci, fx: latest.fx, oil: latest.oil, ppi: latest.ppi, labor: latest.labor, policyRate: latest.policyRate };
+                    simCtx.points = macroSimData.length;
+                    const fc = buildScenarioForecast(macroSimData, shocks);
+                    if (fc && fc[11]) {
+                        simCtx.forecast = { m3: fc[2]?.deltaPct, m6: fc[5]?.deltaPct, m12: fc[11]?.deltaPct };
                     }
-                } catch(e) {}
+                    // PYEONG type impacts
+                    const pyeongKeys = Object.keys(PYEONG_TYPES);
+                    simCtx.pyeongImpacts = pyeongKeys.map(k => {
+                        const pt = PYEONG_TYPES[k];
+                        const d12 = fc && fc[11] ? fc[11].deltaPct : 0;
+                        const impact12 = d12 * (pt.materialPct / 100 * 1.1 + pt.laborPct / 100 * pt.laborSensitivity);
+                        return { type: pt.label, baseline: pt.baseline, materialPct: pt.materialPct, laborPct: pt.laborPct, impact12: +impact12.toFixed(2) };
+                    });
+                    // PF grade impacts
+                    const baseRate = latest.policyRate || 2.5;
+                    const delta12 = fc && fc[11] ? fc[11].deltaPct : 0;
+                    simCtx.pfImpacts = PF_GRADES.map(pf => {
+                        const costImpact = delta12 * 0.15;
+                        const riskPremium = delta12 > 0 ? delta12 * pf.baseSpread * 0.08 : delta12 * pf.baseSpread * 0.03;
+                        const totalDelta = (shocks.policyRate || 0) + riskPremium + costImpact;
+                        return { grade: pf.grade, currentRate: +(baseRate + pf.baseSpread).toFixed(2), newRate: +(baseRate + pf.baseSpread + totalDelta).toFixed(2), delta: +totalDelta.toFixed(2) };
+                    });
+                }
+            } catch(e) {}
+
+            try {
                 const resp = await fetch('/api/report', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -5427,46 +5518,198 @@
                     throw new Error(`HTTP ${resp.status}: ${errBody}`);
                 }
                 const data = await resp.json();
-                content.innerHTML = renderConsultingReport(data.report);
+                // Executive summary from sim data
+                const exSummary = buildExecSummary(simCtx);
+                content.innerHTML = exSummary + renderConsultingReport(data.report);
+
+                // Render KPI summary bar
+                renderReportKpiBar(simCtx, kpiBar);
+                // Render inline charts
+                renderReportCharts(simCtx, chartsArea);
+
                 document.getElementById('reportTimestamp').textContent =
                     `생성: ${new Date(data.generatedAt).toLocaleString('ko-KR')} | 모델: ${data.model || 'AI'} | 데이터: ${data.dataTimestamp || 'N/A'}`;
             } catch (err) {
-                content.innerHTML = '<div style="padding:30px;text-align:center;">'
-                    + '<div style="font-size:20px;margin-bottom:12px;">⚠️</div>'
-                    + '<div style="color:#ff6b6b;font-size:14px;font-weight:600;margin-bottom:8px;">리포트 생성 실패</div>'
-                    + '<div style="color:#6d8db0;font-size:11px;max-width:400px;margin:0 auto;">' + err.message + '</div>'
-                    + '<div style="color:#4a5568;font-size:10px;margin-top:16px;padding:8px 12px;background:rgba(56,189,248,0.04);border:1px solid #1a2a42;border-radius:4px;display:inline-block;">Vercel 환경변수에 ANTHROPIC_API_KEY 또는 OPENAI_API_KEY 설정 필요</div></div>';
+                content.innerHTML = '<div style="padding:40px;text-align:center;">'
+                    + '<div style="font-size:24px;margin-bottom:14px;">⚠️</div>'
+                    + '<div style="color:#ff6b6b;font-size:15px;font-weight:600;margin-bottom:10px;">리포트 생성 실패</div>'
+                    + '<div style="color:#6d8db0;font-size:12px;max-width:500px;margin:0 auto;line-height:1.6;">' + err.message + '</div>'
+                    + '<div style="color:#4a5568;font-size:11px;margin-top:18px;padding:10px 14px;background:rgba(56,189,248,0.04);border:1px solid #1a2a42;border-radius:6px;display:inline-block;">Vercel 환경변수에 ANTHROPIC_API_KEY 또는 OPENAI_API_KEY 설정 필요</div></div>';
             }
             btn.textContent = 'AI분석';
             btn.disabled = false;
         }
 
+        function buildExecSummary(simCtx) {
+            if (!simCtx || !simCtx.forecast) return '';
+            const f = simCtx.forecast;
+            const s = simCtx.shocks || {};
+            const fmtD = (v) => v != null ? ((v >= 0 ? '+' : '') + v.toFixed(1) + '%') : '--';
+            const severity = Math.abs(f.m12 || 0);
+            const level = severity > 5 ? 'HIGH' : severity > 2 ? 'MODERATE' : 'LOW';
+            const levelColor = severity > 5 ? '#ff4d6d' : severity > 2 ? '#f59e0b' : '#22c55e';
+            const direction = (f.m12 || 0) > 0 ? '상승' : '하락';
+
+            let drivers = [];
+            if (Math.abs(s.oil || 0) >= 5) drivers.push(`유가 ${fmtD(s.oil)}`);
+            if (Math.abs(s.fx || 0) >= 3) drivers.push(`환율 ${fmtD(s.fx)}`);
+            if (Math.abs(s.policyRate || 0) >= 0.25) drivers.push(`금리 ${s.policyRate >= 0 ? '+' : ''}${s.policyRate}%p`);
+            if (Math.abs(s.labor || 0) >= 1) drivers.push(`노무비 ${fmtD(s.labor)}`);
+            const driverText = drivers.length > 0 ? drivers.join(', ') + ' 충격 시나리오 하' : '현재 파라미터 설정 하';
+
+            let html = '<div style="margin-bottom:20px;padding:16px 18px;background:linear-gradient(135deg,rgba(20,184,166,0.06),rgba(56,189,248,0.04));border:1px solid rgba(20,184,166,0.2);border-radius:8px;">';
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
+            html += '<div style="font-size:12px;font-weight:700;color:#14b8a6;text-transform:uppercase;letter-spacing:1.5px;font-family:\'IBM Plex Mono\',Consolas,monospace;">EXECUTIVE SUMMARY</div>';
+            html += `<div style="font-size:10px;font-weight:800;color:${levelColor};padding:3px 10px;border:1px solid ${levelColor};border-radius:4px;font-family:'IBM Plex Mono',Consolas,monospace;">${level} IMPACT</div>`;
+            html += '</div>';
+            html += `<div style="font-size:15px;color:#e2e8f0;line-height:1.7;">`;
+            html += `${driverText}에서 건설공사비지수는 <strong style="color:${levelColor};font-size:17px;">${direction} ${fmtD(f.m12)}</strong> (12M) 전망. `;
+            html += `단기(3M) ${fmtD(f.m3)}, 중기(6M) ${fmtD(f.m6)} 경로를 따르며, `;
+            if (simCtx.pyeongImpacts) {
+                const maxType = simCtx.pyeongImpacts.reduce((a, b) => Math.abs(b.impact12) > Math.abs(a.impact12) ? b : a);
+                const minType = simCtx.pyeongImpacts.reduce((a, b) => Math.abs(b.impact12) < Math.abs(a.impact12) ? b : a);
+                html += `<strong>${maxType.type}</strong>(${fmtD(maxType.impact12)})이 가장 큰 영향, <strong>${minType.type}</strong>(${fmtD(minType.impact12)})이 최소 영향. `;
+            }
+            if (simCtx.pfImpacts) {
+                const worstPf = simCtx.pfImpacts.reduce((a, b) => b.delta > a.delta ? b : a);
+                html += `PF금리는 ${worstPf.grade}등급 기준 ${worstPf.delta >= 0 ? '+' : ''}${worstPf.delta.toFixed(1)}%p 변동 예상.`;
+            }
+            html += '</div></div>';
+            return html;
+        }
+
+        function renderReportKpiBar(simCtx, container) {
+            if (!simCtx.forecast) return;
+            const f = simCtx.forecast;
+            const fmtV = (v) => v != null ? ((v >= 0 ? '+' : '') + v.toFixed(2) + '%') : '--';
+            const kpiColor = (v) => v > 0 ? '#ff6b00' : v < 0 ? '#22c55e' : '#8cb4d8';
+            const shocks = simCtx.shocks || {};
+            const kpis = [
+                { label: '3M 전망', value: fmtV(f.m3), color: kpiColor(f.m3) },
+                { label: '6M 전망', value: fmtV(f.m6), color: kpiColor(f.m6) },
+                { label: '12M 전망', value: fmtV(f.m12), color: kpiColor(f.m12) },
+                { label: '환율 충격', value: (shocks.fx >= 0 ? '+' : '') + (shocks.fx || 0) + '%', color: '#38bdf8' },
+                { label: '유가 충격', value: (shocks.oil >= 0 ? '+' : '') + (shocks.oil || 0) + '%', color: '#22c55e' },
+                { label: '금리 변화', value: (shocks.policyRate >= 0 ? '+' : '') + (shocks.policyRate || 0) + '%p', color: '#fb7185' },
+            ];
+            container.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap;">' + kpis.map(k =>
+                `<div style="flex:1;min-width:100px;padding:8px 12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:6px;text-align:center;">
+                    <div style="font-size:9px;color:#5a7a9a;text-transform:uppercase;letter-spacing:0.5px;">${k.label}</div>
+                    <div style="font-size:16px;font-weight:800;color:${k.color};font-family:'IBM Plex Mono',Consolas,monospace;margin-top:2px;">${k.value}</div>
+                </div>`
+            ).join('') + '</div>';
+            container.style.display = 'block';
+        }
+
+        function renderReportCharts(simCtx, container) {
+            if (!simCtx.pyeongImpacts && !simCtx.pfImpacts) return;
+            let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">';
+
+            // Chart 1: PYEONG type impact horizontal bars
+            if (simCtx.pyeongImpacts) {
+                html += '<div style="padding:14px;background:rgba(6,10,18,0.6);border:1px solid #162540;border-radius:8px;">';
+                html += '<div style="font-size:11px;font-weight:700;color:#8cb4d8;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;font-family:\'IBM Plex Mono\',Consolas,monospace;">유형별 건설공사비 영향 (12M)</div>';
+                const maxImpact = Math.max(...simCtx.pyeongImpacts.map(p => Math.abs(p.impact12)), 1);
+                simCtx.pyeongImpacts.forEach(p => {
+                    const barW = Math.min(100, Math.round(Math.abs(p.impact12) / maxImpact * 100));
+                    const barColor = p.impact12 > 0 ? '#ff6b00' : '#22c55e';
+                    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                        <div style="width:70px;font-size:11px;color:#b8c8dc;flex-shrink:0;">${p.type}</div>
+                        <div style="flex:1;height:14px;background:rgba(255,255,255,0.03);border-radius:3px;overflow:hidden;">
+                            <div style="height:100%;width:${barW}%;background:linear-gradient(90deg,${barColor},${barColor}88);border-radius:3px;transition:width 0.6s;"></div>
+                        </div>
+                        <div style="width:55px;text-align:right;font-size:12px;font-weight:700;color:${barColor};font-family:'IBM Plex Mono',Consolas,monospace;">${p.impact12 >= 0 ? '+' : ''}${p.impact12.toFixed(1)}%</div>
+                    </div>`;
+                });
+                html += '</div>';
+            }
+
+            // Chart 2: PF grade rate comparison
+            if (simCtx.pfImpacts) {
+                html += '<div style="padding:14px;background:rgba(6,10,18,0.6);border:1px solid #162540;border-radius:8px;">';
+                html += '<div style="font-size:11px;font-weight:700;color:#8cb4d8;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;font-family:\'IBM Plex Mono\',Consolas,monospace;">등급별 PF금리 변동</div>';
+                const gradeColors = { 'AA-': '#22c55e', 'A': '#4ec9ff', 'BBB+': '#f59e0b', 'BBB0': '#fb7185', 'BBB-': '#ff4d6d' };
+                simCtx.pfImpacts.forEach(pf => {
+                    const color = gradeColors[pf.grade] || '#8cb4d8';
+                    const barW = Math.min(100, Math.round(pf.newRate / 12 * 100));
+                    const deltaColor = pf.delta > 0 ? '#ff6b00' : pf.delta < 0 ? '#22c55e' : '#8cb4d8';
+                    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                        <div style="width:42px;font-size:11px;font-weight:800;color:${color};font-family:'IBM Plex Mono',Consolas,monospace;flex-shrink:0;">${pf.grade}</div>
+                        <div style="flex:1;height:14px;background:rgba(255,255,255,0.03);border-radius:3px;overflow:hidden;position:relative;">
+                            <div style="height:100%;width:${Math.round(pf.currentRate/12*100)}%;background:${color}44;border-radius:3px;position:absolute;"></div>
+                            <div style="height:100%;width:${barW}%;background:linear-gradient(90deg,${color},${color}88);border-radius:3px;position:relative;z-index:1;"></div>
+                        </div>
+                        <div style="width:80px;text-align:right;font-size:11px;font-family:'IBM Plex Mono',Consolas,monospace;">
+                            <span style="color:#b8c8dc;">${pf.newRate.toFixed(1)}%</span>
+                            <span style="color:${deltaColor};font-size:10px;"> ${pf.delta >= 0 ? '+' : ''}${pf.delta.toFixed(1)}</span>
+                        </div>
+                    </div>`;
+                });
+                html += '</div>';
+            }
+
+            html += '</div>';
+            container.innerHTML = html;
+            container.style.display = 'block';
+        }
+
         function renderConsultingReport(md) {
-            // McKinsey/BCG-style consulting report renderer
-            let html = md
-                // Section headers with accent bar
-                .replace(/^#### (.+)$/gm, '<h5 style="color:#a78bfa;margin:12px 0 4px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;font-family:\'JetBrains Mono\',monospace;">$1</h5>')
-                .replace(/^### (.+)$/gm, '<h4 style="color:#38bdf8;margin:16px 0 6px;font-size:13px;font-weight:700;padding-left:10px;border-left:3px solid #38bdf8;">$1</h4>')
-                .replace(/^## (.+)$/gm, '<div style="margin:20px 0 10px;padding:8px 12px;background:linear-gradient(90deg,rgba(56,189,248,0.08),transparent);border-left:3px solid #14b8a6;border-radius:0 4px 4px 0;"><h3 style="color:#e2e8f0;font-size:15px;font-weight:700;margin:0;font-family:\'JetBrains Mono\',monospace;">$1</h3></div>')
-                .replace(/^# (.+)$/gm, '<div style="margin:0 0 16px;padding:12px 0;border-bottom:2px solid #1a2d48;"><h2 style="color:#f0f6ff;font-size:18px;font-weight:800;margin:0;letter-spacing:0.5px;">$1</h2></div>')
-                // Bold with accent
-                .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e8f0ff;">$1</strong>')
-                // Inline code
-                .replace(/`(.+?)`/g, '<code style="background:rgba(56,189,248,0.08);color:#38bdf8;padding:1px 5px;border-radius:2px;font-size:11px;font-family:\'JetBrains Mono\',monospace;">$1</code>')
-                // Bullet points with styled markers
-                .replace(/^- (.+)$/gm, '<div style="display:flex;gap:8px;padding:3px 0 3px 4px;"><span style="color:#38bdf8;font-size:8px;margin-top:5px;flex-shrink:0;">●</span><span>$1</span></div>')
-                // Numbered items
-                .replace(/^(\d+)\. (.+)$/gm, '<div style="display:flex;gap:8px;padding:3px 0 3px 4px;"><span style="color:#14b8a6;font-weight:700;min-width:18px;flex-shrink:0;font-family:\'JetBrains Mono\',monospace;font-size:12px;">$1.</span><span>$2</span></div>')
-                // Arrow patterns (→) highlight
+            // Parse markdown tables into real HTML tables
+            const lines = md.split('\n');
+            const out = [];
+            let inTable = false;
+            let tableRows = [];
+            const flushTable = () => {
+                if (tableRows.length < 2) { out.push(...tableRows.map(r => r._raw)); tableRows = []; return; }
+                let t = '<table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;">';
+                tableRows.forEach((row, ri) => {
+                    if (row._sep) return;
+                    const tag = ri === 0 ? 'th' : 'td';
+                    const bg = ri === 0 ? 'background:rgba(56,189,248,0.08);' : (ri % 2 === 0 ? 'background:rgba(255,255,255,0.015);' : '');
+                    t += '<tr>';
+                    row.cells.forEach(c => {
+                        const align = /^\d|^[+\-]/.test(c.trim()) ? 'text-align:right;' : '';
+                        const style = `padding:7px 10px;border-bottom:1px solid #1a2840;color:${ri === 0 ? '#8cb4d8' : '#c0d0e4'};font-weight:${ri === 0 ? '700' : '400'};font-size:${ri === 0 ? '11px' : '13px'};${align}${bg}`;
+                        t += `<${tag} style="${style}">${c.trim()}</${tag}>`;
+                    });
+                    t += '</tr>';
+                });
+                t += '</table>';
+                out.push(t);
+                tableRows = [];
+            };
+            lines.forEach(line => {
+                if (/^\|(.+)\|$/.test(line)) {
+                    const inner = line.slice(1, -1);
+                    if (/^[\s\-:|]+$/.test(inner)) { tableRows.push({ _sep: true }); }
+                    else { tableRows.push({ cells: inner.split('|'), _raw: line }); }
+                    inTable = true;
+                } else {
+                    if (inTable) { flushTable(); inTable = false; }
+                    out.push(line);
+                }
+            });
+            if (inTable) flushTable();
+
+            let html = out.join('\n')
+                .replace(/^#### (.+)$/gm, '<h5 style="color:#a78bfa;margin:14px 0 6px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;font-family:\'IBM Plex Mono\',Consolas,monospace;">$1</h5>')
+                .replace(/^### (.+)$/gm, '<h4 style="color:#38bdf8;margin:18px 0 8px;font-size:15px;font-weight:700;padding-left:12px;border-left:3px solid #38bdf8;">$1</h4>')
+                .replace(/^## (.+)$/gm, '<div style="margin:24px 0 12px;padding:10px 14px;background:linear-gradient(90deg,rgba(56,189,248,0.08),transparent);border-left:4px solid #14b8a6;border-radius:0 6px 6px 0;"><h3 style="color:#e2e8f0;font-size:17px;font-weight:700;margin:0;font-family:\'IBM Plex Mono\',Consolas,monospace;">$1</h3></div>')
+                .replace(/^# (.+)$/gm, '<div style="margin:0 0 18px;padding:14px 0;border-bottom:2px solid #1a2d48;"><h2 style="color:#f0f6ff;font-size:21px;font-weight:800;margin:0;letter-spacing:0.5px;">$1</h2></div>')
+                .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e8f0ff;font-weight:700;">$1</strong>')
+                .replace(/`(.+?)`/g, '<code style="background:rgba(56,189,248,0.08);color:#38bdf8;padding:2px 6px;border-radius:3px;font-size:12px;font-family:\'IBM Plex Mono\',Consolas,monospace;">$1</code>')
+                .replace(/^- (.+)$/gm, '<div style="display:flex;gap:10px;padding:4px 0 4px 6px;"><span style="color:#38bdf8;font-size:9px;margin-top:6px;flex-shrink:0;">●</span><span>$1</span></div>')
+                .replace(/^(\d+)\. (.+)$/gm, '<div style="display:flex;gap:10px;padding:4px 0 4px 6px;"><span style="color:#14b8a6;font-weight:700;min-width:20px;flex-shrink:0;font-family:\'IBM Plex Mono\',Consolas,monospace;font-size:14px;">$1.</span><span>$2</span></div>')
                 .replace(/→/g, '<span style="color:#f59e0b;font-weight:600;"> → </span>')
-                // Percentage highlights
-                .replace(/([+\-]?\d+\.?\d*%)/g, '<span style="font-family:\'JetBrains Mono\',monospace;font-weight:700;color:#4ec9ff;">$1</span>')
-                // Currency highlights
-                .replace(/(₩[\d,]+)/g, '<span style="font-family:\'JetBrains Mono\',monospace;font-weight:600;color:#22c55e;">$1</span>')
-                .replace(/(\$[\d,.]+)/g, '<span style="font-family:\'JetBrains Mono\',monospace;font-weight:600;color:#f59e0b;">$1</span>')
-                .replace(/\n\n/g, '<div style="height:8px;"></div>')
+                // Truncate decimals to 1 place in percentage values
+                .replace(/([+\-]?\d+)\.(\d)\d+(%p?)/g, '$1.$2$3')
+                .replace(/([+\-]?\d+\.?\d*%p?)/g, '<span style="font-family:\'IBM Plex Mono\',Consolas,monospace;font-weight:700;color:#4ec9ff;">$1</span>')
+                .replace(/(₩[\d,]+만?)/g, '<span style="font-family:\'IBM Plex Mono\',Consolas,monospace;font-weight:600;color:#22c55e;">$1</span>')
+                .replace(/(\$[\d,.]+)/g, '<span style="font-family:\'IBM Plex Mono\',Consolas,monospace;font-weight:600;color:#f59e0b;">$1</span>')
+                .replace(/^---$/gm, '<hr style="border:none;border-top:1px solid #1a2d48;margin:16px 0;">')
+                .replace(/\n\n/g, '<div style="height:10px;"></div>')
                 .replace(/\n/g, '<br>');
-            return '<div style="font-size:13px;line-height:1.7;color:#b8c8dc;">' + html + '</div>';
+            return '<div style="font-size:14.5px;line-height:1.8;color:#c0d0e4;">' + html + '</div>';
         }
 
         function markdownToHtml(md) { return renderConsultingReport(md); }
@@ -5507,7 +5750,9 @@
         }
 
         function closeSimulationPopup() {
-            document.getElementById('simulationPopup').classList.remove('active');
+            const popup = document.getElementById('simulationPopup');
+            popup.classList.remove('active');
+            popup.style.display = 'none';
         }
 
         /* Scenario Presets — macro driver shocks */
@@ -5584,33 +5829,1177 @@
         }
 
         function openSimHelp() {
-            const modal = document.getElementById('mechModal');
-            const dynDiv = document.getElementById('mechDynamic');
-            if (dynDiv) {
-                dynDiv.innerHTML = `<div style="padding:16px;font-size:12px;color:#8cb8e0;line-height:1.7;">
-                    <h3 style="color:#38bdf8;margin-bottom:12px;font-size:15px;">시뮬레이션 엔진 도움말</h3>
-                    <p><b style="color:#f59e0b;">3가지 분석 방법론:</b></p>
-                    <ul style="margin:6px 0 12px 16px;color:#6d8db0;">
-                        <li><b>Gaussian IRF</b> — 충격반응함수 기반. 변수 간 시차 전파를 모델링</li>
-                        <li><b>ARDL-OLS</b> — 자기회귀분포시차 모형. 장기 균형관계 추정</li>
-                        <li><b>Local Projections</b> — Jordà 방식. 비선형 반응경로 포착</li>
-                    </ul>
-                    <p><b style="color:#f59e0b;">KPI 카드:</b></p>
-                    <ul style="margin:6px 0 12px 16px;color:#6d8db0;">
-                        <li><b>3M/6M/12M</b> — 각 방법론별 추가 압력(%) 표시 (O/O/O)</li>
-                        <li><b>공사비 평균영향</b> — 3가지 방법론의 12M 평균</li>
-                    </ul>
-                    <p><b style="color:#f59e0b;">파라미터:</b></p>
-                    <ul style="margin:6px 0 12px 16px;color:#6d8db0;">
-                        <li>슬라이더로 각 변수 충격 크기 조절</li>
-                        <li>프리셋: 유가급등, 환율급등, 노무비, 금리, 복합 시나리오</li>
-                        <li>민감도 분석: 단일 변수의 영향도 구간 측정</li>
-                        <li>Monte Carlo: 확률적 시뮬레이션 (500~1000회)</li>
-                    </ul>
-                    <p style="color:#3d5570;font-size:10px;margin-top:8px;">데이터: 60개월 합성 시계열 기반 | 실시간 API 연동 예정</p>
-                </div>`;
+            let existing = document.getElementById('simHelpOverlay');
+            if (existing) existing.remove();
+
+            if (!document.getElementById('hdocFontLink')) {
+                const lk = document.createElement('link');
+                lk.id = 'hdocFontLink'; lk.rel = 'stylesheet';
+                lk.href = 'https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap';
+                document.head.appendChild(lk);
             }
-            modal.classList.add('active');
+            if (!document.getElementById('hdocCSS')) {
+                const st = document.createElement('style');
+                st.id = 'hdocCSS'; st.textContent = getHelpDocCSS();
+                document.head.appendChild(st);
+            }
+
+            const overlay = document.createElement('div');
+            overlay.id = 'simHelpOverlay';
+            overlay.className = 'hdoc-overlay';
+            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+            const mdContent = buildHelpMarkdown();
+
+            const tocSections = [
+                { id:'sec-overview', label:'엔진 개요', num:'I' },
+                { id:'sec-methods', label:'분석 방법론', num:'II' },
+                { id:'sec-passthrough', label:'전파 경로', num:'III' },
+                { id:'sec-dynamics', label:'System Dynamics', num:'IV' },
+                { id:'sec-pyeong', label:'유형별 공사비', num:'V' },
+                { id:'sec-pf', label:'PF금리 등급별', num:'VI' },
+                { id:'sec-periods', label:'분석 기간', num:'VII' },
+                { id:'sec-pressure', label:'압력 상태 진단', num:'VIII' },
+                { id:'sec-impl', label:'구현 세부사항', num:'IX' },
+                { id:'sec-guide', label:'실전 활용', num:'X' },
+                { id:'sec-refs', label:'출처·참고문헌', num:'XI' },
+            ];
+
+            const tocHtml = tocSections.map(t => `
+                <div class="hdoc-toc-item" data-target="${t.id}">
+                    <span class="hdoc-toc-num">${t.num}</span>
+                    <span class="hdoc-toc-label">${t.label}</span>
+                </div>`).join('');
+
+            overlay.innerHTML = `
+            <div class="hdoc-shell">
+                <header class="hdoc-header">
+                    <div>
+                        <div class="hdoc-tag">SIMULATION ENGINE</div>
+                        <div class="hdoc-title">종합 문서</div>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <button class="hdoc-btn-dl">MD Download</button>
+                        <button class="hdoc-btn-x">&times;</button>
+                    </div>
+                </header>
+                <div class="hdoc-body">
+                    <nav class="hdoc-toc">${tocHtml}</nav>
+                    <main class="hdoc-main" id="hdocMain"></main>
+                </div>
+            </div>`;
+
+            document.body.appendChild(overlay);
+            document.getElementById('hdocMain').innerHTML = buildHelpDocument();
+
+            // TOC click + scroll spy
+            const mainEl = document.getElementById('hdocMain');
+            overlay.querySelectorAll('.hdoc-toc-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const t = document.getElementById(item.dataset.target);
+                    if (t) t.scrollIntoView({ behavior:'smooth', block:'start' });
+                });
+            });
+            mainEl.addEventListener('scroll', () => {
+                let cur = '';
+                tocSections.forEach(s => {
+                    const el = document.getElementById(s.id);
+                    if (el && el.getBoundingClientRect().top < 260) cur = s.id;
+                });
+                overlay.querySelectorAll('.hdoc-toc-item').forEach(i => {
+                    i.classList.toggle('active', i.dataset.target === cur);
+                });
+            });
+
+            overlay.querySelector('.hdoc-btn-x').onclick = () => overlay.remove();
+            overlay.querySelector('.hdoc-btn-dl').onclick = () => {
+                const blob = new Blob([mdContent], { type:'text/markdown;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = 'simulation-complete-doc.md'; a.click();
+                URL.revokeObjectURL(url);
+            };
+
+            requestAnimationFrame(() => {
+                overlay.querySelector('.hdoc-shell').style.opacity = '1';
+                overlay.querySelector('.hdoc-shell').style.transform = 'scale(1)';
+            });
+        }
+
+        function buildHelpMarkdown() {
+            const ptRows = Object.entries(PASS_THROUGH).map(([k, v]) => {
+                const meta = DRIVER_META[k];
+                const route = ROUTE_BLUEPRINT[k];
+                return `| ${meta.label} | ${v.weight} | ${v.peakLag}개월 | ${v.width} | ${route.path} |`;
+            }).join('\n');
+
+            const pyeongRows = Object.entries(PYEONG_TYPES).map(([k, v]) =>
+                `| ${v.label} | ${v.baseline}만/평 | ${v.materialPct}% | ${v.laborPct}% | ${v.overheadPct}% | ${v.laborSensitivity} | ${v.source} |`
+            ).join('\n');
+
+            const pfRows = PF_GRADES.map(p =>
+                `| ${p.grade} | +${p.baseSpread}%p | ${p.seniorDisc}%p | +${p.mezzDisc}%p | +${p.juniorDisc}%p | ${p.ltv} | ${p.dscr} |`
+            ).join('\n');
+
+            return `# 건설공사비 시뮬레이션 — 종합 문서
+
+@@SEC:sec-overview
+## Part I. 엔진 개요
+
+### 1.1 시뮬레이션 목적
+본 시뮬레이션은 거시경제 변수(환율, 유가, PPI, 노무비, 금리 등)의 충격이 건설공사비지수에 미치는 영향을 정량적으로 분석합니다.
+3가지 독립적 방법론을 병행 적용하여 단일 모형 편향을 최소화하고, 교차 검증을 통해 전망의 신뢰도를 높입니다.
+
+### 1.2 데이터 기반
+- **출처**: ECOS(한국은행 경제통계시스템) 월별 시계열
+- **기간**: 2021.01 ~ 2025.12 (60개월)
+- **드라이버**: 환율, 유가, PPI, 수입물가, 노무비, 철강, 시멘트, 기준금리, VIX, US10Y
+
+### 1.3 왜 3가지 방법이 필요한가
+하나의 충격에 대해 세 가지 방법론이 **서로 다른 전망**을 내놓습니다. 단일 방법론의 한계를 보완하기 위해 비교 분석을 지원합니다.
+
+| 기준 | Gaussian IRF | ARDL-OLS | Local Projections |
+|------|-------------|----------|-------------------|
+| 계수 추정 | 수기 입력 (고정) | OLS 데이터 추정 | OLS 데이터 추정 |
+| IRF 형태 | Gaussian (가정) | 시차별 계수 (자유) | horizon별 직접 추정 |
+| 비선형 충격 대응 | 취약 | 보통 | ★★★ 강건 |
+| 소표본 안정성 | ★★★ | 보통 | 취약 (h 증가 시) |
+| 변수 상호작용 | 독립 가정 | 시차별 포착 | 동시점 포착 |
+| 오차 누적 | 없음 (공식 기반) | 재귀 누적 | 없음 (직접 추정) |
+| 전쟁 시나리오 적합도 | 낮음 | 보통 | ★★★ 최적 |
+
+---
+
+@@SEC:sec-methods
+## Part II. 분석 방법론 (3-Method Ensemble)
+
+@@SEC:sec-method1
+### 2.1 Method 1 — Gaussian IRF (충격반응함수)
+
+#### 개념
+각 거시변수에 대해 사전 지정된 가중치(weight), 최대 반응 시점(peakLag), 확산폭(width)을 사용하여 충격의 시간별 전파를 모델링합니다.
+
+#### 수학적 정의
+\`ΔCC(h) = Σ shock_k × w_k × exp(-(h - μ_k)² / 2σ_k²) × 0.1\`
+
+관성 감쇠: \`inertia(h) = max(0.1, avg_ΔCC_MoM × e^(-h/10))\`
+
+#### 작동 원리
+- 각 드라이버(환율, 유가 등)에 대해 **고정된 3개 파라미터**(weight, peakLag, width)를 사전 설정
+- 사용자가 입력한 충격(shock %)에 가중치를 곱하고, Gaussian 커널로 시간별 반응 크기를 계산
+- 12개월간 기준성장률 + 충격성장률을 누적하여 전망 경로를 생성
+
+#### 장점
+- 데이터 없이도 작동 (파라미터만 설정)
+- 소표본에서도 안정적, 직관적이고 설명이 쉬움
+- 계산 즉시 완료
+
+#### 한계
+- 가중치가 **추정이 아닌 가정** — 실제와 괴리 가능
+- IRF 형태가 항상 Gaussian — 실제 반응은 비대칭일 수 있음
+- 변수 간 상호작용 미반영 (환율↑→수입물가↑ 연쇄 무시)
+
+#### 적합한 사용 시점
+데이터가 부족하거나, 빠른 직관적 판단이 필요할 때. "대략적인 방향과 규모"를 파악하는 초기 스크리닝에 적합.
+
+---
+
+@@SEC:sec-method2
+### 2.2 Method 2 — ARDL-OLS (자기회귀분포시차)
+
+#### 개념
+Autoregressive Distributed Lag 모형을 OLS로 추정. 선택한 분석 기간의 실제 데이터로 각 드라이버의 시차별 영향 계수를 OLS로 추정합니다.
+
+#### 수학적 정의
+\`ΔCC_t = α + Σ_k Σ_l β_{k,l} · ΔX_{k,t-l} + ε_t\`
+
+계수 추정: \`β̂ = (X'X)⁻¹X'y\`
+
+현재 구현: K=8 (8개 드라이버), L=4 (최대 4개월 시차), 총 41개 계수.
+
+#### 작동 원리
+- 선택된 분석 기간의 시계열을 **월별 변화율(Δ%)**로 변환
+- 8개 드라이버 × (lag 0~4) = 40개 설명변수 + 상수항으로 X 행렬 구성
+- **OLS 회귀**: X 전치 → 곱셈 → 역행렬 → 계수 벡터 β̂ 산출
+- 추정된 시차별 계수로 IRF를 구성 — Gaussian 가정 없이 **데이터가 결정한 형태**
+
+#### 장점
+- **데이터 기반** — 주관적 파라미터 제거
+- R² 제공 — 모델 적합도 정량 검증
+- 분석 기간 변경 시 계수가 자동 재추정
+
+#### 한계
+- 표본 크기가 작으면 계수 추정이 불안정 (과적합 위험)
+- 41개 계수 vs ~20개 관측치 → 전쟁기 단독 추정 시 주의
+- 재귀 전망 시 오차가 누적될 수 있음
+
+#### 적합한 사용 시점
+충분한 관측치(30+)가 있는 기간에서 변수별 영향 크기를 정량적으로 파악하고 싶을 때. "전체 기간"이나 "최근 12개월" 설정에서 가장 안정적.
+
+---
+
+@@SEC:sec-method3
+### 2.3 Method 3 — Local Projections (Jordà, 2005)
+
+#### 개념
+Oscar Jordà(2005)가 제안한 방법론. VAR/ARDL의 재귀적 IRF 대신 **각 예측 시점 h에서 별도의 회귀를 실행**합니다.
+
+#### 수학적 정의
+각 horizon h = 1, 2, ..., 12에 대해 독립적인 회귀를 실행:
+
+\`y_{t+h} - y_t = α_h + Σ_k β_{h,k} · ΔX_{k,t} + ε_{t+h}\`
+
+β_{h,k}는 "드라이버 k가 1단위 변화했을 때, h개월 후까지의 누적 영향"을 직접 추정.
+핵심: **12개의 별도 OLS 회귀**를 실행.
+
+#### 왜 전쟁 시나리오에 더 적합한가
+- **VAR/ARDL 문제**: 1개월 추정 → (오차 포함) → 2개월 추정 → (오차 누적) → ... → 12개월 (오차 폭발)
+- **LP 해결**: h=1 OLS, h=2 OLS, ..., h=12 OLS — 각 h에서 독립 추정 → 오차 비누적
+
+전쟁·금융위기 같은 대형 충격은 기존 선형 관계를 깨뜨립니다. LP는 **각 시점에서 독립적으로 추정**하므로 비선형 반응도 포착하고 오차가 누적되지 않습니다.
+
+#### 장점
+- **오차 비누적** — 장기 전망에서도 신뢰구간 안정
+- **비선형 반응 포착** — 전쟁 충격의 비대칭적 전파 반영
+- 모델 misspecification에 강건
+
+#### 한계
+- h가 커질수록 유효 표본이 줄어 추정 정밀도 하락
+- 소표본(< 20)에서 불안정
+- Newey-West 표준오차 등 추가 보정이 이상적 (현재 미구현)
+
+#### 적합한 사용 시점
+전쟁, 금융위기, 공급망 붕괴 등 **대형 비선형 충격**의 전파를 분석할 때. "전쟁기 데이터 + LP 방법론"이 가장 의미 있는 조합.
+
+### 2.4 앙상블 (전체 비교 모드)
+- 3가지 방법론의 결과를 단순 평균하여 KPI에 표시
+- 방법론 간 편차가 클수록 불확실성이 높은 것으로 해석
+
+---
+
+@@SEC:sec-passthrough
+## Part III. 전파 경로 모형 (Pass-Through Model)
+
+### 3.1 전파 가중치 테이블
+
+각 거시변수가 건설공사비에 도달하는 전파 가중치(weight), 피크 시차(peakLag), 확산폭(width):
+
+| 변수 | 가중치(w) | 피크시차 | 확산폭(σ) | 전파경로 |
+|------|-----------|----------|-----------|----------|
+${ptRows}
+
+### 3.2 파생 변수 산출
+- 수입물가 = 환율×0.45 + 유가×0.35 + PPI×0.20
+- 철강가격 = 수입물가×0.40 + PPI×0.35 + 유가×0.15
+- 시멘트가격 = PPI×0.55 + 유가×0.25
+
+---
+
+@@SEC:sec-causal
+## Part IV. System Dynamics — 인과구조
+
+### 4.1 Causal Loop Diagram (CLD)
+
+거시경제 충격이 건설공사비에 전달되는 전체 인과구조:
+
+**외생 충격 (Exogenous Shocks):**
+- 원/달러 환율 (w=0.12, lag=3M) → 수입물가, 원자재
+- 국제유가 WTI (w=0.08, lag=2M) → 에너지비, 물류비
+- 기준금리 (w=0.09, lag=4M) → 금융비용, 사업성, 수요
+
+**원가 압력 경로 (Cost-Push Channel):**
+- PPI (w=0.14, lag=2M) → 제조원가 → 자재단가
+- 수입물가 (w=0.19, lag=3M) → 수입자재 → 건설비
+- 철강 (w=0.15, lag=2M) → 구조재 → 공사비
+- 시멘트 (w=0.06, lag=1M) → 기초자재 → 공사비
+- 노임 (w=0.20, lag=1M) → 직접노무비 → 공사비
+
+**공사유형 믹스:** 주거 / 물류센터 / 오피스·상업 / 첨단산업 / 토목·인프라
+
+---
+
+@@SEC:sec-stockflow
+### 4.2 Stock & Flow — 누적 메커니즘
+
+#### 유입 (Inflow)
+각 드라이버의 충격이 가중치를 곱하고 IRF(h)를 적용하여 누적 원가 압력에 합산:
+
+| 유입 변수 | 가중치 |
+|-----------|--------|
+| 수입물가 충격 | w=0.19 |
+| 노무비 상승 | w=0.20 |
+| 철강 가격 충격 | w=0.15 |
+| PPI 상승 | w=0.14 |
+| 환율 충격 | w=0.13 |
+| 금리 변화 | w=0.09 |
+| 유가 충격 | w=0.08 |
+| 시멘트 충격 | w=0.06 |
+
+#### Stock: 누적 원가 압력
+\`누적 성장률 = Σ(shock × weight × IRF(h))\`
+Gaussian IRF: \`e^(-(h-peakLag)²/2σ²)\`
+
+#### 감쇠 (Dampening)
+- 관성 감쇠: \`e^(-h/10)\`
+- 수요 위축 → 착공 감소
+- 유형 전환 → 저단가 공종 비중 증가
+
+---
+
+@@SEC:sec-feedback
+### 4.3 피드백 루프 (Feedback Loops)
+
+#### R1: 원가-착공 강화루프 (Reinforcing)
+건설공사비 ↑ → 사업성 악화 → 착공 감소 → 저단가 공종 축소 → 고단가 비중 ↑ → 가중평균 상승 → 공사비 ↑ (순환)
+
+#### R2: 환율-수입물가 강화루프
+환율 ↑ → 수입단가 상승 → 수입물가 ↑ → 자재비 상승 → 건설공사비 ↑ → 인플레 기대 → 환율 ↑ (순환)
+
+#### B1: 금리-수요 균형루프 (Balancing)
+금리 ↑ → 대출 비용 ↑ → 건설 수요 ↓ → 발주 감소 → 노무비 안정 → 직접비 억제 → 공사비 상승 둔화
+
+#### B2: 공사비-정책 균형루프
+공사비 급등 → 물가 압력 → 긴축 정책 → 금리 ↑ → 투자 위축 → 공사비 둔화
+
+---
+
+@@SEC:sec-lagstructure
+### 4.4 시차 구조 (Lag & Impulse Response)
+
+변수별 Peak Lag과 IRF 확산폭:
+
+| 변수 | peakLag | 확산폭(σ) | 특성 |
+|------|---------|-----------|------|
+| 노무비 | 1개월 | 1.1 | 집중형 — 즉시 반응 |
+| 시멘트 | 1개월 | 1.2 | 단기 반응 |
+| 유가 | 2개월 | 1.2 | 에너지→운송→자재 경유 |
+| PPI | 2개월 | 1.5 | 제조원가 경유 |
+| 철강 | 2개월 | 1.3 | 수입·가공 시차 |
+| 환율 | 3개월 | 1.5 | 수입물가→자재 2단계 전파 |
+| 수입물가 | 3개월 | 1.4 | 수입자재 도달 시차 |
+| 기준금리 | 4개월 | 1.8 | 확산형 — 금융→실물 전이 느림 |
+
+---
+
+@@SEC:sec-pyeong
+## Part V. 유형별 건설공사비 모형
+
+부동산 유형별 재료비/노무비/경비 비중 차이에 따른 차등 민감도:
+
+| 유형 | 기준단가 | 재료비 | 노무비 | 경비 | 노무민감도 | 출처 |
+|------|----------|--------|--------|------|------------|------|
+${pyeongRows}
+
+**유형별 영향 산출 공식:**
+\`영향(%) = 공사비변동(%) × (재료비비중 × 1.1 + 노무비비중 × 노무민감도)\`
+
+---
+
+@@SEC:sec-pf
+## Part VI. PF금리 등급별 모형
+
+기준금리 + 등급별 스프레드를 기반으로 선/중/후순위 트랜치 금리 추정:
+
+| 등급 | 기본스프레드 | 선순위 할인 | 중순위 가산 | 후순위 가산 | LTV | DSCR |
+|------|-------------|------------|------------|------------|-----|------|
+${pfRows}
+
+**PF금리 변동 산출:**
+- costImpact = 12M공사비변동 × 0.15
+- riskPremium = 12M변동 × 등급스프레드 × 0.08 (상승시) / 0.03 (하락시)
+- totalDelta = 금리충격 + riskPremium + costImpact
+- 선순위 = 기준금리 + 스프레드 + seniorDisc + totalDelta
+- 중순위 = 기준금리 + 스프레드 + mezzDisc + totalDelta
+- 후순위 = 기준금리 + 스프레드 + juniorDisc + totalDelta
+
+---
+
+@@SEC:sec-periods
+## Part VII. 분석 기간
+
+| 기간 | 범위 | 특성 |
+|------|------|------|
+| 우크라 전쟁기 | 22.02~23.08 | 에너지·원자재 급등기 (idx 13~31, 19개월) |
+| 전쟁 후 안정기 | 23.09~24.06 | 공급망 정상화, 금리 고점 (idx 32~41, 10개월) |
+| 최근 12개월 | 직전 12개월 | 현재 추세 반영 (idx 48~59) |
+| 전체 | 21.01~25.12 | 60개월 전구간 — 가장 안정적 추정 |
+
+**같은 방법론이라도 어떤 기간의 데이터로 추정했느냐에 따라 결과가 완전히 달라집니다.**
+전쟁기 추정 → 유가·환율 계수 크게, 안정기 추정 → 노무비·금리가 지배적.
+
+### 권장 기간-방법론 조합
+
+| 분석 목적 | 기간 | 방법론 | 이유 |
+|-----------|------|--------|------|
+| 전쟁 재발 시나리오 | 전쟁기 | LP | 소표본 + 대형 충격 → LP가 유일하게 강건 |
+| 현재 추세 기반 전망 | 최근 12M | ARDL + Gaussian | 현재 구조 반영, 두 방법 교차 검증 |
+| 장기 구조 분석 | 전체 | ARDL | 충분한 표본, R² 검증 가능 |
+| 전체 비교 (보고용) | 전체 | 3-Method 비교 | 방법론 간 일치/괴리 → 신뢰도 판단 |
+
+---
+
+@@SEC:sec-pressure
+## Part VIII. 압력 상태 진단 (Pressure State)
+
+**종합 점수 산출:**
+\`점수 = 현재YoY×0.45 + 3M전망×1.5 + 12M전망×1.2 + 상위3기여도×0.55\`
+
+| 상태 | 점수 기준 | 의미 |
+|------|-----------|------|
+| HIGH PRESSURE | ≥ 4.2 | 원가·금융 동시 상방 리스크 |
+| WATCH | ≥ 2.1 | 우상향이나 통제 가능 |
+| STABLE | < 2.1 | 상방 압력 제한적 |
+
+---
+
+@@SEC:sec-impl
+## Part IX. 구현 세부사항
+
+### 9.1 OLS 행렬 연산 (순수 JavaScript)
+외부 라이브러리 없이 행렬 전치, 곱셈, 역행렬(가우스-조르단 소거법)을 구현:
+- \`matTranspose(A)\` — m × n → n × m
+- \`matMul(A, B)\` — A(m×p) · B(p×n) → C(m×n)
+- \`matInvert(M)\` — Gauss-Jordan elimination, partial pivoting
+- \`olsEstimate(X, y)\` — β̂ = (X'X)⁻¹X'y, R² 계산 포함
+
+### 9.2 모델 캐싱
+ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 저장. 기간 변경 시 캐시 초기화 및 재추정. 충격(shock) 변경 시에는 재추정 없이 기존 계수 적용.
+
+### 9.3 ARDL 파라미터
+
+| 파라미터 | 값 | 설명 |
+|---------|-----|------|
+| K (드라이버 수) | 8 | fx, oil, ppi, importPrice, labor, steel, cement, policyRate |
+| L (최대 시차) | 4 | 0~4개월 시차 포함 |
+| 계수 수 | 41 | 8 × 5 + 1 (상수항) |
+| 최소 관측치 | 10 | 이하이면 Gaussian 폴백 |
+
+### 9.4 LP 파라미터
+
+| 파라미터 | 값 | 설명 |
+|---------|-----|------|
+| 최대 horizon | 12 | 12개월 전방까지 추정 |
+| 회귀 수 | 12 | 각 h에서 독립 OLS |
+| 계수 수/회귀 | 9 | 8 드라이버 + 상수항 |
+| 최소 유효 관측치 | 8 | 이하이면 해당 h 스킵 |
+
+---
+
+@@SEC:sec-guide
+## Part X. 실전 활용 가이드
+
+### 10.1 시나리오별 권장 방법론
+
+| 분석 목적 | 추천 방법론 | 추천 기간 | 이유 |
+|-----------|-----------|-----------|------|
+| 빠른 스크리닝 | Gaussian IRF | 최근 12M | 파라미터 추정 불필요, 방향성 판단에 충분 |
+| 정밀 비용 예측 | ARDL-OLS | 전체(5Y) | 시차별 계수를 데이터로 추정, 정량적 정확도 높음 |
+| 위기 상황 분석 | Local Projections | 전쟁기 | 비정상 분포(fat tails)에 강건 |
+| 교차 검증 | All (3방법 비교) | 상황별 | 결과 수렴 → 신뢰도↑, 괴리 → 불확실성↑ |
+| 과거 충격 회고 | ARDL / LP | 해당 시기 | 변수별 영향 분해 가능 |
+
+### 10.2 분석 결과 해석
+
+**PRESSURE BADGE 해석:**
+- HIGH PRESSURE: 복합 점수 > 3.0 — 건설비 상승 압력이 강하게 작용 중
+- WATCH: 복합 점수 1.5~3.0 — 일부 변수에서 압력 신호 감지
+- STABLE: 복합 점수 < 1.5 — 유의미한 상승 압력 없음
+
+**3M / 6M / 12M 추가압력 해석:**
+- +2.5% (3M) → 향후 3개월간 건설공사비 지수가 현재 대비 2.5% 추가 상승 예상
+- -0.3% (6M) → 6개월 시점에서 충격이 흡수되어 소폭 하락 전환 예상
+- 3방법 비교 시 — 결과가 동일 방향이면 확신↑, 서로 다르면 불확실성 구간
+
+**ATTRIBUTION TABLE 해석:**
+- 기여도(%) — 해당 변수가 전체 공사비 변동의 몇 %를 설명 (change × weight)
+- 반영시차 — 충격 후 최대 영향까지 걸리는 개월 수 (peakLag)
+- 기여도가 가장 큰 변수 = **핵심 관리 대상**. 시차가 긴 변수는 선제 대응 가능
+
+### 10.3 3가지 방법론 결과가 다를 때
+
+- **3개 모두 상승** → 높은 확신 → 예산 상향 조정 검토
+- **2:1 분리** → 중간 확신 → 주요 변수 모니터링 강화
+- **완전 불일치** → 높은 불확실성 → Monte Carlo 시뮬레이션으로 확률 분포 확인
+
+---
+
+@@SEC:sec-refs
+## Part XI. 데이터 출처·참고문헌
+
+### 11.1 데이터 출처
+- **ECOS (한국은행 경제통계시스템)**: 기준금리, 환율, PPI, 수입물가, 건설공사비지수, 회사채 수익률
+- **대한건설협회**: 건설노임 단가, 실적공사비
+- **한국신용평가**: PF 스프레드 리포트
+- **한국주택금융공사**: MBS 금리, 선/중/후순위 기준
+- **Yahoo Finance / MarketWatch**: WTI, Brent, VIX, US10Y, 건설주 시세
+
+### 11.2 참고 문헌
+- **Jordà, Ò. (2005).** "Estimation and Inference of Impulse Responses by Local Projections." *American Economic Review*, 95(1), 161–182. — LP 방법론의 원논문
+- **Pesaran, M. H. & Shin, Y. (1999).** "An Autoregressive Distributed Lag Modelling Approach to Cointegration Analysis." — ARDL 방법론의 이론적 기초
+- **Ramey, V. A. (2016).** "Macroeconomic Shocks and Their Propagation." *Handbook of Macroeconomics*, Vol. 2. — 충격 전파 분석 방법론 종합 서베이
+- **Plagborg-Møller, M. & Wolf, C. K. (2021).** "Local Projections and VARs Estimate the Same Impulse Responses." *Econometrica*, 89(2), 955–980. — LP와 VAR의 수학적 동치 관계 증명
+
+---
+
+*Generated by Crisis Monitoring Dashboard Simulation Engine v4*
+*Last updated: ${new Date().toISOString().slice(0, 10)}*
+`;
+        }
+
+        function renderHelpHtml(md) {
+            const out = [];
+            let tableRows = [];
+            const flushTable = () => {
+                if (tableRows.length < 2) { out.push(...tableRows.map(r => r._raw)); tableRows = []; return; }
+                let t = '<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:12px;">';
+                tableRows.forEach((row, ri) => {
+                    if (row._sep) return;
+                    const tag = ri === 0 ? 'th' : 'td';
+                    const bg = ri === 0 ? 'background:rgba(56,189,248,0.08);' : (ri % 2 === 0 ? 'background:rgba(255,255,255,0.015);' : '');
+                    t += '<tr>';
+                    row.cells.forEach(c => {
+                        const align = /^[+\-]?\d|^≥|^<|^★/.test(c.trim()) ? 'text-align:right;' : '';
+                        t += '<' + tag + ' style="padding:6px 8px;border-bottom:1px solid #1a2840;color:' + (ri === 0 ? '#8cb4d8' : '#b8c8dc') + ';font-weight:' + (ri === 0 ? '700' : '400') + ';font-size:' + (ri === 0 ? '10px' : '12px') + ';white-space:nowrap;' + align + bg + '">' + c.trim() + '</' + tag + '>';
+                    });
+                    t += '</tr>';
+                });
+                t += '</table>';
+                out.push(t);
+                tableRows = [];
+            };
+            const realLines = md.split('\n');
+            let inTable = false;
+            realLines.forEach(line => {
+                if (/^\|(.+)\|$/.test(line)) {
+                    const inner = line.slice(1, -1);
+                    if (/^[\s\-:|]+$/.test(inner)) { tableRows.push({ _sep: true }); }
+                    else { tableRows.push({ cells: inner.split('|'), _raw: line }); }
+                    inTable = true;
+                } else {
+                    if (inTable) { flushTable(); inTable = false; }
+                    out.push(line);
+                }
+            });
+            if (inTable) flushTable();
+
+            let html = out.join('\n')
+                // Section anchors: @@SEC:id → div with id
+                .replace(/@@SEC:(\S+)/g, '<div id="$1" style="scroll-margin-top:10px;"></div>')
+                .replace(/^#### (.+)$/gm, '<h5 style="color:#a78bfa;margin:14px 0 5px;font-size:12.5px;font-weight:700;letter-spacing:0.5px;">$1</h5>')
+                .replace(/^### (.+)$/gm, '<h4 style="color:#38bdf8;margin:18px 0 6px;font-size:14px;font-weight:700;padding-left:10px;border-left:3px solid #38bdf8;">$1</h4>')
+                .replace(/^## (Part [IVX]+\..+)$/gm, '<div style="margin:28px 0 10px;padding:10px 14px;background:linear-gradient(90deg,rgba(20,184,166,0.1),rgba(56,189,248,0.04),transparent);border-left:4px solid #14b8a6;border-radius:0 6px 6px 0;"><h3 style="color:#f0f6ff;font-size:17px;font-weight:800;margin:0;letter-spacing:-0.3px;">$1</h3></div>')
+                .replace(/^## (.+)$/gm, '<div style="margin:20px 0 10px;padding:8px 12px;background:linear-gradient(90deg,rgba(56,189,248,0.06),transparent);border-left:3px solid #14b8a6;border-radius:0 4px 4px 0;"><h3 style="color:#e2e8f0;font-size:16px;font-weight:700;margin:0;">$1</h3></div>')
+                .replace(/^# (.+)$/gm, '<div style="margin:0 0 16px;padding:14px 0;border-bottom:2px solid #1a2d48;"><h2 style="color:#f0f6ff;font-size:20px;font-weight:800;margin:0;letter-spacing:-0.5px;">$1</h2></div>')
+                .replace(/\*([^*]+)\*/g, (m, p1) => {
+                    if (p1.startsWith('*') && p1.endsWith('*')) return m;
+                    return '<em style="color:#94a3b8;font-style:italic;">' + p1 + '</em>';
+                })
+                .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e8f0ff;">$1</strong>')
+                .replace(/`(.+?)`/g, '<code style="background:rgba(56,189,248,0.08);color:#38bdf8;padding:1px 5px;border-radius:2px;font-size:11px;font-family:\'IBM Plex Mono\',Consolas,monospace;">$1</code>')
+                .replace(/^- (.+)$/gm, '<div style="display:flex;gap:8px;padding:3px 0 3px 4px;"><span style="color:#38bdf8;font-size:8px;margin-top:5px;">●</span><span>$1</span></div>')
+                .replace(/→/g, '<span style="color:#f59e0b;font-weight:600;"> → </span>')
+                .replace(/^---$/gm, '<hr style="border:none;border-top:1px solid #1a2840;margin:18px 0;">')
+                .replace(/\n\n/g, '<div style="height:6px;"></div>')
+                .replace(/\n/g, '<br>');
+            return '<div style="font-size:13px;line-height:1.7;color:#b8c8dc;">' + html + '</div>';
+        }
+
+        function getHelpDocCSS() {
+            return `
+            .hdoc-overlay {
+                position:fixed;top:0;left:0;width:100%;height:100%;z-index:10200;
+                display:flex;align-items:center;justify-content:center;
+                background:rgba(2,6,16,0.82);backdrop-filter:blur(8px);
+            }
+            .hdoc-shell {
+                background:#070e1a;border:1px solid rgba(78,201,255,0.12);
+                border-radius:14px;width:min(1260px,97vw);max-height:96vh;
+                display:flex;flex-direction:column;
+                box-shadow:0 32px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(78,201,255,0.06);
+                opacity:0;transform:scale(0.97);transition:all 0.3s cubic-bezier(0.16,1,0.3,1);
+            }
+            .hdoc-header {
+                padding:16px 24px;display:flex;justify-content:space-between;align-items:center;
+                border-bottom:1px solid rgba(78,201,255,0.08);flex-shrink:0;
+                background:linear-gradient(135deg,#080f1e,#0c1829);border-radius:14px 14px 0 0;
+            }
+            .hdoc-tag {
+                font-family:'Outfit',sans-serif;font-size:9px;font-weight:700;
+                color:#14b8a6;letter-spacing:3px;text-transform:uppercase;margin-bottom:2px;
+            }
+            .hdoc-title {
+                font-family:'Outfit','IBM Plex Sans KR',sans-serif;font-size:22px;font-weight:900;
+                color:#f0f6ff;letter-spacing:-0.5px;
+            }
+            .hdoc-btn-dl {
+                background:rgba(20,184,166,0.08);border:1px solid rgba(20,184,166,0.25);
+                color:#14b8a6;font-size:11px;font-weight:600;padding:6px 14px;border-radius:6px;
+                cursor:pointer;font-family:'Outfit',sans-serif;letter-spacing:0.5px;transition:all 0.2s;
+            }
+            .hdoc-btn-dl:hover { background:rgba(20,184,166,0.18);border-color:#14b8a6; }
+            .hdoc-btn-x {
+                background:none;border:1px solid rgba(255,255,255,0.08);color:#7f93ad;
+                font-size:18px;width:32px;height:32px;border-radius:6px;cursor:pointer;
+                display:flex;align-items:center;justify-content:center;transition:all 0.2s;
+            }
+            .hdoc-btn-x:hover { background:rgba(255,60,60,0.12);color:#ff6b6b;border-color:rgba(255,60,60,0.3); }
+            .hdoc-body { display:flex;flex:1;overflow:hidden;min-height:0; }
+            .hdoc-toc {
+                width:200px;flex-shrink:0;overflow-y:auto;padding:16px 10px;
+                border-right:1px solid rgba(78,201,255,0.06);background:rgba(4,10,22,0.6);
+            }
+            .hdoc-toc-item {
+                display:flex;align-items:center;gap:10px;padding:8px 12px;
+                border-radius:6px;cursor:pointer;transition:all 0.15s;margin-bottom:2px;
+            }
+            .hdoc-toc-item:hover { background:rgba(56,189,248,0.06); }
+            .hdoc-toc-item.active { background:rgba(20,184,166,0.1); }
+            .hdoc-toc-item.active .hdoc-toc-num { color:#14b8a6; }
+            .hdoc-toc-item.active .hdoc-toc-label { color:#e8f4ff; }
+            .hdoc-toc-num {
+                font-family:'Outfit',sans-serif;font-size:10px;font-weight:800;
+                color:#3a5070;min-width:22px;letter-spacing:0.5px;
+            }
+            .hdoc-toc-label {
+                font-size:12px;color:#7f93ad;font-weight:500;white-space:nowrap;
+                overflow:hidden;text-overflow:ellipsis;
+            }
+            .hdoc-main {
+                flex:1;overflow-y:auto;padding:32px 40px 60px;scroll-behavior:smooth;
+            }
+            .hdoc-main::-webkit-scrollbar { width:6px; }
+            .hdoc-main::-webkit-scrollbar-track { background:transparent; }
+            .hdoc-main::-webkit-scrollbar-thumb { background:#1a2d48;border-radius:3px; }
+            .hd-hero { margin-bottom:40px;padding-bottom:32px;border-bottom:1px solid rgba(78,201,255,0.06); }
+            .hd-hero-title {
+                font-family:'Outfit',sans-serif;font-size:42px;font-weight:900;
+                letter-spacing:-2px;line-height:1;
+                background:linear-gradient(135deg,#f0f6ff,#38bdf8,#14b8a6);
+                -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:12px;
+            }
+            .hd-hero-sub { font-size:14px;color:#7f93ad;line-height:1.7;max-width:600px; }
+            .hd-kpi-row { display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:24px; }
+            .hd-kpi {
+                background:linear-gradient(145deg,#0c1a2e,#0a1525);
+                border:1px solid rgba(78,201,255,0.08);border-radius:10px;padding:16px 18px;
+            }
+            .hd-kpi-val { font-family:'Outfit',sans-serif;font-size:28px;font-weight:900;color:#f0f6ff;letter-spacing:-1px; }
+            .hd-kpi-label { font-size:11px;color:#5a7a9a;margin-top:4px;font-weight:500; }
+            .hd-sec { scroll-margin-top:20px;margin-top:48px;animation:hdFadeIn 0.4s ease-out both; }
+            @keyframes hdFadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+            .hd-sec-head {
+                display:flex;align-items:baseline;gap:14px;margin-bottom:20px;
+                padding-bottom:12px;border-bottom:2px solid rgba(20,184,166,0.15);
+            }
+            .hd-sec-num { font-family:'Outfit',sans-serif;font-size:11px;font-weight:800;color:#14b8a6;letter-spacing:2px; }
+            .hd-sec-title {
+                font-family:'Outfit','IBM Plex Sans KR',sans-serif;font-size:24px;
+                font-weight:800;color:#f0f6ff;letter-spacing:-0.5px;
+            }
+            .hd-subsec {
+                font-family:'Outfit','IBM Plex Sans KR',sans-serif;font-size:16px;
+                font-weight:700;color:#38bdf8;margin:28px 0 12px;padding-left:12px;border-left:3px solid #38bdf8;
+            }
+            .hd-text { font-size:13px;color:#b0c4de;line-height:1.8;margin:8px 0; }
+            .hd-formula {
+                background:rgba(56,189,248,0.04);border:1px solid rgba(56,189,248,0.1);
+                border-radius:8px;padding:12px 16px;margin:12px 0;
+                font-family:'IBM Plex Mono',Consolas,monospace;font-size:12px;color:#38bdf8;letter-spacing:0.5px;overflow-x:auto;
+            }
+            .hd-cards { display:grid;gap:14px;margin:16px 0; }
+            .hd-cards-3 { grid-template-columns:repeat(3,1fr); }
+            .hd-cards-2 { grid-template-columns:repeat(2,1fr); }
+            .hd-cards-4 { grid-template-columns:repeat(4,1fr); }
+            .hd-card {
+                background:linear-gradient(145deg,#0c1a2e,#0a1424);
+                border:1px solid rgba(78,201,255,0.07);border-radius:10px;padding:18px;transition:border-color 0.2s;
+            }
+            .hd-card:hover { border-color:rgba(78,201,255,0.18); }
+            .hd-card-title { font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#e8f4ff;margin-bottom:8px; }
+            .hd-card-text { font-size:12px;color:#7f93ad;line-height:1.6; }
+            .hd-method-card {
+                background:linear-gradient(145deg,#0c1a2e,#0a1424);border-radius:12px;padding:20px;
+                position:relative;overflow:hidden;border:1px solid rgba(78,201,255,0.07);
+            }
+            .hd-method-card::before { content:'';position:absolute;top:0;left:0;right:0;height:3px; }
+            .hd-method-card.m1::before { background:linear-gradient(90deg,#14b8a6,#38bdf8); }
+            .hd-method-card.m2::before { background:linear-gradient(90deg,#f59e0b,#f97316); }
+            .hd-method-card.m3::before { background:linear-gradient(90deg,#a78bfa,#818cf8); }
+            .hd-method-num { font-family:'Outfit',sans-serif;font-size:48px;font-weight:900;line-height:1;letter-spacing:-3px;margin-bottom:4px; }
+            .m1 .hd-method-num { color:rgba(20,184,166,0.2); }
+            .m2 .hd-method-num { color:rgba(245,158,11,0.2); }
+            .m3 .hd-method-num { color:rgba(167,139,250,0.2); }
+            .hd-method-name { font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;color:#f0f6ff;margin-bottom:6px; }
+            .hd-method-desc { font-size:12px;color:#7f93ad;line-height:1.6;margin-bottom:12px; }
+            .hd-badge { display:inline-block;font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px;margin:2px 3px 2px 0; }
+            .hd-badge-pro { background:rgba(20,184,166,0.1);color:#14b8a6;border:1px solid rgba(20,184,166,0.2); }
+            .hd-badge-con { background:rgba(239,68,68,0.08);color:#f87171;border:1px solid rgba(239,68,68,0.15); }
+            .hd-badge-use { background:rgba(56,189,248,0.08);color:#38bdf8;border:1px solid rgba(56,189,248,0.15); }
+            .hd-table {
+                width:100%;border-collapse:separate;border-spacing:0;margin:14px 0;
+                border-radius:8px;overflow:hidden;border:1px solid rgba(78,201,255,0.08);
+            }
+            .hd-table thead th {
+                background:linear-gradient(135deg,#0e1f35,#0b1829);color:#8cb4d8;font-size:10px;
+                font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:10px 12px;
+                text-align:left;border-bottom:2px solid rgba(20,184,166,0.15);
+            }
+            .hd-table tbody td { padding:9px 12px;font-size:12px;color:#b8c8dc;border-bottom:1px solid rgba(78,201,255,0.04); }
+            .hd-table tbody tr:hover td { background:rgba(56,189,248,0.03); }
+            .hd-table tbody tr:nth-child(even) td { background:rgba(255,255,255,0.01); }
+            .hd-table .td-num { font-family:'Outfit',sans-serif;font-weight:700;color:#e8f4ff;text-align:right; }
+            .hd-table .td-highlight { color:#14b8a6;font-weight:600; }
+            .hd-bar-chart { margin:18px 0; }
+            .hd-bar-row { display:flex;align-items:center;gap:10px;margin-bottom:8px; }
+            .hd-bar-label { width:80px;font-size:11px;color:#8cb4d8;text-align:right;flex-shrink:0;font-weight:500; }
+            .hd-bar-track { flex:1;height:22px;background:rgba(255,255,255,0.02);border-radius:4px;overflow:hidden;position:relative; }
+            .hd-bar-fill {
+                height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;
+                font-size:10px;font-weight:700;color:#fff;transition:width 0.6s cubic-bezier(0.16,1,0.3,1);min-width:30px;
+            }
+            .hd-bar-val { width:40px;font-size:11px;color:#5a7a9a;text-align:right;flex-shrink:0;font-family:'Outfit',sans-serif;font-weight:600; }
+            .hd-stacked-row { display:flex;align-items:center;gap:10px;margin-bottom:6px; }
+            .hd-stacked-label { width:90px;font-size:11px;color:#8cb4d8;text-align:right;flex-shrink:0; }
+            .hd-stacked-bar { flex:1;height:20px;display:flex;border-radius:4px;overflow:hidden; }
+            .hd-stacked-seg {
+                height:100%;display:flex;align-items:center;justify-content:center;
+                font-size:9px;font-weight:700;color:rgba(255,255,255,0.8);min-width:20px;
+            }
+            .hd-flow {
+                display:flex;align-items:center;gap:0;margin:20px 0;padding:16px;
+                background:rgba(6,12,24,0.5);border-radius:10px;border:1px solid rgba(78,201,255,0.06);overflow-x:auto;
+            }
+            .hd-flow-node { padding:10px 14px;border-radius:8px;font-size:11px;font-weight:600;color:#e8f4ff;text-align:center;white-space:nowrap;flex-shrink:0; }
+            .hd-flow-arrow { color:#3a5070;font-size:16px;margin:0 4px;flex-shrink:0; }
+            .hd-loop-card { border-radius:10px;padding:16px 18px;margin-bottom:10px;border:1px solid;position:relative; }
+            .hd-loop-card.reinforcing { background:rgba(20,184,166,0.04);border-color:rgba(20,184,166,0.15); }
+            .hd-loop-card.balancing { background:rgba(245,158,11,0.04);border-color:rgba(245,158,11,0.15); }
+            .hd-loop-tag { font-family:'Outfit',sans-serif;font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px; }
+            .hd-loop-card.reinforcing .hd-loop-tag { color:#14b8a6; }
+            .hd-loop-card.balancing .hd-loop-tag { color:#f59e0b; }
+            .hd-loop-title { font-size:14px;font-weight:700;color:#e8f4ff;margin-bottom:6px; }
+            .hd-loop-desc { font-size:12px;color:#7f93ad;line-height:1.6; }
+            .hd-period-card {
+                background:linear-gradient(145deg,#0c1a2e,#0a1424);
+                border:1px solid rgba(78,201,255,0.07);border-radius:10px;padding:16px;position:relative;overflow:hidden;
+            }
+            .hd-period-card::after { content:'';position:absolute;bottom:0;left:0;right:0;height:2px; }
+            .hd-period-card:nth-child(1)::after { background:#ef4444; }
+            .hd-period-card:nth-child(2)::after { background:#f59e0b; }
+            .hd-period-card:nth-child(3)::after { background:#38bdf8; }
+            .hd-period-card:nth-child(4)::after { background:#14b8a6; }
+            .hd-period-range { font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5a7a9a;margin-bottom:4px; }
+            .hd-period-name { font-size:14px;font-weight:700;color:#e8f4ff;margin-bottom:6px; }
+            .hd-period-desc { font-size:11px;color:#7f93ad;line-height:1.5; }
+            .hd-gauge-row { display:flex;gap:12px;margin:16px 0; }
+            .hd-gauge-item { flex:1;text-align:center;padding:16px;border-radius:10px;border:1px solid rgba(78,201,255,0.07); }
+            .hd-gauge-score { font-family:'Outfit',sans-serif;font-size:24px;font-weight:900;margin-bottom:4px; }
+            .hd-gauge-label { font-size:11px;font-weight:600;margin-bottom:2px; }
+            .hd-gauge-desc { font-size:10px;color:#5a7a9a; }
+            .hd-timeline { margin:18px 0; }
+            .hd-tl-row { display:flex;align-items:center;gap:10px;margin-bottom:6px; }
+            .hd-tl-label { width:70px;font-size:11px;color:#8cb4d8;text-align:right;flex-shrink:0;font-weight:500; }
+            .hd-tl-track { flex:1;height:18px;background:rgba(255,255,255,0.015);border-radius:3px;position:relative; }
+            .hd-tl-mark {
+                position:absolute;top:0;height:100%;border-radius:3px;display:flex;align-items:center;justify-content:center;
+                font-size:9px;font-weight:700;color:rgba(255,255,255,0.7);
+            }
+            .hd-tl-scale { display:flex;justify-content:space-between;padding-left:80px;font-size:9px;color:#3a5070;margin-top:4px; }
+            .hd-ul { margin:8px 0;padding:0;list-style:none; }
+            .hd-ul li { display:flex;gap:8px;padding:4px 0;font-size:12px;color:#b0c4de;line-height:1.6; }
+            .hd-ul li::before { content:'';width:5px;height:5px;border-radius:50%;background:#38bdf8;flex-shrink:0;margin-top:7px; }
+            .hd-divider { border:none;border-top:1px solid rgba(78,201,255,0.06);margin:40px 0; }
+            .hd-cmp-strong { color:#14b8a6;font-weight:700; }
+            .hd-cmp-medium { color:#f59e0b;font-weight:600; }
+            .hd-cmp-weak { color:#f87171;font-weight:600; }
+            .hd-ref { padding:12px 16px;border-left:3px solid #3a5070;margin:10px 0;background:rgba(255,255,255,0.01);border-radius:0 6px 6px 0; }
+            .hd-ref-title { font-size:12px;color:#e8f4ff;font-weight:600;margin-bottom:4px; }
+            .hd-ref-meta { font-size:11px;color:#5a7a9a;font-style:italic; }
+            .hd-arrow { color:#f59e0b;font-weight:700; }
+            .hd-code-block {
+                background:#060c18;border:1px solid rgba(78,201,255,0.08);border-radius:8px;padding:14px 18px;margin:10px 0;
+                font-family:'IBM Plex Mono',Consolas,monospace;font-size:11px;color:#38bdf8;line-height:1.6;overflow-x:auto;
+            }
+            @media (max-width:900px) {
+                .hd-cards-3 { grid-template-columns:1fr; }
+                .hd-cards-4 { grid-template-columns:repeat(2,1fr); }
+                .hdoc-toc { display:none; }
+                .hdoc-main { padding:20px; }
+                .hd-hero-title { font-size:28px; }
+            }
+            `;
+        }
+
+        function buildHelpDocument() {
+            const ptData = Object.entries(PASS_THROUGH).map(([k, v]) => ({
+                key: k, label: DRIVER_META[k].label, weight: v.weight,
+                peakLag: v.peakLag, width: v.width, path: ROUTE_BLUEPRINT[k].path
+            })).sort((a, b) => b.weight - a.weight);
+            const maxWeight = Math.max(...ptData.map(d => d.weight));
+
+            const pyeongData = Object.entries(PYEONG_TYPES).map(([k, v]) => ({
+                key: k, label: v.label, baseline: v.baseline,
+                material: v.materialPct, labor: v.laborPct, overhead: v.overheadPct,
+                laborSens: v.laborSensitivity, source: v.source
+            }));
+
+            const pfData = PF_GRADES.map(p => ({
+                grade: p.grade, baseSpread: p.baseSpread, seniorDisc: p.seniorDisc,
+                mezzDisc: p.mezzDisc, juniorDisc: p.juniorDisc, ltv: p.ltv, dscr: p.dscr
+            }));
+
+            const barColors = [
+                'linear-gradient(90deg,#14b8a6,#0d9488)','linear-gradient(90deg,#38bdf8,#0ea5e9)',
+                'linear-gradient(90deg,#a78bfa,#8b5cf6)','linear-gradient(90deg,#f59e0b,#d97706)',
+                'linear-gradient(90deg,#f87171,#ef4444)','linear-gradient(90deg,#34d399,#10b981)',
+                'linear-gradient(90deg,#fb923c,#ea580c)','linear-gradient(90deg,#818cf8,#6366f1)',
+                'linear-gradient(90deg,#fbbf24,#f59e0b)','linear-gradient(90deg,#22d3ee,#06b6d4)',
+            ];
+
+            let html = '';
+
+            // HERO
+            html += `
+            <div class="hd-hero">
+                <div class="hd-hero-title">CONSTRUCTION<br>COST SIMULATION</div>
+                <div class="hd-hero-sub">
+                    거시경제 변수의 충격이 건설공사비지수에 미치는 영향을 정량적으로 분석하는 3-Method Ensemble 시뮬레이션 엔진.
+                    단일 모형 편향을 최소화하고, 교차 검증을 통해 전망의 신뢰도를 높입니다.
+                </div>
+                <div class="hd-kpi-row">
+                    <div class="hd-kpi"><div class="hd-kpi-val">10</div><div class="hd-kpi-label">MACRO DRIVERS</div></div>
+                    <div class="hd-kpi"><div class="hd-kpi-val">3</div><div class="hd-kpi-label">INDEPENDENT METHODS</div></div>
+                    <div class="hd-kpi"><div class="hd-kpi-val">60</div><div class="hd-kpi-label">MONTHS OF DATA</div></div>
+                </div>
+            </div>`;
+
+            // PART I
+            html += `
+            <div class="hd-sec" id="sec-overview">
+                <div class="hd-sec-head"><span class="hd-sec-num">PART I</span><span class="hd-sec-title">엔진 개요</span></div>
+                <div class="hd-subsec">1.1 시뮬레이션 목적</div>
+                <div class="hd-text">본 시뮬레이션은 거시경제 변수(환율, 유가, PPI, 노무비, 금리 등)의 충격이 건설공사비지수에 미치는 영향을 정량적으로 분석합니다. 3가지 독립적 방법론을 병행 적용하여 단일 모형 편향을 최소화하고, 교차 검증을 통해 전망의 신뢰도를 높입니다.</div>
+                <div class="hd-subsec">1.2 데이터 기반</div>
+                <div class="hd-cards hd-cards-2">
+                    <div class="hd-card"><div class="hd-card-title">데이터 출처</div><div class="hd-card-text">ECOS (한국은행 경제통계시스템) 월별 시계열</div></div>
+                    <div class="hd-card"><div class="hd-card-title">분석 기간</div><div class="hd-card-text">2021.01 ~ 2025.12 (60개월)</div></div>
+                </div>
+                <div class="hd-text" style="margin-top:12px;"><strong style="color:#e8f0ff;">10개 드라이버:</strong> 환율, 유가, PPI, 수입물가, 노무비, 철강, 시멘트, 기준금리, VIX, US10Y</div>
+                <div class="hd-subsec">1.3 왜 3가지 방법이 필요한가</div>
+                <div class="hd-text">하나의 충격에 대해 세 가지 방법론이 <strong style="color:#e8f0ff;">서로 다른 전망</strong>을 내놓습니다. 단일 방법론의 한계를 보완하기 위해 비교 분석을 지원합니다.</div>
+                <table class="hd-table">
+                    <thead><tr><th>기준</th><th>Gaussian IRF</th><th>ARDL-OLS</th><th>Local Projections</th></tr></thead>
+                    <tbody>
+                        <tr><td>계수 추정</td><td>수기 입력 (고정)</td><td>OLS 데이터 추정</td><td>OLS 데이터 추정</td></tr>
+                        <tr><td>IRF 형태</td><td>Gaussian (가정)</td><td>시차별 계수 (자유)</td><td>horizon별 직접 추정</td></tr>
+                        <tr><td>비선형 대응</td><td class="hd-cmp-weak">취약</td><td class="hd-cmp-medium">보통</td><td class="hd-cmp-strong">강건</td></tr>
+                        <tr><td>소표본 안정성</td><td class="hd-cmp-strong">강건</td><td class="hd-cmp-medium">보통</td><td class="hd-cmp-weak">취약 (h 증가)</td></tr>
+                        <tr><td>변수 상호작용</td><td>독립 가정</td><td>시차별 포착</td><td>동시점 포착</td></tr>
+                        <tr><td>오차 누적</td><td class="hd-cmp-strong">없음</td><td class="hd-cmp-weak">재귀 누적</td><td class="hd-cmp-strong">없음</td></tr>
+                        <tr><td>전쟁 적합도</td><td class="hd-cmp-weak">낮음</td><td class="hd-cmp-medium">보통</td><td class="hd-cmp-strong">최적</td></tr>
+                    </tbody>
+                </table>
+            </div>`;
+
+            // PART II
+            html += `
+            <hr class="hd-divider">
+            <div class="hd-sec" id="sec-methods">
+                <div class="hd-sec-head"><span class="hd-sec-num">PART II</span><span class="hd-sec-title">분석 방법론</span></div>
+                <div class="hd-text" style="margin-bottom:20px;">3-Method Ensemble: 각 방법론의 강점이 다른 방법론의 약점을 보완합니다.</div>
+                <div class="hd-cards hd-cards-3">
+                    <div class="hd-method-card m1">
+                        <div class="hd-method-num">01</div>
+                        <div class="hd-method-name">Gaussian IRF</div>
+                        <div class="hd-method-desc">사전 지정된 가중치, 최대 반응 시점, 확산폭을 사용하여 충격의 시간별 전파를 모델링.</div>
+                        <div class="hd-formula">IRF(h) = w &times; exp(-(h - &mu;)&sup2; / 2&sigma;&sup2;)</div>
+                        <div style="margin-top:10px;">
+                            <span class="hd-badge hd-badge-pro">소표본 안정</span><span class="hd-badge hd-badge-pro">즉시 계산</span><span class="hd-badge hd-badge-pro">직관적</span>
+                        </div>
+                        <div style="margin-top:4px;"><span class="hd-badge hd-badge-con">가정 기반</span><span class="hd-badge hd-badge-con">비대칭 미반영</span></div>
+                        <div style="margin-top:8px;"><span class="hd-badge hd-badge-use">초기 스크리닝에 적합</span></div>
+                    </div>
+                    <div class="hd-method-card m2">
+                        <div class="hd-method-num">02</div>
+                        <div class="hd-method-name">ARDL-OLS</div>
+                        <div class="hd-method-desc">Autoregressive Distributed Lag 모형을 OLS로 추정. 실제 데이터에서 시차별 영향 계수를 추정.</div>
+                        <div class="hd-formula">&beta;&#770; = (X'X)&#8315;&sup1;X'y &emsp; [41 coefficients]</div>
+                        <div style="margin-top:10px;">
+                            <span class="hd-badge hd-badge-pro">데이터 기반</span><span class="hd-badge hd-badge-pro">R&sup2; 검증</span><span class="hd-badge hd-badge-pro">자동 재추정</span>
+                        </div>
+                        <div style="margin-top:4px;"><span class="hd-badge hd-badge-con">과적합 위험</span><span class="hd-badge hd-badge-con">오차 누적</span></div>
+                        <div style="margin-top:8px;"><span class="hd-badge hd-badge-use">정밀 비용 예측</span></div>
+                    </div>
+                    <div class="hd-method-card m3">
+                        <div class="hd-method-num">03</div>
+                        <div class="hd-method-name">Local Projections</div>
+                        <div class="hd-method-desc">Jord&agrave;(2005) 방법론. 각 예측 시점 h에서 별도 OLS 회귀를 실행하여 직접 추정.</div>
+                        <div class="hd-formula">y<sub>t+h</sub> - y<sub>t</sub> = &alpha;<sub>h</sub> + &Sigma;&beta;<sub>h,k</sub> &middot; &Delta;X<sub>k,t</sub></div>
+                        <div style="margin-top:10px;">
+                            <span class="hd-badge hd-badge-pro">오차 비누적</span><span class="hd-badge hd-badge-pro">비선형 포착</span><span class="hd-badge hd-badge-pro">강건</span>
+                        </div>
+                        <div style="margin-top:4px;"><span class="hd-badge hd-badge-con">소표본 불안정</span><span class="hd-badge hd-badge-con">h 증가시 정밀도 하락</span></div>
+                        <div style="margin-top:8px;"><span class="hd-badge hd-badge-use">위기 상황 분석 최적</span></div>
+                    </div>
+                </div>
+                <div class="hd-subsec">2.4 앙상블 비교 모드</div>
+                <div class="hd-text">3가지 방법론의 결과를 단순 평균하여 KPI에 표시합니다. 방법론 간 편차가 클수록 불확실성이 높은 것으로 해석합니다.</div>
+            </div>`;
+
+            // PART III
+            const barChartHtml = ptData.map((d, i) =>
+                `<div class="hd-bar-row"><div class="hd-bar-label">${d.label}</div><div class="hd-bar-track"><div class="hd-bar-fill" style="width:${(d.weight/maxWeight*100).toFixed(0)}%;background:${barColors[i%barColors.length]};">${d.weight}</div></div><div class="hd-bar-val">${d.peakLag}M</div></div>`
+            ).join('');
+
+            html += `
+            <hr class="hd-divider">
+            <div class="hd-sec" id="sec-passthrough">
+                <div class="hd-sec-head"><span class="hd-sec-num">PART III</span><span class="hd-sec-title">전파 경로 모형</span></div>
+                <div class="hd-subsec">3.1 전파 가중치 분포</div>
+                <div class="hd-bar-chart">${barChartHtml}</div>
+                <div class="hd-subsec">3.2 상세 파라미터</div>
+                <table class="hd-table">
+                    <thead><tr><th>변수</th><th>가중치</th><th>피크시차</th><th>확산폭(&sigma;)</th><th>전파경로</th></tr></thead>
+                    <tbody>${ptData.map(d => `<tr><td class="td-highlight">${d.label}</td><td class="td-num">${d.weight}</td><td class="td-num">${d.peakLag}M</td><td class="td-num">${d.width}</td><td>${d.path}</td></tr>`).join('')}</tbody>
+                </table>
+                <div class="hd-subsec">3.3 파생 변수 산출</div>
+                <div class="hd-flow">
+                    <div class="hd-flow-node" style="background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.2);">환율 &times;0.45</div>
+                    <span class="hd-flow-arrow">+</span>
+                    <div class="hd-flow-node" style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.2);">유가 &times;0.35</div>
+                    <span class="hd-flow-arrow">+</span>
+                    <div class="hd-flow-node" style="background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.2);">PPI &times;0.20</div>
+                    <span class="hd-flow-arrow">&xrarr;</span>
+                    <div class="hd-flow-node" style="background:rgba(20,184,166,0.15);border:1px solid rgba(20,184,166,0.3);font-weight:700;">수입물가</div>
+                </div>
+                <div class="hd-flow">
+                    <div class="hd-flow-node" style="background:rgba(20,184,166,0.1);border:1px solid rgba(20,184,166,0.2);">수입물가 &times;0.40</div>
+                    <span class="hd-flow-arrow">+</span>
+                    <div class="hd-flow-node" style="background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.2);">PPI &times;0.35</div>
+                    <span class="hd-flow-arrow">+</span>
+                    <div class="hd-flow-node" style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.2);">유가 &times;0.15</div>
+                    <span class="hd-flow-arrow">&xrarr;</span>
+                    <div class="hd-flow-node" style="background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.2);font-weight:700;">철강</div>
+                </div>
+                <div class="hd-flow">
+                    <div class="hd-flow-node" style="background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.2);">PPI &times;0.55</div>
+                    <span class="hd-flow-arrow">+</span>
+                    <div class="hd-flow-node" style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.2);">유가 &times;0.25</div>
+                    <span class="hd-flow-arrow">&xrarr;</span>
+                    <div class="hd-flow-node" style="background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.2);font-weight:700;">시멘트</div>
+                </div>
+            </div>`;
+
+            // PART IV
+            html += `
+            <hr class="hd-divider">
+            <div class="hd-sec" id="sec-dynamics">
+                <div class="hd-sec-head"><span class="hd-sec-num">PART IV</span><span class="hd-sec-title">System Dynamics</span></div>
+                <div class="hd-subsec">4.1 Causal Loop Diagram</div>
+                <div class="hd-text">거시경제 충격이 건설공사비에 전달되는 전체 인과구조:</div>
+                <div class="hd-cards hd-cards-3" style="margin:16px 0;">
+                    <div class="hd-card" style="border-top:2px solid #ef4444;">
+                        <div class="hd-card-title" style="color:#f87171;">외생 충격</div>
+                        <ul class="hd-ul">
+                            <li>환율 (w=0.12, lag=3M) <span class="hd-arrow">&rarr;</span> 수입물가</li>
+                            <li>국제유가 (w=0.08, lag=2M) <span class="hd-arrow">&rarr;</span> 에너지비</li>
+                            <li>기준금리 (w=0.09, lag=4M) <span class="hd-arrow">&rarr;</span> 금융비용</li>
+                        </ul>
+                    </div>
+                    <div class="hd-card" style="border-top:2px solid #f59e0b;">
+                        <div class="hd-card-title" style="color:#fbbf24;">원가 압력 경로</div>
+                        <ul class="hd-ul">
+                            <li>PPI (w=0.14) <span class="hd-arrow">&rarr;</span> 자재단가</li>
+                            <li>수입물가 (w=0.19) <span class="hd-arrow">&rarr;</span> 건설비</li>
+                            <li>철강 (w=0.15) <span class="hd-arrow">&rarr;</span> 공사비</li>
+                            <li>시멘트 (w=0.06) <span class="hd-arrow">&rarr;</span> 공사비</li>
+                            <li>노임 (w=0.20) <span class="hd-arrow">&rarr;</span> 공사비</li>
+                        </ul>
+                    </div>
+                    <div class="hd-card" style="border-top:2px solid #14b8a6;">
+                        <div class="hd-card-title" style="color:#14b8a6;">공사유형 믹스</div>
+                        <ul class="hd-ul"><li>주거</li><li>물류센터</li><li>오피스 / 상업</li><li>첨단산업</li><li>토목 / 인프라</li></ul>
+                    </div>
+                </div>
+                <div class="hd-subsec">4.2 Stock & Flow</div>
+                <div class="hd-text">각 드라이버의 충격이 가중치를 곱하고 IRF(h)를 적용하여 누적 원가 압력에 합산:</div>
+                <div class="hd-flow" style="flex-wrap:wrap;justify-content:center;gap:8px;">
+                    ${ptData.map((d, i) => `<div class="hd-flow-node" style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);font-size:10px;">${d.label}<br><span style="font-weight:800;font-size:12px;">${d.weight}</span></div>`).join('<span class="hd-flow-arrow" style="font-size:12px;">+</span>')}
+                    <span class="hd-flow-arrow" style="font-size:18px;">&xrarr;</span>
+                    <div class="hd-flow-node" style="background:rgba(20,184,166,0.2);border:2px solid rgba(20,184,166,0.4);font-weight:800;font-size:13px;">누적 원가 압력</div>
+                </div>
+                <div class="hd-subsec">4.3 피드백 루프</div>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0;">
+                    <div class="hd-loop-card reinforcing"><div class="hd-loop-tag">R1 REINFORCING</div><div class="hd-loop-title">원가-착공 강화루프</div><div class="hd-loop-desc">공사비&uarr; &rarr; 사업성 악화 &rarr; 착공 감소 &rarr; 저단가 축소 &rarr; 고단가 비중&uarr; &rarr; 가중평균 상승 &rarr; 공사비&uarr;</div></div>
+                    <div class="hd-loop-card reinforcing"><div class="hd-loop-tag">R2 REINFORCING</div><div class="hd-loop-title">환율-수입물가 강화루프</div><div class="hd-loop-desc">환율&uarr; &rarr; 수입단가 상승 &rarr; 자재비 상승 &rarr; 공사비&uarr; &rarr; 인플레 기대 &rarr; 환율&uarr;</div></div>
+                    <div class="hd-loop-card balancing"><div class="hd-loop-tag">B1 BALANCING</div><div class="hd-loop-title">금리-수요 균형루프</div><div class="hd-loop-desc">금리&uarr; &rarr; 대출비용&uarr; &rarr; 건설수요&darr; &rarr; 발주 감소 &rarr; 노무비 안정 &rarr; 공사비 둔화</div></div>
+                    <div class="hd-loop-card balancing"><div class="hd-loop-tag">B2 BALANCING</div><div class="hd-loop-title">공사비-정책 균형루프</div><div class="hd-loop-desc">공사비 급등 &rarr; 물가 압력 &rarr; 긴축 정책 &rarr; 금리&uarr; &rarr; 투자 위축 &rarr; 공사비 둔화</div></div>
+                </div>
+                <div class="hd-subsec">4.4 시차 구조</div>
+                <div class="hd-timeline">
+                    ${[{l:'노무비',lag:1,w:1.1,c:'#14b8a6'},{l:'시멘트',lag:1,w:1.2,c:'#fbbf24'},{l:'유가',lag:2,w:1.2,c:'#f59e0b'},{l:'PPI',lag:2,w:1.5,c:'#a78bfa'},{l:'철강',lag:2,w:1.3,c:'#f87171'},{l:'환율',lag:3,w:1.5,c:'#38bdf8'},{l:'수입물가',lag:3,w:1.4,c:'#34d399'},{l:'기준금리',lag:4,w:1.8,c:'#818cf8'}].map(d => {
+                        const left=Math.max(0,(d.lag-d.w)/6*100), width=Math.min(d.w*2/6*100,100-left);
+                        return `<div class="hd-tl-row"><div class="hd-tl-label">${d.l}</div><div class="hd-tl-track"><div class="hd-tl-mark" style="left:${left}%;width:${width}%;background:${d.c}33;border:1px solid ${d.c}66;">${d.lag}M</div></div></div>`;
+                    }).join('')}
+                    <div class="hd-tl-scale"><span>0M</span><span>1M</span><span>2M</span><span>3M</span><span>4M</span><span>5M</span><span>6M</span></div>
+                </div>
+            </div>`;
+
+            // PART V
+            const sc = {m:'#38bdf8',l:'#14b8a6',o:'#a78bfa'};
+            html += `
+            <hr class="hd-divider">
+            <div class="hd-sec" id="sec-pyeong">
+                <div class="hd-sec-head"><span class="hd-sec-num">PART V</span><span class="hd-sec-title">유형별 건설공사비</span></div>
+                <div class="hd-subsec">비용 구성 비교</div>
+                <div style="display:flex;gap:16px;margin:12px 0 6px;font-size:10px;">
+                    <span style="color:${sc.m};">&#9632; 재료비</span><span style="color:${sc.l};">&#9632; 노무비</span><span style="color:${sc.o};">&#9632; 경비</span>
+                </div>
+                ${pyeongData.map(d => `<div class="hd-stacked-row"><div class="hd-stacked-label">${d.label}</div><div class="hd-stacked-bar"><div class="hd-stacked-seg" style="width:${d.material}%;background:${sc.m};">${d.material}%</div><div class="hd-stacked-seg" style="width:${d.labor}%;background:${sc.l};">${d.labor}%</div><div class="hd-stacked-seg" style="width:${d.overhead}%;background:${sc.o};">${d.overhead}%</div></div></div>`).join('')}
+                <div class="hd-subsec" style="margin-top:24px;">상세 파라미터</div>
+                <table class="hd-table">
+                    <thead><tr><th>유형</th><th>기준단가</th><th>재료비</th><th>노무비</th><th>경비</th><th>노무민감도</th><th>출처</th></tr></thead>
+                    <tbody>${pyeongData.map(d => `<tr><td class="td-highlight">${d.label}</td><td class="td-num">${d.baseline}만/평</td><td class="td-num">${d.material}%</td><td class="td-num">${d.labor}%</td><td class="td-num">${d.overhead}%</td><td class="td-num">${d.laborSens}</td><td>${d.source}</td></tr>`).join('')}</tbody>
+                </table>
+                <div class="hd-formula">영향(%) = 공사비변동(%) &times; (재료비비중 &times; 1.1 + 노무비비중 &times; 노무민감도)</div>
+            </div>`;
+
+            // PART VI
+            html += `
+            <hr class="hd-divider">
+            <div class="hd-sec" id="sec-pf">
+                <div class="hd-sec-head"><span class="hd-sec-num">PART VI</span><span class="hd-sec-title">PF금리 등급별 모형</span></div>
+                <div class="hd-text">기준금리 + 등급별 스프레드를 기반으로 선/중/후순위 트랜치 금리를 추정합니다.</div>
+                <table class="hd-table">
+                    <thead><tr><th>등급</th><th>기본스프레드</th><th>선순위</th><th>중순위</th><th>후순위</th><th>LTV</th><th>DSCR</th></tr></thead>
+                    <tbody>${pfData.map(d => `<tr><td class="td-highlight">${d.grade}</td><td class="td-num">+${d.baseSpread}%p</td><td class="td-num">${d.seniorDisc}%p</td><td class="td-num">+${d.mezzDisc}%p</td><td class="td-num">+${d.juniorDisc}%p</td><td class="td-num">${d.ltv}</td><td class="td-num">${d.dscr}</td></tr>`).join('')}</tbody>
+                </table>
+                <div class="hd-subsec">PF금리 변동 산출</div>
+                <div class="hd-code-block">costImpact   = 12M공사비변동 &times; 0.15\nriskPremium  = 12M변동 &times; 등급스프레드 &times; 0.08 (상승) / 0.03 (하락)\ntotalDelta   = 금리충격 + riskPremium + costImpact\n\n선순위 = 기준금리 + 스프레드 + seniorDisc + totalDelta\n중순위 = 기준금리 + 스프레드 + mezzDisc   + totalDelta\n후순위 = 기준금리 + 스프레드 + juniorDisc + totalDelta</div>
+            </div>`;
+
+            // PART VII
+            html += `
+            <hr class="hd-divider">
+            <div class="hd-sec" id="sec-periods">
+                <div class="hd-sec-head"><span class="hd-sec-num">PART VII</span><span class="hd-sec-title">분석 기간</span></div>
+                <div class="hd-cards hd-cards-4">
+                    <div class="hd-period-card"><div class="hd-period-range">22.02 ~ 23.08</div><div class="hd-period-name">우크라 전쟁기</div><div class="hd-period-desc">에너지/원자재 급등기 (19개월)</div></div>
+                    <div class="hd-period-card"><div class="hd-period-range">23.09 ~ 24.06</div><div class="hd-period-name">전쟁 후 안정기</div><div class="hd-period-desc">공급망 정상화, 금리 고점 (10개월)</div></div>
+                    <div class="hd-period-card"><div class="hd-period-range">직전 12개월</div><div class="hd-period-name">최근 12개월</div><div class="hd-period-desc">현재 추세 반영</div></div>
+                    <div class="hd-period-card"><div class="hd-period-range">21.01 ~ 25.12</div><div class="hd-period-name">전체 기간</div><div class="hd-period-desc">60개월 전구간 &#8212; 가장 안정적 추정</div></div>
+                </div>
+                <div class="hd-text" style="margin-top:16px;"><strong style="color:#f59e0b;">같은 방법론이라도 어떤 기간의 데이터로 추정했느냐에 따라 결과가 완전히 달라집니다.</strong></div>
+                <div class="hd-subsec">권장 기간-방법론 조합</div>
+                <table class="hd-table">
+                    <thead><tr><th>분석 목적</th><th>기간</th><th>방법론</th><th>이유</th></tr></thead>
+                    <tbody>
+                        <tr><td>전쟁 재발 시나리오</td><td>전쟁기</td><td class="td-highlight">LP</td><td>소표본 + 대형 충격 &rarr; LP가 유일하게 강건</td></tr>
+                        <tr><td>현재 추세 기반 전망</td><td>최근 12M</td><td class="td-highlight">ARDL + Gaussian</td><td>현재 구조 반영, 두 방법 교차 검증</td></tr>
+                        <tr><td>장기 구조 분석</td><td>전체</td><td class="td-highlight">ARDL</td><td>충분한 표본, R&sup2; 검증 가능</td></tr>
+                        <tr><td>전체 비교 (보고용)</td><td>전체</td><td class="td-highlight">3-Method</td><td>방법론 간 일치/괴리 &rarr; 신뢰도 판단</td></tr>
+                    </tbody>
+                </table>
+            </div>`;
+
+            // PART VIII
+            html += `
+            <hr class="hd-divider">
+            <div class="hd-sec" id="sec-pressure">
+                <div class="hd-sec-head"><span class="hd-sec-num">PART VIII</span><span class="hd-sec-title">압력 상태 진단</span></div>
+                <div class="hd-formula">점수 = 현재YoY &times; 0.45 + 3M전망 &times; 1.5 + 12M전망 &times; 1.2 + 상위3기여도 &times; 0.55</div>
+                <div class="hd-gauge-row">
+                    <div class="hd-gauge-item" style="background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.2);"><div class="hd-gauge-score" style="color:#ef4444;">&ge; 4.2</div><div class="hd-gauge-label" style="color:#f87171;">HIGH PRESSURE</div><div class="hd-gauge-desc">원가/금융 동시 상방 리스크</div></div>
+                    <div class="hd-gauge-item" style="background:rgba(245,158,11,0.06);border-color:rgba(245,158,11,0.2);"><div class="hd-gauge-score" style="color:#f59e0b;">&ge; 2.1</div><div class="hd-gauge-label" style="color:#fbbf24;">WATCH</div><div class="hd-gauge-desc">우상향이나 통제 가능</div></div>
+                    <div class="hd-gauge-item" style="background:rgba(20,184,166,0.06);border-color:rgba(20,184,166,0.2);"><div class="hd-gauge-score" style="color:#14b8a6;">&lt; 2.1</div><div class="hd-gauge-label" style="color:#14b8a6;">STABLE</div><div class="hd-gauge-desc">상방 압력 제한적</div></div>
+                </div>
+            </div>`;
+
+            // PART IX
+            html += `
+            <hr class="hd-divider">
+            <div class="hd-sec" id="sec-impl">
+                <div class="hd-sec-head"><span class="hd-sec-num">PART IX</span><span class="hd-sec-title">구현 세부사항</span></div>
+                <div class="hd-subsec">9.1 OLS 행렬 연산</div>
+                <div class="hd-text">외부 라이브러리 없이 순수 JavaScript로 구현:</div>
+                <div class="hd-code-block">matTranspose(A)    // m&times;n &rarr; n&times;m\nmatMul(A, B)       // A(m&times;p) &middot; B(p&times;n) &rarr; C(m&times;n)\nmatInvert(M)       // Gauss-Jordan, partial pivoting\nolsEstimate(X, y)  // &beta;&#770; = (X'X)&#8315;&sup1;X'y + R&sup2;</div>
+                <div class="hd-subsec">9.2 모델 캐싱</div>
+                <div class="hd-text">ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 <code style="background:rgba(56,189,248,0.08);color:#38bdf8;padding:1px 5px;border-radius:2px;font-size:11px;">_modelCache</code>에 저장. 기간 변경 시 캐시 초기화 및 재추정.</div>
+                <div class="hd-cards hd-cards-2" style="margin-top:16px;">
+                    <div class="hd-card">
+                        <div class="hd-card-title">ARDL 파라미터</div>
+                        <table class="hd-table" style="margin:8px 0 0;"><thead><tr><th>파라미터</th><th>값</th><th>설명</th></tr></thead><tbody>
+                            <tr><td>K</td><td class="td-num">8</td><td>드라이버 수</td></tr>
+                            <tr><td>L</td><td class="td-num">4</td><td>최대 시차 (0~4)</td></tr>
+                            <tr><td>계수</td><td class="td-num">41</td><td>8&times;5 + 상수항</td></tr>
+                            <tr><td>최소 관측</td><td class="td-num">10</td><td>미만 시 Gaussian 폴백</td></tr>
+                        </tbody></table>
+                    </div>
+                    <div class="hd-card">
+                        <div class="hd-card-title">LP 파라미터</div>
+                        <table class="hd-table" style="margin:8px 0 0;"><thead><tr><th>파라미터</th><th>값</th><th>설명</th></tr></thead><tbody>
+                            <tr><td>max horizon</td><td class="td-num">12</td><td>12개월 전방</td></tr>
+                            <tr><td>회귀 수</td><td class="td-num">12</td><td>각 h에서 독립 OLS</td></tr>
+                            <tr><td>계수/회귀</td><td class="td-num">9</td><td>8 드라이버 + 상수항</td></tr>
+                            <tr><td>최소 관측</td><td class="td-num">8</td><td>미만 시 해당 h 스킵</td></tr>
+                        </tbody></table>
+                    </div>
+                </div>
+            </div>`;
+
+            // PART X
+            html += `
+            <hr class="hd-divider">
+            <div class="hd-sec" id="sec-guide">
+                <div class="hd-sec-head"><span class="hd-sec-num">PART X</span><span class="hd-sec-title">실전 활용 가이드</span></div>
+                <div class="hd-subsec">10.1 시나리오별 권장 방법론</div>
+                <table class="hd-table">
+                    <thead><tr><th>분석 목적</th><th>추천 방법론</th><th>추천 기간</th><th>이유</th></tr></thead>
+                    <tbody>
+                        <tr><td>빠른 스크리닝</td><td class="td-highlight">Gaussian IRF</td><td>최근 12M</td><td>파라미터 추정 불필요</td></tr>
+                        <tr><td>정밀 비용 예측</td><td class="td-highlight">ARDL-OLS</td><td>전체 (5Y)</td><td>시차별 계수 추정, 정량적 정확도</td></tr>
+                        <tr><td>위기 상황 분석</td><td class="td-highlight">LP</td><td>전쟁기</td><td>비정상 분포에 강건</td></tr>
+                        <tr><td>교차 검증</td><td class="td-highlight">3방법 비교</td><td>상황별</td><td>수렴 &rarr; 신뢰도&uarr;</td></tr>
+                    </tbody>
+                </table>
+                <div class="hd-subsec">10.2 결과 해석</div>
+                <div class="hd-cards hd-cards-3">
+                    <div class="hd-card"><div class="hd-card-title">PRESSURE BADGE</div><ul class="hd-ul"><li><span style="color:#ef4444;font-weight:700;">HIGH</span> &#8212; 건설비 상승 압력 강</li><li><span style="color:#f59e0b;font-weight:700;">WATCH</span> &#8212; 일부 변수 압력 감지</li><li><span style="color:#14b8a6;font-weight:700;">STABLE</span> &#8212; 유의미한 압력 없음</li></ul></div>
+                    <div class="hd-card"><div class="hd-card-title">추가압력 해석</div><ul class="hd-ul"><li>+2.5% (3M) &rarr; 3개월간 2.5% 추가 상승</li><li>-0.3% (6M) &rarr; 충격 흡수 후 하락 전환</li><li>3방법 동일방향 &rarr; 확신&uarr;</li></ul></div>
+                    <div class="hd-card"><div class="hd-card-title">ATTRIBUTION</div><ul class="hd-ul"><li>기여도(%) &#8212; 전체 변동 설명 비중</li><li>반영시차 &#8212; 최대 영향까지 개월수</li><li>최대 기여 변수 = 핵심 관리 대상</li></ul></div>
+                </div>
+                <div class="hd-subsec">10.3 방법론 결과가 다를 때</div>
+                <div class="hd-cards hd-cards-3">
+                    <div class="hd-card" style="border-top:2px solid #14b8a6;"><div class="hd-card-title" style="color:#14b8a6;">3개 모두 상승</div><div class="hd-card-text">높은 확신 &rarr; 예산 상향 조정 검토</div></div>
+                    <div class="hd-card" style="border-top:2px solid #f59e0b;"><div class="hd-card-title" style="color:#f59e0b;">2:1 분리</div><div class="hd-card-text">중간 확신 &rarr; 주요 변수 모니터링 강화</div></div>
+                    <div class="hd-card" style="border-top:2px solid #ef4444;"><div class="hd-card-title" style="color:#f87171;">완전 불일치</div><div class="hd-card-text">높은 불확실성 &rarr; Monte Carlo 시뮬레이션</div></div>
+                </div>
+            </div>`;
+
+            // PART XI
+            html += `
+            <hr class="hd-divider">
+            <div class="hd-sec" id="sec-refs">
+                <div class="hd-sec-head"><span class="hd-sec-num">PART XI</span><span class="hd-sec-title">출처 &middot; 참고문헌</span></div>
+                <div class="hd-subsec">11.1 데이터 출처</div>
+                <div class="hd-cards hd-cards-2">
+                    <div class="hd-card"><div class="hd-card-title">ECOS</div><div class="hd-card-text">한국은행 경제통계시스템 &#8212; 기준금리, 환율, PPI, 수입물가, 건설공사비지수</div></div>
+                    <div class="hd-card"><div class="hd-card-title">대한건설협회</div><div class="hd-card-text">건설노임 단가, 실적공사비</div></div>
+                    <div class="hd-card"><div class="hd-card-title">한국신용평가</div><div class="hd-card-text">PF 스프레드 리포트</div></div>
+                    <div class="hd-card"><div class="hd-card-title">한국주택금융공사</div><div class="hd-card-text">MBS 금리, 선/중/후순위 기준</div></div>
+                    <div class="hd-card" style="grid-column:span 2;"><div class="hd-card-title">Yahoo Finance / MarketWatch</div><div class="hd-card-text">WTI, Brent, VIX, US10Y, 건설주 시세</div></div>
+                </div>
+                <div class="hd-subsec">11.2 참고 문헌</div>
+                <div class="hd-ref"><div class="hd-ref-title">Jord&agrave;, &Ograve;. (2005)</div><div class="hd-ref-meta">"Estimation and Inference of Impulse Responses by Local Projections." American Economic Review, 95(1), 161&#8211;182.</div></div>
+                <div class="hd-ref"><div class="hd-ref-title">Pesaran, M. H. & Shin, Y. (1999)</div><div class="hd-ref-meta">"An Autoregressive Distributed Lag Modelling Approach to Cointegration Analysis."</div></div>
+                <div class="hd-ref"><div class="hd-ref-title">Ramey, V. A. (2016)</div><div class="hd-ref-meta">"Macroeconomic Shocks and Their Propagation." Handbook of Macroeconomics, Vol. 2.</div></div>
+                <div class="hd-ref"><div class="hd-ref-title">Plagborg-M&oslash;ller, M. & Wolf, C. K. (2021)</div><div class="hd-ref-meta">"Local Projections and VARs Estimate the Same Impulse Responses." Econometrica, 89(2).</div></div>
+                <div style="margin-top:40px;padding:16px 0;border-top:1px solid rgba(78,201,255,0.06);text-align:center;">
+                    <div style="font-size:10px;color:#3a5070;">Generated by Crisis Monitoring Dashboard Simulation Engine v4</div>
+                    <div style="font-size:10px;color:#3a5070;margin-top:4px;">Last updated: ${new Date().toISOString().slice(0,10)}</div>
+                </div>
+            </div>`;
+
+            return html;
         }
 
         function toggleAccordion(el) {
@@ -6403,7 +7792,7 @@
                             <span style="color:${pf.color};">${pf.label}</span> 등급 선/중/후순위 금리
                         </div>
                     </div>
-                    <button onclick="document.getElementById('pfDetailPopup').remove()" style="background:none;border:1px solid rgba(255,255,255,0.1);color:#8cb4d8;font-size:14px;cursor:pointer;border-radius:4px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;">✕</button>
+                    <button class="pf-close-btn" style="background:none;border:1px solid rgba(255,255,255,0.1);color:#8cb4d8;font-size:10px;cursor:pointer;border-radius:4px;padding:4px 10px;">닫기</button>
                 </div>
 
                 <div style="padding:12px 16px;">
@@ -6445,6 +7834,7 @@
             const existing = document.getElementById('pfDetailPopup');
             if (existing) existing.remove();
             document.body.appendChild(popup);
+            popup.querySelector('.pf-close-btn').addEventListener('click', () => popup.remove());
         }
 
         const INDICATOR_EXPLAIN = {
