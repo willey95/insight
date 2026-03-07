@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <style>
         * {
             margin: 0;
@@ -480,6 +481,24 @@
             background: linear-gradient(135deg, #14b8a6, #2dd4bf);
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(20,184,166,0.3);
+        }
+        .sim-btn-help {
+            padding: 4px 10px;
+            font-size: 9px;
+            font-weight: 700;
+            color: #6d8db0;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid #1e3050;
+            border-radius: 4px;
+            cursor: pointer;
+            letter-spacing: 0.3px;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.2s;
+        }
+        .sim-btn-help:hover {
+            background: rgba(56,189,248,0.08);
+            border-color: rgba(56,189,248,0.3);
+            color: #a8d8f8;
         }
         .sim-btn-close {
             width: 28px;
@@ -1006,6 +1025,141 @@
         .legend-red { background: #dc3545; }
         .legend-orange { background: #ff6b00; }
         .legend-green { background: #00c853; }
+
+        /* ── Enhanced War Map Styles ── */
+        @keyframes pulse-conflict {
+            0% { box-shadow: 0 0 0 0 rgba(255,45,85,0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(255,45,85,0); }
+            100% { box-shadow: 0 0 0 0 rgba(255,45,85,0); }
+        }
+        @keyframes pulse-gdelt {
+            0% { box-shadow: 0 0 0 0 rgba(255,200,50,0.6); }
+            70% { box-shadow: 0 0 0 10px rgba(255,200,50,0); }
+            100% { box-shadow: 0 0 0 0 rgba(255,200,50,0); }
+        }
+        @keyframes dash-march {
+            to { stroke-dashoffset: -20; }
+        }
+        @keyframes trajectory-flow {
+            0% { stroke-dashoffset: 30; }
+            100% { stroke-dashoffset: 0; }
+        }
+        @keyframes glow-pulse {
+            0%,100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .conflict-pulse-marker {
+            width: 14px; height: 14px; border-radius: 50%;
+            background: radial-gradient(circle, #ff2d55 30%, rgba(255,45,85,0.3) 70%);
+            animation: pulse-conflict 1.5s infinite;
+            border: 1px solid rgba(255,45,85,0.8);
+        }
+        .conflict-pulse-marker.critical {
+            width: 18px; height: 18px;
+            background: radial-gradient(circle, #ff0033 30%, rgba(255,0,51,0.4) 70%);
+            border-color: #ff0033;
+        }
+        .gdelt-event-marker {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: radial-gradient(circle, #ffc832 40%, rgba(255,200,50,0.2) 80%);
+            animation: pulse-gdelt 2s infinite;
+            border: 1px solid rgba(255,200,50,0.6);
+        }
+        .oil-infra-marker {
+            display: inline-flex; align-items: center; gap: 3px;
+            padding: 2px 6px; border-radius: 4px;
+            background: rgba(10,10,5,0.92);
+            border: 1px solid #8b6914;
+            box-shadow: 0 0 8px rgba(255,179,0,0.2);
+            white-space: nowrap; margin-left: -20px; margin-top: -10px;
+        }
+        .oil-infra-marker .oil-icon { font-size: 11px; }
+        .oil-infra-marker .oil-label {
+            font-size: 8px; color: #d4a844;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
+            letter-spacing: 0.3px;
+        }
+
+        /* Layer Control Panel */
+        .map-layer-ctrl {
+            position: absolute; top: 8px; right: 8px; z-index: 800;
+            background: rgba(8,14,24,0.92); border: 1px solid #2a3d57;
+            border-radius: 6px; padding: 6px 8px;
+            display: flex; flex-direction: column; gap: 3px;
+            backdrop-filter: blur(4px);
+            max-height: 280px; overflow-y: auto;
+        }
+        .map-layer-ctrl label {
+            display: flex; align-items: center; gap: 5px;
+            font-size: 9px; color: #9db0cc; cursor: pointer;
+            padding: 1px 0; white-space: nowrap;
+            text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .map-layer-ctrl label:hover { color: #e0ecff; }
+        .map-layer-ctrl input[type="checkbox"] {
+            width: 12px; height: 12px; accent-color: #4ec9ff;
+        }
+        .map-layer-ctrl .layer-dot {
+            display: inline-block; width: 6px; height: 6px;
+            border-radius: 50%; margin-left: auto;
+        }
+        .map-layer-ctrl-title {
+            font-size: 8px; font-weight: 700; color: #5a7a9e;
+            text-transform: uppercase; letter-spacing: 0.8px;
+            border-bottom: 1px solid #1f2f45; padding-bottom: 3px; margin-bottom: 2px;
+        }
+
+        /* Map Event Timeline Sidebar */
+        .map-event-timeline {
+            position: absolute; bottom: 8px; left: 8px; z-index: 800;
+            background: rgba(8,14,24,0.90); border: 1px solid #2a3d57;
+            border-radius: 6px; padding: 6px 8px;
+            width: 240px; max-height: 180px; overflow-y: auto;
+            backdrop-filter: blur(4px);
+        }
+        .map-event-timeline::-webkit-scrollbar { width: 3px; }
+        .map-event-timeline::-webkit-scrollbar-thumb { background: #3a4d68; border-radius: 3px; }
+        .map-event-timeline-title {
+            font-size: 8px; font-weight: 700; color: #5a7a9e;
+            text-transform: uppercase; letter-spacing: 0.8px;
+            margin-bottom: 4px;
+        }
+        .map-event-item {
+            display: flex; gap: 5px; align-items: flex-start;
+            padding: 3px 0; border-bottom: 1px solid rgba(42,61,87,0.4);
+            font-size: 9px;
+        }
+        .map-event-item:last-child { border-bottom: none; }
+        .map-event-dot {
+            width: 6px; height: 6px; min-width: 6px;
+            border-radius: 50%; margin-top: 3px;
+        }
+        .map-event-dot.conflict { background: #ff2d55; }
+        .map-event-dot.gdelt { background: #ffc832; }
+        .map-event-dot.aircraft { background: #4ec9ff; }
+        .map-event-dot.vessel { background: #00d084; }
+        .map-event-text { color: #b0c4de; line-height: 1.3; }
+        .map-event-time { color: #5a7090; font-size: 8px; margin-left: auto; white-space: nowrap; }
+
+        /* Map Stats Bar */
+        .map-stats-bar {
+            position: absolute; top: 8px; left: 8px; z-index: 800;
+            display: flex; gap: 6px; flex-wrap: wrap;
+        }
+        .map-stat-badge {
+            background: rgba(8,14,24,0.90); border: 1px solid #2a3d57;
+            border-radius: 4px; padding: 3px 7px;
+            font-size: 9px; color: #8fa5c2;
+            display: flex; align-items: center; gap: 4px;
+            backdrop-filter: blur(4px);
+        }
+        .map-stat-badge .stat-count {
+            font-weight: 700; font-family: 'IBM Plex Mono', Consolas, monospace;
+        }
+        .map-stat-badge .stat-count.high { color: #ff4d6d; }
+        .map-stat-badge .stat-count.mid { color: #ffc56f; }
+        .map-stat-badge .stat-count.low { color: #00d084; }
 
         .live-news-feed {
             flex: 1;
@@ -2136,16 +2290,46 @@
             <div class="card-header">
                 <div>
                     <div class="card-title">GEO CRISIS MAP</div>
-                    <div class="card-subtitle">Middle East Hotspot Tracking</div>
+                    <div class="card-subtitle">Middle East Real-Time War Situation</div>
                 </div>
+                <div class="card-timestamp" id="tsMap">LIVE</div>
             </div>
             <div class="geo-map-wrap">
                 <div class="geo-map-canvas" id="geoMapCanvas" aria-label="Middle East Crisis Map"></div>
+                <!-- Map Stats Bar (top-left) -->
+                <div class="map-stats-bar" id="mapStatsBar">
+                    <div class="map-stat-badge">AIRCRAFT <span class="stat-count low" id="statAircraft">0</span></div>
+                    <div class="map-stat-badge">VESSELS <span class="stat-count low" id="statVessels">0</span></div>
+                    <div class="map-stat-badge">CONFLICTS <span class="stat-count low" id="statConflicts">0</span></div>
+                    <div class="map-stat-badge">GDELT <span class="stat-count low" id="statGdelt">0</span></div>
+                </div>
+                <!-- Layer Control (top-right) -->
+                <div class="map-layer-ctrl" id="mapLayerCtrl">
+                    <div class="map-layer-ctrl-title">LAYERS</div>
+                    <label><input type="checkbox" checked data-layer="aircraft"> Aircraft <span class="layer-dot" style="background:#4ec9ff"></span></label>
+                    <label><input type="checkbox" checked data-layer="vessels"> Vessels <span class="layer-dot" style="background:#00d084"></span></label>
+                    <label><input type="checkbox" checked data-layer="conflicts"> Conflicts <span class="layer-dot" style="background:#ff2d55"></span></label>
+                    <label><input type="checkbox" checked data-layer="gdelt"> GDELT Events <span class="layer-dot" style="background:#ffc832"></span></label>
+                    <label><input type="checkbox" checked data-layer="zones"> Conflict Zones <span class="layer-dot" style="background:#ff4d6d"></span></label>
+                    <label><input type="checkbox" checked data-layer="heatmap"> Heatmap <span class="layer-dot" style="background:#ff6b00"></span></label>
+                    <label><input type="checkbox" checked data-layer="oil"> Oil Infra <span class="layer-dot" style="background:#d4a844"></span></label>
+                    <label><input type="checkbox" checked data-layer="bases"> Military Bases <span class="layer-dot" style="background:#ffb347"></span></label>
+                    <label><input type="checkbox" checked data-layer="trajectories"> Attack Paths <span class="layer-dot" style="background:#e040fb"></span></label>
+                    <label><input type="checkbox" checked data-layer="hotspots"> Hotspots <span class="layer-dot" style="background:#ff4d6d"></span></label>
+                </div>
+                <!-- Event Timeline (bottom-left) -->
+                <div class="map-event-timeline" id="mapEventTimeline">
+                    <div class="map-event-timeline-title">LIVE EVENTS</div>
+                    <div id="mapEventList"></div>
+                </div>
             </div>
             <div class="map-legend">
-                <span><i class="legend-dot legend-red"></i>군사 긴장</span>
-                <span><i class="legend-dot legend-orange"></i>충돌 가능성</span>
-                <span><i class="legend-dot legend-green"></i>통상 경로</span>
+                <span><i class="legend-dot legend-red"></i>Active Conflict</span>
+                <span><i class="legend-dot legend-orange"></i>GDELT Event</span>
+                <span><i class="legend-dot legend-green"></i>Shipping Route</span>
+                <span><i class="legend-dot" style="background:#4ec9ff"></i>Aircraft</span>
+                <span><i class="legend-dot" style="background:#e040fb"></i>Attack Path</span>
+                <span><i class="legend-dot" style="background:#d4a844"></i>Oil Infra</span>
             </div>
         </div>
 
@@ -2356,30 +2540,10 @@
             </div>
             <div class="correlation-layout correlation-layout-top">
                 <div></div>
-                <div class="corr-top-labels">
-                    <div class="corr-label">WTI</div>
-                    <div class="corr-label">Brent</div>
-                    <div class="corr-label">금</div>
-                    <div class="corr-label">금리</div>
-                    <div class="corr-label">환율</div>
-                    <div class="corr-label">건설</div>
-                    <div class="corr-label">부동산</div>
-                    <div class="corr-label">VIX</div>
-                    <div class="corr-label">10Y</div>
-                </div>
+                <div class="corr-top-labels"></div>
             </div>
             <div class="correlation-layout correlation-layout-main">
-                <div class="corr-left-labels">
-                    <div class="corr-label corr-left-label">WTI</div>
-                    <div class="corr-label corr-left-label">Brent</div>
-                    <div class="corr-label corr-left-label">금</div>
-                    <div class="corr-label corr-left-label">금리</div>
-                    <div class="corr-label corr-left-label">환율</div>
-                    <div class="corr-label corr-left-label">건설</div>
-                    <div class="corr-label corr-left-label">부동산</div>
-                    <div class="corr-label corr-left-label">VIX</div>
-                    <div class="corr-label corr-left-label">10Y</div>
-                </div>
+                <div class="corr-left-labels"></div>
                 <div class="correlation-matrix" id="correlationMatrix"></div>
             </div>
         </div>
@@ -2398,8 +2562,9 @@
                     <div class="sim-header-status" id="simStatusIndicator">
                         <span class="sim-status-dot"></span>READY
                     </div>
+                    <button class="sim-btn-help" onclick="openSimHelp()">도움말</button>
                     <button class="sim-btn-report" onclick="generateLLMReport()" id="btnReport">
-                        <span style="font-size:11px;">⚡</span> AI 리포트
+                        <span style="font-size:11px;">⚡</span> AI 분석
                     </button>
                     <button class="sim-btn-close" onclick="closeSimulationPopup()">✕</button>
                 </div>
@@ -2443,17 +2608,17 @@
                             <div class="sim-kpi-sub">LONG-TERM</div>
                         </div>
                         <div class="sim-kpi-card" data-accent="#38bdf8">
-                            <div class="sim-kpi-label">핵심 전달경로</div>
-                            <div class="sim-kpi-value" style="color:#38bdf8;font-size:13px;" id="simTopRoute">--</div>
-                            <div class="sim-kpi-sub">TOP DRIVER</div>
+                            <div class="sim-kpi-label">공사비 평균영향</div>
+                            <div class="sim-kpi-value" style="color:#38bdf8;" id="simAvgImpact">--</div>
+                            <div class="sim-kpi-sub">AVG IMPACT</div>
                         </div>
                     </div>
                 </div>
                 <div class="sim-body-3col">
                     <div class="sim-col">
                         <div class="sim-col-section" style="flex:0 0 auto;">
-                            <div class="sim-accordion-title collapsed" onclick="toggleAccordion(this)">파라미터 설정</div>
-                            <div class="sim-accordion-body collapsed">
+                            <div class="sim-accordion-title" onclick="toggleAccordion(this)">파라미터 설정</div>
+                            <div class="sim-accordion-body">
                             <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;margin-top:6px;">
                                 <button class="sim-preset-btn" onclick="loadPreset('baseline')" style="font-size:10px;padding:3px 8px;">기준</button>
                                 <button class="sim-preset-btn" onclick="loadPreset('fxShock')" style="font-size:10px;padding:3px 8px;">환율급등</button>
@@ -2502,8 +2667,9 @@
                         </div>
                             </div>
                         </div>
-                        <div style="margin-top:4px;">
-                            <button class="sim-button" onclick="openMechPopup()" style="width:100%;padding:5px;font-size:10px;background:linear-gradient(90deg,#1a3a5c,#22456a);">전파경로 상세 ▸</button>
+                        <div style="display:flex;flex-direction:column;gap:3px;margin-top:4px;">
+                            <button class="sim-button" onclick="showContributionPopup()" style="width:100%;padding:5px;font-size:10px;background:linear-gradient(135deg,#1a4a3c,#22685a);">전파경로 기여도 ▸</button>
+                            <button class="sim-button" onclick="openMechPopup()" style="width:100%;padding:5px;font-size:10px;background:linear-gradient(135deg,#1a3a5c,#22456a);">전파경로 상세 ▸</button>
                         </div>
                     </div>
                     <div class="sim-col">
@@ -3566,11 +3732,54 @@
             changeElement.className = 'market-change ' + (deltaPct >= 0 ? 'up' : 'down');
         }
 
+        /* ── Map Layer Groups ── */
+        const mapLayers = {};
+        let heatmapLayer = null;
+        let heatmapData = [];
+        const liveGdeltMarkers = {};
+        const oilInfraMarkers = [];
+        const conflictZonePolygons = [];
+        const trajectoryLines = [];
+        const mapEventLog = [];
+
+        /* ── Conflict Zone Definitions ── */
+        const CONFLICT_ZONES = [
+            { name: 'Gaza Strip', color: '#ff2d55', coords: [[31.59,34.22],[31.59,34.56],[31.22,34.56],[31.22,34.22]] },
+            { name: 'South Lebanon', color: '#ff6b00', coords: [[33.05,35.10],[33.40,35.10],[33.40,35.90],[33.05,35.90]] },
+            { name: 'Northern Syria (Idlib)', color: '#ff4d6d', coords: [[35.50,36.10],[36.30,36.10],[36.30,37.20],[35.50,37.20]] },
+            { name: 'Yemen (Houthi)', color: '#e04040', coords: [[14.50,43.50],[16.00,43.50],[16.00,45.50],[14.50,45.50]] },
+            { name: 'Western Iraq', color: '#cc4422', coords: [[32.50,42.00],[34.50,42.00],[34.50,44.50],[32.50,44.50]] },
+            { name: 'Strait of Hormuz', color: '#ff8800', coords: [[25.80,55.50],[26.80,55.50],[26.80,57.00],[25.80,57.00]] },
+            { name: 'Red Sea (Houthi Threat)', color: '#dd3333', coords: [[12.00,42.00],[15.00,42.00],[15.00,44.00],[12.00,44.00]] }
+        ];
+
+        /* ── Oil Infrastructure ── */
+        const OIL_INFRASTRUCTURE = [
+            { name: 'Ras Tanura', lat: 26.64, lon: 50.16, type: 'refinery', icon: '🛢' },
+            { name: 'Abqaiq Processing', lat: 25.94, lon: 49.68, type: 'processing', icon: '⚙' },
+            { name: 'Kharg Island', lat: 29.23, lon: 50.32, type: 'terminal', icon: '🛢' },
+            { name: 'Fujairah Terminal', lat: 25.12, lon: 56.35, type: 'terminal', icon: '🛢' },
+            { name: 'Basra Oil Terminal', lat: 29.68, lon: 48.80, type: 'terminal', icon: '🛢' },
+            { name: 'Yanbu Refinery', lat: 24.09, lon: 38.06, type: 'refinery', icon: '⚙' },
+            { name: 'Bandar Abbas', lat: 27.18, lon: 56.27, type: 'port', icon: '⚓' },
+            { name: 'Jeddah Port', lat: 21.49, lon: 39.17, type: 'port', icon: '⚓' },
+            { name: 'Suez Canal', lat: 30.46, lon: 32.34, type: 'chokepoint', icon: '🚢' },
+            { name: 'Bab el-Mandeb', lat: 12.58, lon: 43.33, type: 'chokepoint', icon: '🚢' }
+        ];
+
+        /* ── Attack Trajectory Definitions ── */
+        const ATTACK_TRAJECTORIES = [
+            { name: 'Houthi → Red Sea', from: [15.37,44.19], to: [14.50,42.50], color: '#ff2d55' },
+            { name: 'Houthi → Hormuz', from: [15.37,44.19], to: [26.57,56.25], color: '#ff6b00' },
+            { name: 'Iran → Israel', from: [33.70,51.40], to: [32.08,34.78], color: '#e040fb' },
+            { name: 'Hezbollah → N.Israel', from: [33.89,35.50], to: [33.00,35.50], color: '#ff4d6d' },
+            { name: 'Iran → Iraq Bases', from: [33.70,51.40], to: [33.32,44.37], color: '#cc6600' },
+            { name: 'Syria → Golan', from: [33.51,36.28], to: [33.00,35.80], color: '#dd4444' }
+        ];
+
         function initMapAssets() {
             const mapCanvas = document.getElementById('geoMapCanvas');
-            if (!mapCanvas) {
-                return;
-            }
+            if (!mapCanvas) return;
 
             if (typeof window.L === 'undefined') {
                 mapWarningMessage = '지도 라이브러리 로딩 실패';
@@ -3585,41 +3794,168 @@
             geoMap = window.L.map(mapCanvas, {
                 zoomControl: true,
                 attributionControl: false,
-                minZoom: 5,
-                maxZoom: 9,
+                minZoom: 4,
+                maxZoom: 12,
                 zoomSnap: 0.5
             });
 
-            window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 12
+            // Dark tile layer (CartoDB dark_all)
+            window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19,
+                subdomains: 'abcd'
             }).addTo(geoMap);
 
             geoMap.fitBounds(bounds, { padding: [8, 8] });
-            geoMap.setMaxBounds(bounds.pad(0.2));
+            geoMap.setMaxBounds(bounds.pad(0.3));
 
+            // ── Layer Groups ──
+            mapLayers.hotspots = window.L.layerGroup().addTo(geoMap);
+            mapLayers.bases = window.L.layerGroup().addTo(geoMap);
+            mapLayers.aircraft = window.L.layerGroup().addTo(geoMap);
+            mapLayers.vessels = window.L.layerGroup().addTo(geoMap);
+            mapLayers.conflicts = window.L.layerGroup().addTo(geoMap);
+            mapLayers.gdelt = window.L.layerGroup().addTo(geoMap);
+            mapLayers.zones = window.L.layerGroup().addTo(geoMap);
+            mapLayers.oil = window.L.layerGroup().addTo(geoMap);
+            mapLayers.trajectories = window.L.layerGroup().addTo(geoMap);
+            mapLayers.heatmap = window.L.layerGroup().addTo(geoMap);
+
+            // ── Conflict Zone Polygons ──
+            CONFLICT_ZONES.forEach(zone => {
+                const polygon = window.L.polygon(zone.coords, {
+                    color: zone.color,
+                    fillColor: zone.color,
+                    fillOpacity: 0.12,
+                    weight: 1.5,
+                    dashArray: '6 4',
+                    className: 'conflict-zone-path'
+                }).addTo(mapLayers.zones);
+                polygon.bindTooltip(zone.name, { sticky: true, className: 'map-hotspot-label' });
+            });
+
+            // ── Oil Infrastructure ──
+            OIL_INFRASTRUCTURE.forEach(infra => {
+                const icon = window.L.divIcon({
+                    className: 'map-asset-icon',
+                    html: `<span class="oil-infra-marker"><span class="oil-icon">${escapeHtml(infra.icon)}</span><span class="oil-label">${escapeHtml(infra.name)}</span></span>`,
+                    iconSize: [0, 0], iconAnchor: [0, 0]
+                });
+                const marker = window.L.marker([infra.lat, infra.lon], { icon, keyboard: false }).addTo(mapLayers.oil);
+                marker.bindTooltip(`${infra.icon} ${infra.name} (${infra.type})`, { direction: 'top', offset: [0, -8] });
+            });
+
+            // ── Attack Trajectories (animated dashed lines) ──
+            ATTACK_TRAJECTORIES.forEach(traj => {
+                const line = window.L.polyline([traj.from, traj.to], {
+                    color: traj.color,
+                    weight: 2,
+                    opacity: 0.6,
+                    dashArray: '8 6',
+                    className: 'attack-trajectory-line'
+                }).addTo(mapLayers.trajectories);
+                line.bindTooltip(traj.name, { sticky: true, className: 'map-hotspot-label' });
+
+                // Arrow marker at the end
+                const endIcon = window.L.divIcon({
+                    className: 'map-asset-icon',
+                    html: `<span style="color:${traj.color};font-size:14px;filter:drop-shadow(0 0 4px ${traj.color});">▸</span>`,
+                    iconSize: [14, 14], iconAnchor: [7, 7]
+                });
+                window.L.marker(traj.to, { icon: endIcon, interactive: false, keyboard: false }).addTo(mapLayers.trajectories);
+            });
+
+            // ── Hotspots ──
             MAP_HOTSPOTS.forEach(hotspot => {
                 const marker = window.L.marker([hotspot.lat, hotspot.lon], {
                     icon: createHotspotIcon(hotspot.critical),
                     interactive: false,
                     keyboard: false
-                }).addTo(geoMap);
+                }).addTo(mapLayers.hotspots);
                 marker.bindTooltip(hotspot.name, {
                     permanent: true,
                     direction: 'right',
                     offset: [8, 0],
                     className: 'map-hotspot-label'
                 });
+                // Seed heatmap with hotspot locations
+                heatmapData.push([hotspot.lat, hotspot.lon, hotspot.critical ? 0.8 : 0.4]);
             });
 
+            // ── Mock assets (bases, aircraft, vessels) ──
             mapAssetState.forEach(asset => {
+                const layerName = asset.type === 'base' || asset.type === 'defense' || asset.type === 'ground' ? 'bases' : asset.type === 'aircraft' ? 'aircraft' : 'vessels';
                 const marker = window.L.marker([asset.lat, asset.lon], {
                     icon: createAssetIcon(asset),
                     keyboard: false
-                }).addTo(geoMap);
+                }).addTo(mapLayers[layerName]);
                 mapAssetMarkers[asset.id] = marker;
             });
 
+            // ── Heatmap Layer ──
+            if (typeof window.L.heatLayer === 'function') {
+                heatmapLayer = window.L.heatLayer(heatmapData, {
+                    radius: 30,
+                    blur: 25,
+                    maxZoom: 10,
+                    max: 1.0,
+                    gradient: { 0.2: '#1a1aff', 0.4: '#00d084', 0.6: '#ffc832', 0.8: '#ff6b00', 1.0: '#ff2d55' }
+                }).addTo(mapLayers.heatmap);
+            }
+
+            // ── Layer Toggle Controls ──
+            initMapLayerControls();
+
             setInterval(updateMapAssets, 2000);
+        }
+
+        function initMapLayerControls() {
+            const ctrl = document.getElementById('mapLayerCtrl');
+            if (!ctrl) return;
+            ctrl.querySelectorAll('input[data-layer]').forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const layerName = this.dataset.layer;
+                    const layer = mapLayers[layerName];
+                    if (!layer || !geoMap) return;
+                    if (this.checked) {
+                        geoMap.addLayer(layer);
+                    } else {
+                        geoMap.removeLayer(layer);
+                    }
+                });
+            });
+        }
+
+        function addMapEvent(type, text) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            mapEventLog.unshift({ type, text, time: timeStr });
+            if (mapEventLog.length > 30) mapEventLog.length = 30;
+            renderMapEventTimeline();
+        }
+
+        function renderMapEventTimeline() {
+            const list = document.getElementById('mapEventList');
+            if (!list) return;
+            list.innerHTML = mapEventLog.slice(0, 15).map(e =>
+                `<div class="map-event-item"><span class="map-event-dot ${escapeHtml(e.type)}"></span><span class="map-event-text">${escapeHtml(e.text)}</span><span class="map-event-time">${escapeHtml(e.time)}</span></div>`
+            ).join('');
+        }
+
+        function updateMapStats(data) {
+            const ac = data?.counts?.aircraft || 0;
+            const vs = data?.counts?.vessels || 0;
+            const cf = data?.counts?.conflicts || 0;
+            const gd = data?.counts?.gdeltEvents || 0;
+            const setStatEl = (id, val) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.textContent = val;
+                el.className = 'stat-count ' + (val > 10 ? 'high' : val > 3 ? 'mid' : 'low');
+            };
+            setStatEl('statAircraft', ac);
+            setStatEl('statVessels', vs);
+            setStatEl('statConflicts', cf);
+            setStatEl('statGdelt', gd);
         }
 
         function clamp(value, min, max) {
@@ -3693,7 +4029,9 @@
 
                 if (!militaryDataActive && (data.counts.aircraft > 0 || data.counts.vessels > 0 || data.counts.conflicts > 0)) {
                     // Real data available — remove mock asset markers
-                    Object.values(mapAssetMarkers).forEach(m => geoMap.removeLayer(m));
+                    Object.values(mapAssetMarkers).forEach(m => {
+                        Object.values(mapLayers).forEach(lg => { try { lg.removeLayer(m); } catch {} });
+                    });
                     mapAssetMarkers = {};
                     militaryDataActive = true;
                 }
@@ -3701,8 +4039,18 @@
                 if (data.aircraft) renderLiveAircraft(data.aircraft);
                 if (data.vessels) renderLiveVessels(data.vessels);
                 if (data.conflicts) renderLiveConflicts(data.conflicts);
+                if (data.gdeltEvents) renderLiveGdeltEvents(data.gdeltEvents);
 
-                if (data.timestamp) setCardTimestamp('tsCrisis', data.timestamp);
+                if (data.timestamp) {
+                    setCardTimestamp('tsCrisis', data.timestamp);
+                    setCardTimestamp('tsMap', data.timestamp);
+                }
+
+                // Update heatmap with live data
+                updateHeatmap(data);
+
+                // Update stats bar
+                updateMapStats(data);
 
                 // Update threat indicators with real counts
                 updateThreatFromMilitary(data);
@@ -3714,6 +4062,7 @@
 
         function renderLiveAircraft(aircraft) {
             const seen = new Set();
+            const targetLayer = mapLayers.aircraft || geoMap;
             aircraft.forEach(ac => {
                 seen.add(ac.id);
                 const label = ac.callsign !== 'UNKNOWN' ? ac.callsign : ac.type;
@@ -3728,15 +4077,15 @@
                         html: `<span class="map-asset-marker aircraft"><span class="asset-icon">✈</span><span class="asset-label">${escapeHtml(label)}</span></span>`,
                         iconSize: [0, 0], iconAnchor: [0, 0]
                     });
-                    const marker = window.L.marker([ac.lat, ac.lon], { icon, keyboard: false }).addTo(geoMap);
+                    const marker = window.L.marker([ac.lat, ac.lon], { icon, keyboard: false }).addTo(targetLayer);
                     marker.bindTooltip(tooltip, { direction: 'top', offset: [0, -5] });
                     liveAircraftMarkers[ac.id] = marker;
+                    addMapEvent('aircraft', `Aircraft detected: ${label}`);
                 }
             });
-            // Remove stale
             Object.keys(liveAircraftMarkers).forEach(id => {
                 if (!seen.has(id)) {
-                    geoMap.removeLayer(liveAircraftMarkers[id]);
+                    targetLayer.removeLayer(liveAircraftMarkers[id]);
                     delete liveAircraftMarkers[id];
                 }
             });
@@ -3744,6 +4093,7 @@
 
         function renderLiveVessels(vessels) {
             const seen = new Set();
+            const targetLayer = mapLayers.vessels || geoMap;
             vessels.forEach(v => {
                 seen.add(v.id);
                 const label = v.name || v.mmsi || 'VESSEL';
@@ -3757,44 +4107,109 @@
                         html: `<span class="map-asset-marker vessel"><span class="asset-icon">⚓</span><span class="asset-label">${escapeHtml(label.slice(0, 15))}</span></span>`,
                         iconSize: [0, 0], iconAnchor: [0, 0]
                     });
-                    const marker = window.L.marker([v.lat, v.lon], { icon, keyboard: false }).addTo(geoMap);
+                    const marker = window.L.marker([v.lat, v.lon], { icon, keyboard: false }).addTo(targetLayer);
                     marker.bindTooltip(tooltip, { direction: 'top', offset: [0, -5] });
                     liveVesselMarkers[v.id] = marker;
                 }
             });
             Object.keys(liveVesselMarkers).forEach(id => {
                 if (!seen.has(id)) {
-                    geoMap.removeLayer(liveVesselMarkers[id]);
+                    targetLayer.removeLayer(liveVesselMarkers[id]);
                     delete liveVesselMarkers[id];
                 }
             });
         }
 
         function renderLiveConflicts(conflicts) {
+            const targetLayer = mapLayers.conflicts || geoMap;
             // Remove old conflict markers
-            Object.values(liveConflictMarkers).forEach(m => geoMap.removeLayer(m));
+            Object.values(liveConflictMarkers).forEach(m => targetLayer.removeLayer(m));
             liveConflictMarkers = {};
 
             conflicts.forEach((c, i) => {
                 const severity = c.fatalities > 10 ? 'critical' : c.fatalities > 0 ? 'high' : 'low';
                 const color = severity === 'critical' ? '#ff2d55' : severity === 'high' ? '#ff6b00' : '#ffc56f';
-                const radius = severity === 'critical' ? 8 : severity === 'high' ? 6 : 4;
 
-                const circle = window.L.circleMarker([c.lat, c.lon], {
-                    radius,
-                    color,
-                    fillColor: color,
-                    fillOpacity: 0.6,
-                    weight: 1
-                }).addTo(geoMap);
+                // Animated pulse marker instead of plain circle
+                const pulseIcon = window.L.divIcon({
+                    className: 'map-asset-icon',
+                    html: `<span class="conflict-pulse-marker ${severity === 'critical' ? 'critical' : ''}"></span>`,
+                    iconSize: [14, 14], iconAnchor: [7, 7]
+                });
+                const marker = window.L.marker([c.lat, c.lon], { icon: pulseIcon, keyboard: false }).addTo(targetLayer);
 
                 const dateStr = c.date || '';
-                circle.bindTooltip(
-                    `<b>${escapeHtml(c.type)}</b><br>${escapeHtml(c.location)}, ${escapeHtml(c.country)}<br>${dateStr} | 사상자: ${c.fatalities}`,
+                marker.bindTooltip(
+                    `<b>${escapeHtml(c.type)}</b><br>${escapeHtml(c.location)}, ${escapeHtml(c.country)}<br>${dateStr} | Casualties: ${c.fatalities}`,
                     { direction: 'top' }
                 );
-                liveConflictMarkers[`conflict-${i}`] = circle;
+                liveConflictMarkers[`conflict-${i}`] = marker;
+
+                // Add to heatmap data
+                heatmapData.push([c.lat, c.lon, severity === 'critical' ? 1.0 : severity === 'high' ? 0.7 : 0.4]);
+
+                if (i < 3) addMapEvent('conflict', `${c.type}: ${c.location}, ${c.country}`);
             });
+        }
+
+        function renderLiveGdeltEvents(events) {
+            const targetLayer = mapLayers.gdelt || geoMap;
+            // Clear old GDELT markers
+            Object.values(liveGdeltMarkers).forEach(m => targetLayer.removeLayer(m));
+            Object.keys(liveGdeltMarkers).forEach(k => delete liveGdeltMarkers[k]);
+
+            // GDELT events don't have lat/lon directly — place them at relevant conflict locations
+            const gdeltLocationMap = [
+                { kw: ['iran', 'tehran'], lat: 35.69, lon: 51.39 },
+                { kw: ['iraq', 'baghdad'], lat: 33.32, lon: 44.37 },
+                { kw: ['syria', 'damascus'], lat: 33.51, lon: 36.28 },
+                { kw: ['yemen', 'houthi', 'sanaa'], lat: 15.37, lon: 44.19 },
+                { kw: ['hormuz', 'strait'], lat: 26.57, lon: 56.25 },
+                { kw: ['gaza', 'hamas'], lat: 31.35, lon: 34.31 },
+                { kw: ['lebanon', 'hezbollah', 'beirut'], lat: 33.89, lon: 35.50 },
+                { kw: ['israel', 'tel aviv'], lat: 32.08, lon: 34.78 },
+                { kw: ['red sea', 'bab'], lat: 12.58, lon: 43.33 },
+                { kw: ['saudi', 'riyadh'], lat: 24.71, lon: 46.68 }
+            ];
+
+            events.forEach((evt, i) => {
+                const titleLower = (evt.title || '').toLowerCase();
+                const match = gdeltLocationMap.find(loc => loc.kw.some(kw => titleLower.includes(kw)));
+                if (!match) return;
+
+                const jitter = () => (Math.random() - 0.5) * 0.3;
+                const lat = match.lat + jitter();
+                const lon = match.lon + jitter();
+
+                const gdeltIcon = window.L.divIcon({
+                    className: 'map-asset-icon',
+                    html: '<span class="gdelt-event-marker"></span>',
+                    iconSize: [10, 10], iconAnchor: [5, 5]
+                });
+                const marker = window.L.marker([lat, lon], { icon: gdeltIcon, keyboard: false }).addTo(targetLayer);
+                const toneLabel = evt.tone < -3 ? 'Very Negative' : evt.tone < 0 ? 'Negative' : 'Neutral/Positive';
+                marker.bindTooltip(
+                    `<b>GDELT</b><br>${escapeHtml((evt.title || '').slice(0, 80))}<br>Source: ${escapeHtml(evt.source)} | Tone: ${toneLabel}`,
+                    { direction: 'top' }
+                );
+                liveGdeltMarkers[`gdelt-${i}`] = marker;
+
+                // Add to heatmap
+                heatmapData.push([lat, lon, 0.3]);
+            });
+
+            if (events.length > 0) addMapEvent('gdelt', `${events.length} GDELT events tracked`);
+        }
+
+        function updateHeatmap(data) {
+            if (!heatmapLayer) return;
+            // Rebuild heatmap with all accumulated data points
+            const points = [...heatmapData];
+            // Add live aircraft positions as low-intensity heat
+            (data.aircraft || []).forEach(ac => points.push([ac.lat, ac.lon, 0.2]));
+            // Add live vessel positions
+            (data.vessels || []).forEach(v => points.push([v.lat, v.lon, 0.15]));
+            heatmapLayer.setLatLngs(points);
         }
 
         function updateThreatFromMilitary(data) {
@@ -4375,7 +4790,38 @@
             if (!container) return;
             container.innerHTML = '';
 
-            const matrix = correlationPayload?.matrix || buildFallbackMatrix();
+            const labels = correlationPayload?.labels || ['WTI', 'Brent', '금', '기준금리', '환율', '건설주', '부동산', 'VIX', '10Y'];
+            const matrix = correlationPayload?.matrix || buildFallbackMatrix(labels.length);
+            const n = labels.length;
+
+            // Sync grid columns with actual data size
+            container.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+
+            // Sync top labels
+            const topLabelsEl = document.querySelector('.corr-top-labels');
+            if (topLabelsEl) {
+                topLabelsEl.innerHTML = '';
+                topLabelsEl.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+                labels.forEach(l => {
+                    const div = document.createElement('div');
+                    div.className = 'corr-label';
+                    div.textContent = l;
+                    topLabelsEl.appendChild(div);
+                });
+            }
+
+            // Sync left labels
+            const leftLabelsEl = document.querySelector('.corr-left-labels');
+            if (leftLabelsEl) {
+                leftLabelsEl.innerHTML = '';
+                leftLabelsEl.style.gridTemplateRows = `repeat(${n}, 26px)`;
+                labels.forEach(l => {
+                    const div = document.createElement('div');
+                    div.className = 'corr-label corr-left-label';
+                    div.textContent = l;
+                    leftLabelsEl.appendChild(div);
+                });
+            }
 
             matrix.forEach((row, i) => {
                 row.forEach((value, j) => {
@@ -4401,9 +4847,10 @@
             });
         }
 
-        function buildFallbackMatrix() {
-            return Array.from({ length: 7 }, (_, i) =>
-                Array.from({ length: 7 }, (_, j) => i === j ? 1.0 : null)
+        function buildFallbackMatrix(size) {
+            const n = size || 9;
+            return Array.from({ length: n }, (_, i) =>
+                Array.from({ length: n }, (_, j) => i === j ? 1.0 : null)
             );
         }
 
@@ -4750,6 +5197,62 @@
             document.getElementById('mechModal').classList.add('active');
         }
 
+        function showContributionPopup() {
+            // Build contribution summary from last simulation results
+            const body = document.getElementById('simAttributionBody');
+            if (!body || !body.innerHTML.trim()) {
+                alert('먼저 시뮬레이션을 실행하세요.');
+                return;
+            }
+            // Reuse mechModal with contribution content
+            const modal = document.getElementById('mechModal');
+            const dynDiv = document.getElementById('mechDynamic');
+            if (dynDiv) {
+                const rows = body.querySelectorAll('tr');
+                let html = '<div style="padding:10px;"><h3 style="color:#38bdf8;margin-bottom:12px;font-size:14px;">전파경로 기여도 분석</h3>';
+                html += '<table style="width:100%;font-size:12px;border-collapse:collapse;font-family:JetBrains Mono,monospace;">';
+                html += '<thead><tr style="color:#6d8db0;border-bottom:1px solid #1e3050;"><th style="text-align:left;padding:6px;">변수</th><th style="text-align:right;padding:6px;">변화</th><th style="text-align:right;padding:6px;">기여도</th><th style="text-align:right;padding:6px;">시차</th><th style="text-align:left;padding:6px;">경로</th></tr></thead><tbody>';
+                rows.forEach(row => {
+                    html += '<tr style="border-bottom:1px solid rgba(22,37,64,0.4);">';
+                    row.querySelectorAll('td').forEach(td => { html += `<td style="padding:5px 6px;">${td.innerHTML}</td>`; });
+                    html += '</tr>';
+                });
+                html += '</tbody></table></div>';
+                dynDiv.innerHTML = html;
+            }
+            modal.classList.add('active');
+        }
+
+        function openSimHelp() {
+            const modal = document.getElementById('mechModal');
+            const dynDiv = document.getElementById('mechDynamic');
+            if (dynDiv) {
+                dynDiv.innerHTML = `<div style="padding:16px;font-size:12px;color:#8cb8e0;line-height:1.7;">
+                    <h3 style="color:#38bdf8;margin-bottom:12px;font-size:15px;">시뮬레이션 엔진 도움말</h3>
+                    <p><b style="color:#f59e0b;">3가지 분석 방법론:</b></p>
+                    <ul style="margin:6px 0 12px 16px;color:#6d8db0;">
+                        <li><b>Gaussian IRF</b> — 충격반응함수 기반. 변수 간 시차 전파를 모델링</li>
+                        <li><b>ARDL-OLS</b> — 자기회귀분포시차 모형. 장기 균형관계 추정</li>
+                        <li><b>Local Projections</b> — Jordà 방식. 비선형 반응경로 포착</li>
+                    </ul>
+                    <p><b style="color:#f59e0b;">KPI 카드:</b></p>
+                    <ul style="margin:6px 0 12px 16px;color:#6d8db0;">
+                        <li><b>3M/6M/12M</b> — 각 방법론별 추가 압력(%) 표시 (O/O/O)</li>
+                        <li><b>공사비 평균영향</b> — 3가지 방법론의 12M 평균</li>
+                    </ul>
+                    <p><b style="color:#f59e0b;">파라미터:</b></p>
+                    <ul style="margin:6px 0 12px 16px;color:#6d8db0;">
+                        <li>슬라이더로 각 변수 충격 크기 조절</li>
+                        <li>프리셋: 유가급등, 환율급등, 노무비, 금리, 복합 시나리오</li>
+                        <li>민감도 분석: 단일 변수의 영향도 구간 측정</li>
+                        <li>Monte Carlo: 확률적 시뮬레이션 (500~1000회)</li>
+                    </ul>
+                    <p style="color:#3d5570;font-size:10px;margin-top:8px;">데이터: 60개월 합성 시계열 기반 | 실시간 API 연동 예정</p>
+                </div>`;
+            }
+            modal.classList.add('active');
+        }
+
         function toggleAccordion(el) {
             el.classList.toggle('collapsed');
             const body = el.nextElementSibling;
@@ -4846,7 +5349,16 @@
                 document.getElementById('simDelta6M').textContent = '+' + macroFmt(primaryFC[5].deltaPct, 2) + '%';
                 document.getElementById('simDelta12M').textContent = '+' + macroFmt(primaryFC[11].deltaPct, 2) + '%';
             }
-            document.getElementById('simTopRoute').textContent = routes[0]?.driver ?? '-';
+            // Average 12M impact across methods
+            if (method === 'all' && multi) {
+                const vals = [multi.gaussian, multi.ardl, multi.lp]
+                    .map(fc => fc && fc[11] ? fc[11].deltaPct : null)
+                    .filter(v => v !== null);
+                const avg = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+                document.getElementById('simAvgImpact').textContent = (avg >= 0 ? '+' : '') + macroFmt(avg, 2) + '%';
+            } else if (primaryFC && primaryFC[11]) {
+                document.getElementById('simAvgImpact').textContent = '+' + macroFmt(primaryFC[11].deltaPct, 2) + '%';
+            }
 
             // Attribution table
             const tbody = document.getElementById('simAttributionBody');
