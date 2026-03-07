@@ -2972,7 +2972,8 @@
                 const raw = window.localStorage.getItem(MACRO_SIM_STORAGE_KEY);
                 if (!raw) return generateBaseSeries();
                 const parsed = JSON.parse(raw);
-                if (Array.isArray(parsed) && parsed.length >= 60) return parsed;
+                if (Array.isArray(parsed) && parsed.length >= 60
+                    && parsed[0].vix !== undefined && parsed[0].us10y !== undefined) return parsed;
             } catch (e) { console.error('failed to load stored history', e); }
             return generateBaseSeries();
         }
@@ -6323,7 +6324,7 @@
                 return { key, label: meta.label, weight: pt.weight, peakLag: pt.peakLag, width: pt.width,
                          path: route.path, summary: route.summary, shock, impact,
                          contribution: attrItem ? attrItem.contribution : 0,
-                         currentVal: latest[key] };
+                         currentVal: latest[key] ?? 0 };
             }).sort((a, b) => b.weight - a.weight);
 
             const totalImpact = forecast[11] ? forecast[11].deltaPct : 0;
