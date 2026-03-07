@@ -758,6 +758,9 @@ async function buildIndicatorsPayload() {
 
     const constructionIndex = null;
 
+    // Sparklines for chart pre-fill (1mo daily)
+    const sparklines = await fetchSparklines().catch(() => ({}));
+
     const sources = [];
     if (Object.keys(yahooIndices).length > 0) sources.push('Yahoo Finance(지수)');
     if (Object.keys(yahooSectors).length > 0) sources.push('Yahoo Finance(섹터주)');
@@ -780,6 +783,7 @@ async function buildIndicatorsPayload() {
         gold, goldChangePct,
         reindex,
         constructionIndex,
+        sparklines,
         timestamp: new Date().toISOString(),
         sources,
         warnings
@@ -949,32 +953,46 @@ async function buildCorrelationPayload() {
     }
     delete raw.constructionStocks;
 
-    // Build month-aligned intersection
-    const monthSets = keys.map(k => new Set((raw[k] || []).map(p => p.month)));
-    let commonMonths = [...monthSets[0]];
-    for (let i = 1; i < monthSets.length; i++) {
-        commonMonths = commonMonths.filter(m => monthSets[i].has(m));
-    }
-    commonMonths.sort();
-
-    // Build aligned arrays
-    const aligned = {};
+    // Build per-series month→value maps
+    const byMonth = {};
     for (const k of keys) {
-        const byMonth = {};
-        for (const p of (raw[k] || [])) byMonth[p.month] = p.value;
-        aligned[k] = commonMonths.map(m => byMonth[m]);
+        byMonth[k] = {};
+        for (const p of (raw[k] || [])) byMonth[k][p.month] = p.value;
     }
 
-    // Compute correlation matrix
+    // Collect all months across all series (union)
+    const allMonthsSet = new Set();
+    for (const k of keys) {
+        for (const m of Object.keys(byMonth[k])) allMonthsSet.add(m);
+    }
+    const allMonths = [...allMonthsSet].sort();
+
+    // Pairwise correlation: for each pair, use their shared months
     const matrix = [];
     for (let i = 0; i < keys.length; i++) {
         const row = [];
         for (let j = 0; j < keys.length; j++) {
             if (i === j) { row.push(1.0); continue; }
-            const r = pearsonCorrelation(aligned[keys[i]], aligned[keys[j]]);
+            const mapA = byMonth[keys[i]];
+            const mapB = byMonth[keys[j]];
+            const shared = allMonths.filter(m => mapA[m] !== undefined && mapB[m] !== undefined);
+            if (shared.length < 6) { row.push(null); continue; }
+            const r = pearsonCorrelation(shared.map(m => mapA[m]), shared.map(m => mapB[m]));
             row.push(r !== null ? Math.round(r * 100) / 100 : null);
         }
         matrix.push(row);
+    }
+
+    // For history chart, build aligned arrays using broadest common months
+    const commonMonths = allMonths.filter(m => keys.every(k => byMonth[k][m] !== undefined));
+    const aligned = {};
+    for (const k of keys) aligned[k] = commonMonths.map(m => byMonth[k][m]);
+
+    // Report per-series date range
+    const seriesRanges = {};
+    for (const k of keys) {
+        const months = Object.keys(byMonth[k]).sort();
+        if (months.length > 0) seriesRanges[k] = { from: months[0], to: months[months.length - 1], n: months.length };
     }
 
     return {
@@ -982,6 +1000,8 @@ async function buildCorrelationPayload() {
         labels,
         matrix,
         months: commonMonths,
+        allMonths,
+        seriesRanges,
         history: aligned,
         dataPoints: commonMonths.length,
         timestamp: new Date().toISOString(),
@@ -1131,6 +1151,48 @@ async function buildHistoryPayload() {
     }
 
     return { series: result, timestamp: new Date().toISOString(), warnings };
+}
+
+// ─── Yahoo Finance Sparklines (5d 15min for real-time chart) ─────────────────
+
+const SPARKLINE_SYMBOLS = {
+    wti: 'CL%3DF',
+    brent: 'BZ%3DF',
+    gold: 'GC%3DF',
+    silver: 'SI%3DF',
+    usdkrw: 'KRW%3DX'
+};
+
+async function fetchYahooSparkline(encodedSymbol) {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodedSymbol}?interval=15m&range=5d&includePrePost=false`;
+    const data = await fetchJson(url);
+    const result = data?.chart?.result?.[0];
+    if (!result) return [];
+    const timestamps = result.timestamp || [];
+    const closes = result.indicators?.quote?.[0]?.close || [];
+    const points = [];
+    for (let i = 0; i < timestamps.length; i++) {
+        const val = toNumber(closes[i]);
+        if (val === null) continue;
+        const d = new Date(timestamps[i] * 1000);
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mm = String(d.getMinutes()).padStart(2, '0');
+        const label = `${d.getMonth() + 1}/${d.getDate()} ${hh}:${mm}`;
+        points.push({ label, value: val });
+    }
+    return points;
+}
+
+async function fetchSparklines() {
+    const entries = Object.entries(SPARKLINE_SYMBOLS);
+    const results = await Promise.all(
+        entries.map(([, sym]) => fetchYahooSparkline(sym).catch(() => []))
+    );
+    const sparklines = {};
+    entries.forEach(([key], i) => {
+        if (results[i].length > 0) sparklines[key] = results[i];
+    });
+    return sparklines;
 }
 
 // ─── Exports ────────────────────────────────────────────────────────────────
