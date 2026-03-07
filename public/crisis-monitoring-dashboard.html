@@ -226,8 +226,8 @@
         /* Main Grid */
         .dashboard {
             display: grid;
-            grid-template-columns: minmax(220px, 1.12fr) minmax(290px, 1.38fr) minmax(290px, 1.38fr) minmax(220px, 1fr);
-            grid-template-rows: minmax(170px, 1fr) minmax(170px, 1fr) minmax(180px, 1fr);
+            grid-template-columns: minmax(220px, 1.22fr) minmax(290px, 1.38fr) minmax(290px, 1.38fr) minmax(220px, 1fr);
+            grid-template-rows: minmax(170px, 1fr) minmax(170px, 1fr) minmax(189px, 1.05fr);
             gap: var(--dashboard-gap);
             padding: var(--dashboard-gap);
             max-width: 1920px;
@@ -328,7 +328,7 @@
 
         .correlation-layout {
             display: grid;
-            grid-template-columns: 72px 1fr;
+            grid-template-columns: 48px 1fr;
             gap: 6px;
         }
 
@@ -348,7 +348,7 @@
 
         .corr-left-labels {
             display: grid;
-            grid-template-rows: repeat(9, 26px);
+            grid-template-rows: repeat(9, 22px);
             gap: 3px;
         }
 
@@ -380,60 +380,68 @@
 
         .simulation-card.active {
             display: flex;
+            flex-direction: column;
         }
 
-        /* ── Sim Header ── */
-        .sim-header {
+        /* ── Sim Topbar (unified controls + KPIs + actions) ── */
+        .sim-topbar {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 14px;
-            background: linear-gradient(90deg, rgba(14,26,42,0.95) 0%, rgba(8,16,28,0.95) 100%);
-            border-bottom: 1px solid #1e3050;
-            position: relative;
+            align-items: stretch;
+            background: #0b1524;
+            border-bottom: 1px solid #1a2a42;
         }
-        .sim-header::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(56,189,248,0.3), transparent);
-        }
-        .sim-header-left {
+        .sim-topbar-left {
             display: flex;
-            align-items: center;
-            gap: 10px;
+            flex-direction: column;
+            gap: 4px;
+            padding: 8px 12px;
+            min-width: 280px;
+            border-right: 1px solid #142034;
         }
-        .sim-header-icon {
-            font-size: 18px;
-            color: #38bdf8;
-            text-shadow: 0 0 12px rgba(56,189,248,0.4);
-            animation: simIconPulse 3s ease-in-out infinite;
-        }
-        @keyframes simIconPulse {
-            0%, 100% { opacity: 0.7; }
-            50% { opacity: 1; }
-        }
-        .sim-header-title {
-            font-size: 13px;
-            font-weight: 800;
-            color: #e2ecf8;
-            letter-spacing: 1.5px;
-            font-family: 'JetBrains Mono', monospace;
-        }
-        .sim-header-sub {
-            font-size: 9px;
-            color: #5a7a9a;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-            margin-top: 1px;
-        }
-        .sim-header-right {
+        .sim-ctrl-row {
             display: flex;
             align-items: center;
             gap: 8px;
+        }
+        .sim-ctrl-tag {
+            font-size: 10px;
+            font-weight: 700;
+            color: #6a8aaa;
+            font-family: 'JetBrains Mono', monospace;
+            white-space: nowrap;
+            min-width: 68px;
+            padding: 3px 8px;
+            background: rgba(56,189,248,0.04);
+            border: 1px solid #182840;
+            border-radius: 2px;
+            text-align: center;
+        }
+        .sim-select {
+            flex: 1;
+            padding: 4px 8px;
+            font-size: 11px;
+            color: #c8d8ec;
+            background: #060c16;
+            border: 1px solid #1a2a42;
+            border-radius: 2px;
+            font-family: inherit;
+            outline: none;
+        }
+        .sim-select:focus { border-color: #38bdf8; }
+        .sim-topbar-kpis {
+            display: flex;
+            gap: 1px;
+            flex: 1;
+            align-items: stretch;
+            padding: 6px 8px;
+        }
+        .sim-topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            border-left: 1px solid #142034;
+            margin-left: auto;
         }
         .sim-header-status {
             display: flex;
@@ -462,99 +470,72 @@
             50% { opacity: 0.4; }
         }
         .sim-btn-report {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 12px;
+            padding: 5px 14px;
             font-size: 10px;
             font-weight: 700;
             color: #ecfdf5;
             background: linear-gradient(135deg, #0d9488, #14b8a6);
             border: none;
-            border-radius: 4px;
+            border-radius: 3px;
             cursor: pointer;
-            letter-spacing: 0.3px;
-            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: 'JetBrains Mono', monospace;
             transition: all 0.2s;
         }
         .sim-btn-report:hover {
             background: linear-gradient(135deg, #14b8a6, #2dd4bf);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(20,184,166,0.3);
+            box-shadow: 0 2px 8px rgba(20,184,166,0.25);
         }
         .sim-btn-help {
-            padding: 4px 10px;
-            font-size: 9px;
-            font-weight: 700;
+            padding: 5px 12px;
+            font-size: 10px;
+            font-weight: 600;
             color: #6d8db0;
-            background: rgba(255,255,255,0.04);
+            background: transparent;
             border: 1px solid #1e3050;
-            border-radius: 4px;
+            border-radius: 3px;
             cursor: pointer;
-            letter-spacing: 0.3px;
             font-family: 'JetBrains Mono', monospace;
             transition: all 0.2s;
         }
         .sim-btn-help:hover {
-            background: rgba(56,189,248,0.08);
+            background: rgba(56,189,248,0.06);
             border-color: rgba(56,189,248,0.3);
             color: #a8d8f8;
         }
         .sim-btn-close {
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid #2a3a52;
-            border-radius: 4px;
+            padding: 5px 12px;
+            font-size: 10px;
+            font-weight: 600;
             color: #6a829f;
-            font-size: 14px;
+            background: transparent;
+            border: 1px solid #2a3a52;
+            border-radius: 3px;
             cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
             transition: all 0.2s;
         }
         .sim-btn-close:hover {
-            background: rgba(239,68,68,0.12);
+            background: rgba(239,68,68,0.1);
             border-color: rgba(239,68,68,0.3);
             color: #fca5a5;
         }
 
-        /* ── Sim Top Bar ── */
-        .sim-top-bar {
-            display: flex;
-            gap: 8px;
-            align-items: stretch;
-            margin-bottom: 6px;
-        }
-        .sim-top-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            min-width: 240px;
-            flex-shrink: 0;
-        }
-        .sim-control-group {
-            background: rgba(10,16,28,0.6);
-            border: 1px solid #182840;
-            border-radius: 4px;
-            padding: 4px 6px;
-        }
-        .sim-top-kpis {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
-            flex: 1;
-        }
+        /* ── Sim KPI Cards (inside topbar) ── */
         .sim-kpi-card {
-            background: rgba(8, 14, 24, 0.9);
-            border: 1px solid #1a2a42;
-            border-radius: 5px;
-            padding: 6px 8px;
+            flex: 1;
+            background: rgba(8,14,24,0.6);
+            border: 1px solid #142034;
+            border-radius: 3px;
+            padding: 5px 10px;
             text-align: center;
-            transition: all 0.25s;
+            transition: all 0.2s;
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         .sim-kpi-card::before {
             content: '';
@@ -563,7 +544,6 @@
             left: 0;
             right: 0;
             height: 2px;
-            background: attr(data-accent);
             background: var(--kpi-accent, #38bdf8);
         }
         .sim-kpi-card[data-accent="#f59e0b"] { --kpi-accent: #f59e0b; }
@@ -572,30 +552,27 @@
         .sim-kpi-card[data-accent="#38bdf8"] { --kpi-accent: #38bdf8; }
         .sim-kpi-card:hover {
             border-color: var(--kpi-accent, #38bdf8);
-            box-shadow: 0 0 12px rgba(56,189,248,0.08);
         }
+        .sim-kpi-card.avg {
+            border-color: rgba(56,189,248,0.2);
+            background: rgba(56,189,248,0.04);
+        }
+        .sim-kpi-card.avg .sim-kpi-value { color: #38bdf8; }
         .sim-kpi-card.active-kpi { border-color: var(--accent-cool); }
         .sim-kpi-label {
-            font-size: 8px;
+            font-size: 9px;
             color: #5d7a9a;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 2px;
             font-family: 'JetBrains Mono', monospace;
+            line-height: 1.3;
         }
         .sim-kpi-value {
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 800;
             font-family: 'JetBrains Mono', monospace;
             color: var(--text);
             line-height: 1.2;
-        }
-        .sim-kpi-sub {
-            font-size: 7px;
-            color: #3d5570;
-            margin-top: 2px;
-            letter-spacing: 1px;
-            font-family: 'JetBrains Mono', monospace;
         }
 
         /* ── Sim 3-Column Body ── */
@@ -1457,8 +1434,8 @@
         .correlation-matrix {
             display: grid;
             grid-template-columns: repeat(9, 1fr);
-            grid-auto-rows: 26px;
-            gap: 3px;
+            grid-auto-rows: 22px;
+            gap: 2px;
             margin-top: 4px;
         }
 
@@ -1466,7 +1443,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             border-radius: 4px;
             cursor: pointer;
@@ -1481,13 +1458,15 @@
         }
 
         .corr-label {
-            font-size: 9px;
+            font-size: 8px;
             line-height: 1;
             text-align: center;
             color: #8394af;
-            padding: 2px;
-            letter-spacing: 0.3px;
-            text-transform: uppercase;
+            padding: 1px;
+            letter-spacing: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* Simulation Panel */
@@ -1499,6 +1478,8 @@
             min-height: 0;
             overflow: auto;
             flex: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         .sim-controls {
@@ -2163,12 +2144,12 @@
             }
 
             .correlation-layout {
-                grid-template-columns: 56px 1fr;
+                grid-template-columns: 40px 1fr;
                 gap: 4px;
             }
 
             .corr-left-labels {
-                grid-template-rows: repeat(9, 22px);
+                grid-template-rows: repeat(9, 20px);
             }
 
             .correlation-matrix {
@@ -2312,6 +2293,7 @@
                     <label><input type="checkbox" checked data-layer="gdelt"> GDELT Events <span class="layer-dot" style="background:#ffc832"></span></label>
                     <label><input type="checkbox" checked data-layer="zones"> Conflict Zones <span class="layer-dot" style="background:#ff4d6d"></span></label>
                     <label><input type="checkbox" checked data-layer="heatmap"> Heatmap <span class="layer-dot" style="background:#ff6b00"></span></label>
+                    <label><input type="checkbox" checked data-layer="pipelines"> Pipelines <span class="layer-dot" style="background:#00e676"></span></label>
                     <label><input type="checkbox" checked data-layer="oil"> Oil Infra <span class="layer-dot" style="background:#d4a844"></span></label>
                     <label><input type="checkbox" checked data-layer="bases"> Military Bases <span class="layer-dot" style="background:#ffb347"></span></label>
                     <label><input type="checkbox" checked data-layer="trajectories"> Attack Paths <span class="layer-dot" style="background:#e040fb"></span></label>
@@ -2550,70 +2532,55 @@
 
         <!-- Simulation Panel -->
         <div class="card simulation-card" id="simulationPopup">
-            <div class="sim-header">
-                <div class="sim-header-left">
-                    <div class="sim-header-icon">◈</div>
-                    <div>
-                        <div class="sim-header-title">IMPACT SIMULATION ENGINE</div>
-                        <div class="sim-header-sub">Multi-Factor Scenario Analysis</div>
+            <div class="sim-topbar">
+                <div class="sim-topbar-left">
+                    <div class="sim-ctrl-row">
+                        <span class="sim-ctrl-tag">분석기간</span>
+                        <select class="sim-select" id="analysisPeriod" onchange="onPeriodChange()">
+                            <option value="warEra">우크라 전쟁기 (22.02~23.08)</option>
+                            <option value="postWar">전쟁 후 안정기 (23.09~24.06)</option>
+                            <option value="recent">최근 12개월</option>
+                            <option value="full" selected>전체 (21.01~25.12)</option>
+                        </select>
+                    </div>
+                    <div class="sim-ctrl-row">
+                        <span class="sim-ctrl-tag">분석방법론</span>
+                        <select class="sim-select" id="simMethod" onchange="onMethodChange()">
+                            <option value="all" selected>전체 비교 (3-Method)</option>
+                            <option value="gaussian">Gaussian IRF</option>
+                            <option value="ardl">ARDL-OLS</option>
+                            <option value="lp">Local Projections</option>
+                        </select>
                     </div>
                 </div>
-                <div class="sim-header-right">
+                <div class="sim-topbar-kpis">
+                    <div class="sim-kpi-card" data-accent="#f59e0b">
+                        <div class="sim-kpi-label">3M</div>
+                        <div class="sim-kpi-value down" id="simDelta3M">--</div>
+                    </div>
+                    <div class="sim-kpi-card" data-accent="#fb7185">
+                        <div class="sim-kpi-label">6M</div>
+                        <div class="sim-kpi-value down" id="simDelta6M">--</div>
+                    </div>
+                    <div class="sim-kpi-card" data-accent="#ef4444">
+                        <div class="sim-kpi-label">12M</div>
+                        <div class="sim-kpi-value down" id="simDelta12M">--</div>
+                    </div>
+                    <div class="sim-kpi-card avg" data-accent="#38bdf8">
+                        <div class="sim-kpi-label">건설공사비<br>평균영향</div>
+                        <div class="sim-kpi-value" id="simAvgImpact">--</div>
+                    </div>
+                </div>
+                <div class="sim-topbar-right">
                     <div class="sim-header-status" id="simStatusIndicator">
                         <span class="sim-status-dot"></span>READY
                     </div>
                     <button class="sim-btn-help" onclick="openSimHelp()">도움말</button>
-                    <button class="sim-btn-report" onclick="generateLLMReport()" id="btnReport">
-                        <span style="font-size:11px;">⚡</span> AI 분석
-                    </button>
-                    <button class="sim-btn-close" onclick="closeSimulationPopup()">✕</button>
+                    <button class="sim-btn-report" onclick="generateLLMReport()" id="btnReport">AI분석</button>
+                    <button class="sim-btn-close" onclick="closeSimulationPopup()">닫기</button>
                 </div>
             </div>
             <div class="simulation-panel">
-                <div class="sim-top-bar">
-                    <div class="sim-top-controls">
-                        <div class="sim-control-group">
-                            <label class="sim-control-label" style="font-size:8px;margin-bottom:2px;opacity:0.6;">PERIOD</label>
-                            <select class="sim-input" id="analysisPeriod" onchange="onPeriodChange()" style="padding:5px;font-size:11px;">
-                                <option value="warEra">우크라 전쟁기 (22.02~23.08)</option>
-                                <option value="postWar">전쟁 후 안정기 (23.09~24.06)</option>
-                                <option value="recent">최근 12개월</option>
-                                <option value="full" selected>전체 (21.01~25.12)</option>
-                            </select>
-                        </div>
-                        <div class="sim-control-group">
-                            <label class="sim-control-label" style="font-size:8px;margin-bottom:2px;opacity:0.6;">METHOD</label>
-                            <select class="sim-input" id="simMethod" onchange="onMethodChange()" style="padding:5px;font-size:11px;">
-                                <option value="all" selected>전체 비교 (3-Method)</option>
-                                <option value="gaussian">Gaussian IRF</option>
-                                <option value="ardl">ARDL-OLS</option>
-                                <option value="lp">Local Projections</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="sim-top-kpis">
-                        <div class="sim-kpi-card" data-accent="#f59e0b">
-                            <div class="sim-kpi-label">3M 추가압력</div>
-                            <div class="sim-kpi-value down" id="simDelta3M">--</div>
-                            <div class="sim-kpi-sub">SHORT-TERM</div>
-                        </div>
-                        <div class="sim-kpi-card" data-accent="#fb7185">
-                            <div class="sim-kpi-label">6M 추가압력</div>
-                            <div class="sim-kpi-value down" id="simDelta6M">--</div>
-                            <div class="sim-kpi-sub">MID-TERM</div>
-                        </div>
-                        <div class="sim-kpi-card" data-accent="#ef4444">
-                            <div class="sim-kpi-label">12M 추가압력</div>
-                            <div class="sim-kpi-value down" id="simDelta12M">--</div>
-                            <div class="sim-kpi-sub">LONG-TERM</div>
-                        </div>
-                        <div class="sim-kpi-card" data-accent="#38bdf8">
-                            <div class="sim-kpi-label">공사비 평균영향</div>
-                            <div class="sim-kpi-value" style="color:#38bdf8;" id="simAvgImpact">--</div>
-                            <div class="sim-kpi-sub">AVG IMPACT</div>
-                        </div>
-                    </div>
-                </div>
                 <div class="sim-body-3col">
                     <div class="sim-col">
                         <div class="sim-col-section" style="flex:0 0 auto;">
@@ -3519,6 +3486,12 @@
                 applyValueWithPct('cement', c.value, 'cement-change', c.changePct);
             }
 
+            // Pre-fill charts with sparkline data on first load
+            if (payload.sparklines && !window._sparklineApplied) {
+                window._sparklineApplied = true;
+                applySparklineData(payload.sparklines);
+            }
+
             // Update finance chart with USD/KRW, gold, silver
             applyFinanceChartData(payload);
 
@@ -3637,6 +3610,47 @@
             }
             charts.finance.data.labels = generateTimeLabels(maxLen);
             charts.finance.update('none');
+        }
+
+        function downsample(arr, step) {
+            // Take every Nth point + always include last point
+            const out = [];
+            for (let i = 0; i < arr.length; i += step) out.push(arr[i]);
+            if (arr.length > 0 && (arr.length - 1) % step !== 0) out.push(arr[arr.length - 1]);
+            return out;
+        }
+
+        function sparkLabel(raw) {
+            // "3/5 14:30" → "3/5" (date only, dedup handled by Chart.js maxTicksLimit)
+            return raw.split(' ')[0];
+        }
+
+        function applySparklineData(sparklines) {
+            const STEP = 8; // 15min × 8 = 2hr sampling (50% fewer points)
+            // Energy chart: WTI & Brent
+            if (charts.energy && sparklines.wti && sparklines.brent) {
+                const wti = downsample(sparklines.wti, STEP);
+                const brent = downsample(sparklines.brent, STEP);
+                const len = Math.min(wti.length, brent.length);
+                charts.energy.data.labels = wti.slice(0, len).map(p => sparkLabel(p.label));
+                charts.energy.data.datasets[0].data = wti.slice(0, len).map(p => p.value);
+                charts.energy.data.datasets[1].data = brent.slice(0, len).map(p => p.value);
+                charts.energy.update('none');
+            }
+            // Finance chart: USD/KRW, Gold, Silver
+            if (charts.finance) {
+                const fx = downsample(sparklines.usdkrw || [], STEP);
+                const gold = downsample(sparklines.gold || [], STEP);
+                const silver = downsample(sparklines.silver || [], STEP);
+                const longest = [fx, gold, silver].reduce((a, b) => a.length >= b.length ? a : b);
+                if (longest.length > 0) {
+                    charts.finance.data.labels = longest.map(p => sparkLabel(p.label));
+                    charts.finance.data.datasets[0].data = fx.map(p => p.value);
+                    charts.finance.data.datasets[1].data = gold.map(p => p.value);
+                    charts.finance.data.datasets[2].data = silver.map(p => p.value);
+                    charts.finance.update('none');
+                }
+            }
         }
 
         function updateWarBarsFromData() {
@@ -3781,6 +3795,30 @@
             { name: 'Syria → Golan', from: [33.51,36.28], to: [33.00,35.80], color: '#dd4444' }
         ];
 
+        /* ── Major Oil/Gas Pipelines ── */
+        const PIPELINES = [
+            { name: 'East-West Pipeline (Petroline)', color: '#00e676', capacity: '5M bpd',
+              coords: [[25.94,49.68],[25.50,47.50],[24.80,44.00],[24.09,38.06]] },
+            { name: 'Abqaiq–Yanbu NGL Pipeline', color: '#69f0ae', capacity: '2M bpd',
+              coords: [[25.94,49.68],[25.20,46.70],[24.50,42.00],[24.09,38.06]] },
+            { name: 'IPSA Pipeline (Iraq–Saudi)', color: '#ffa726', capacity: '1.65M bpd',
+              coords: [[30.50,47.80],[29.50,46.00],[28.00,43.50],[26.50,40.00],[24.09,38.06]] },
+            { name: 'Kirkuk–Ceyhan Pipeline', color: '#ef5350', capacity: '1.6M bpd',
+              coords: [[35.47,44.39],[36.20,43.50],[36.80,42.00],[37.00,40.50],[36.93,35.95]] },
+            { name: 'Habshan–Fujairah Pipeline', color: '#42a5f5', capacity: '1.5M bpd',
+              coords: [[23.80,54.50],[24.50,55.50],[25.12,56.35]] },
+            { name: 'Sumed Pipeline (Egypt)', color: '#ab47bc', capacity: '2.5M bpd',
+              coords: [[29.87,32.56],[29.80,31.50],[29.50,30.90],[30.97,29.74]] },
+            { name: 'Strait of Hormuz Shipping Lane', color: '#ff1744', capacity: '21M bpd', dashed: true,
+              coords: [[26.57,56.25],[26.20,56.80],[25.80,57.00],[25.50,57.20]] },
+            { name: 'Bab el-Mandeb Shipping Lane', color: '#ff1744', capacity: '6.2M bpd', dashed: true,
+              coords: [[12.58,43.33],[12.80,43.50],[13.20,43.80]] },
+            { name: 'TurkStream (Gas)', color: '#26c6da', capacity: '31.5 bcm/yr',
+              coords: [[42.00,37.00],[41.50,33.00],[41.20,30.00]] },
+            { name: 'Iran–Turkey Gas Pipeline', color: '#ffab40', capacity: '10 bcm/yr',
+              coords: [[38.07,46.30],[38.50,44.00],[39.00,43.50],[39.92,44.00]] }
+        ];
+
         function initMapAssets() {
             const mapCanvas = document.getElementById('geoMapCanvas');
             if (!mapCanvas) return;
@@ -3822,7 +3860,31 @@
             mapLayers.zones = window.L.layerGroup().addTo(geoMap);
             mapLayers.oil = window.L.layerGroup().addTo(geoMap);
             mapLayers.trajectories = window.L.layerGroup().addTo(geoMap);
+            mapLayers.pipelines = window.L.layerGroup().addTo(geoMap);
             mapLayers.heatmap = window.L.layerGroup().addTo(geoMap);
+
+            // ── Pipelines ──
+            PIPELINES.forEach(pipe => {
+                const line = window.L.polyline(pipe.coords, {
+                    color: pipe.color,
+                    weight: pipe.dashed ? 2.5 : 3,
+                    opacity: 0.7,
+                    dashArray: pipe.dashed ? '4 6' : null,
+                    lineCap: 'round',
+                    lineJoin: 'round'
+                }).addTo(mapLayers.pipelines);
+                line.bindTooltip(`<b>${pipe.name}</b><br>Capacity: ${pipe.capacity}`, {
+                    sticky: true, className: 'map-hotspot-label', direction: 'top'
+                });
+                // Label at midpoint
+                const mid = pipe.coords[Math.floor(pipe.coords.length / 2)];
+                const labelIcon = window.L.divIcon({
+                    className: 'map-asset-icon',
+                    html: `<span style="font-size:7px;color:${pipe.color};text-shadow:0 0 4px #000,0 0 2px #000;white-space:nowrap;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:0.5px;">${pipe.name.split('(')[0].trim()}</span>`,
+                    iconSize: [0, 0], iconAnchor: [0, 0]
+                });
+                window.L.marker(mid, { icon: labelIcon, interactive: false, keyboard: false }).addTo(mapLayers.pipelines);
+            });
 
             // ── Conflict Zone Polygons ──
             CONFLICT_ZONES.forEach(zone => {
@@ -4550,16 +4612,22 @@
                             label: 'WTI',
                             data: [],
                             borderColor: '#ff6b00',
-                            backgroundColor: 'rgba(255, 107, 0, 0.1)',
-                            tension: 0.4,
-                            borderWidth: 2
+                            backgroundColor: 'rgba(255, 107, 0, 0.08)',
+                            tension: 0.35,
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            pointHitRadius: 6,
+                            fill: true
                         }, {
                             label: 'Brent',
                             data: [],
                             borderColor: '#00c853',
-                            backgroundColor: 'rgba(0, 200, 83, 0.1)',
-                            tension: 0.4,
-                            borderWidth: 2
+                            backgroundColor: 'rgba(0, 200, 83, 0.08)',
+                            tension: 0.35,
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            pointHitRadius: 6,
+                            fill: true
                         }]
                     },
                     options: getChartOptions('')
@@ -4577,26 +4645,35 @@
                         datasets: [{
                             label: 'USD/KRW',
                             data: [],
-                            borderColor: '#2196f3',
-                            backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                            tension: 0.4,
-                            borderWidth: 2,
+                            borderColor: '#42a5f5',
+                            backgroundColor: 'rgba(66, 165, 245, 0.06)',
+                            tension: 0.35,
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            pointHitRadius: 6,
+                            fill: true,
                             yAxisID: 'y'
                         }, {
                             label: 'Gold',
                             data: [],
-                            borderColor: '#ffc107',
-                            backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                            tension: 0.4,
-                            borderWidth: 2,
+                            borderColor: '#ffca28',
+                            backgroundColor: 'rgba(255, 202, 40, 0.06)',
+                            tension: 0.35,
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            pointHitRadius: 6,
+                            fill: true,
                             yAxisID: 'y1'
                         }, {
                             label: 'Silver',
                             data: [],
-                            borderColor: '#cfd8dc',
-                            backgroundColor: 'rgba(207, 216, 220, 0.1)',
+                            borderColor: '#b0bec5',
+                            backgroundColor: 'rgba(176, 190, 197, 0.06)',
                             tension: 0.35,
-                            borderWidth: 2,
+                            borderWidth: 1.2,
+                            pointRadius: 0,
+                            pointHitRadius: 6,
+                            fill: true,
                             yAxisID: 'y2'
                         }]
                     },
@@ -4648,14 +4725,15 @@
                         font: { size: 10 }
                     }
                 },
+                elements: { point: { radius: 0 } },
                 scales: {
                     y: {
                         ticks: { color: '#95a8c6', font: { size: 9 }, maxTicksLimit: 4 },
-                        grid: { color: '#25354c' }
+                        grid: { color: '#1e2e42' }
                     },
                     x: {
-                        ticks: { color: '#95a8c6', font: { size: 9 }, maxTicksLimit: 5 },
-                        grid: { color: '#25354c' }
+                        ticks: { color: '#6b8099', font: { size: 8 }, maxTicksLimit: 5, maxRotation: 0 },
+                        grid: { display: false }
                     }
                 }
             };
@@ -4691,7 +4769,7 @@
         }
 
         // 5-Year historical correlation data (loaded from /api/correlation)
-        const CORR_CACHE_KEY = 'insight-correlation-5y-v3';
+        const CORR_CACHE_KEY = 'insight-correlation-5y-v4';
         const CORR_CACHE_TTL = 3600000; // 1 hour
         let correlationPayload = null;
         const correlationHistory = { wti: [], fedfunds: [], usdkrw: [], construction: [], realestate: [], vix: [], us10y: [] };
@@ -4877,7 +4955,7 @@
             const leftLabelsEl = document.querySelector('.corr-left-labels');
             if (leftLabelsEl) {
                 leftLabelsEl.innerHTML = '';
-                leftLabelsEl.style.gridTemplateRows = `repeat(${n}, 26px)`;
+                leftLabelsEl.style.gridTemplateRows = `repeat(${n}, 22px)`;
                 labels.forEach(l => {
                     const div = document.createElement('div');
                     div.className = 'corr-label corr-left-label';
