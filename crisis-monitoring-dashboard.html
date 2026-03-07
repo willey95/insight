@@ -663,8 +663,8 @@
         .re-impact-card {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px 8px;
+            gap: 4px;
+            padding: 3px 4px;
             background: rgba(10, 15, 24, 0.5);
             border: 1px solid #1a2a42;
             border-radius: 5px;
@@ -673,19 +673,19 @@
             cursor: pointer;
         }
         .re-impact-card:hover { border-color: #3b6ea1; }
-        .re-impact-icon { font-size: 16px; flex-shrink: 0; }
+        .re-impact-icon { font-size: 8px; flex-shrink: 0; }
         .re-impact-info { flex: 1; min-width: 0; }
         .re-impact-name {
-            font-size: 10px;
+            font-size: 5px;
             color: #8ea9cc;
             font-weight: 600;
         }
         .re-impact-baseline {
-            font-size: 9px;
+            font-size: 5px;
             color: #5a7a9a;
         }
         .re-impact-delta {
-            font-size: 14px;
+            font-size: 7px;
             font-weight: 700;
             font-family: 'JetBrains Mono', monospace;
             text-align: right;
@@ -1749,9 +1749,9 @@
         .modal-content {
             background: linear-gradient(165deg, rgba(13, 19, 29, 0.97), rgba(9, 13, 20, 0.97));
             border: 1px solid #2a3952;
-            border-radius: 6px;
-            padding: 15px;
-            max-width: 520px;
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 900px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
@@ -1761,8 +1761,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
-            padding-bottom: 8px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
             border-bottom: 1px solid #2a3952;
         }
 
@@ -1770,38 +1770,38 @@
             background: #172536;
             color: #d5e5fc;
             border: none;
-            width: 22px;
-            height: 22px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 19px;
             border: 1px solid #354963;
         }
 
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin: 10px 0;
+            gap: 15px;
+            margin: 20px 0;
         }
 
         .stat-box {
             background: rgba(14, 24, 38, 0.82);
-            padding: 8px;
+            padding: 15px;
             border-radius: 4px;
             border-left: 2px solid var(--accent-cool);
         }
 
         .stat-label {
-            font-size: 6px;
+            font-size: 12px;
             color: #8ea0bc;
-            margin-bottom: 3px;
+            margin-bottom: 5px;
             text-transform: uppercase;
             letter-spacing: 0.35px;
         }
 
         .stat-value {
-            font-size: 12px;
+            font-size: 23px;
             font-weight: 700;
             color: #dce9ff;
             font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
@@ -2641,7 +2641,7 @@
     <div class="modal" id="detailModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="modalTitle" style="color: #ff6b00; font-size: 11px;">지표 상세 분석</h2>
+                <h2 id="modalTitle" style="color: #ff6b00; font-size: 21px;">지표 상세 분석</h2>
                 <button class="modal-close" onclick="closeModal()">×</button>
             </div>
             <div class="stats-grid">
