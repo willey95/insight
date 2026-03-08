@@ -2607,9 +2607,12 @@
 
         <!-- Correlation Matrix -->
         <div class="card correlation-card">
-            <div class="card-header" style="flex-direction:row;align-items:center;gap:10px;">
-                <div class="card-title" style="margin:0;">CROSS-METRIC CORRELATION</div>
-                <div class="card-subtitle" style="margin:0;">지표 간 상관관계 분석 <span id="corrDataInfo" class="card-timestamp"></span></div>
+            <div class="card-header">
+                <div>
+                    <div class="card-title">CROSS-METRIC CORRELATION</div>
+                    <div class="card-subtitle">지표 간 상관관계 분석</div>
+                </div>
+                <div class="card-timestamp" id="corrDataInfo"></div>
             </div>
             <div class="correlation-layout correlation-layout-top">
                 <div></div>
@@ -3868,7 +3871,7 @@
             // Blockade risk: prefer LLM hormuz_threat_level, fallback to formula
             const blockade = (c.llmHormuz != null)
                 ? c.llmHormuz
-                : Math.min(100, Math.round((c.hormuz * 8 + c.conflicts * 2)));
+                : Math.min(100, Math.round(c.hormuz * 10 + c.conflicts * 3 + Math.min(20, c.aircraft * 2)));
             setWarBar('warBarBlockade', 'warBarBlockadeVal', blockade);
 
             // Energy supply shock: prefer LLM energy_disruption_risk, fallback to formula
@@ -3876,17 +3879,19 @@
             const brentChange = Math.abs(s.brentChangePct || 0);
             const energyShock = (c.llmEnergy != null)
                 ? c.llmEnergy
-                : Math.min(100, Math.round((wtiChange + brentChange) * 8 + c.aircraft * 1.5));
+                : Math.min(100, Math.round((wtiChange + brentChange) * 8 + c.aircraft * 3 + c.hormuz * 5));
             setWarBar('warBarEnergy', 'warBarEnergyVal', energyShock);
 
-            // Financial contagion: FX + stock volatility + fatalities severity
+            // Financial contagion: FX + stock volatility + conflicts/fatalities
             const fxChange = Math.abs(s.usdkrwChangePct || 0);
             const kospiChange = Math.abs(s.kospiChangePct || 0);
-            const finContagion = Math.min(100, Math.round((fxChange + kospiChange) * 10 + c.fatalities * 0.5));
+            const finContagion = Math.min(100, Math.round((fxChange + kospiChange) * 10 + c.fatalities * 0.5 + c.conflicts * 2 + c.aircraft * 1));
             setWarBar('warBarFinance', 'warBarFinanceVal', finContagion);
 
-            // Construction cost impact (AI): from LLM analysis
-            const constImpact = (c.llmConstruction != null) ? Math.round(c.llmConstruction * 10) : 0;
+            // Construction cost impact: LLM preferred; fallback uses military activity
+            const constImpact = (c.llmConstruction != null)
+                ? Math.round(c.llmConstruction * 10)
+                : Math.min(100, Math.round((c.aircraft * 0.5 + c.conflicts * 0.3 + c.fatalities * 0.1) * 10));
             setWarBar('warBarConstruction', 'warBarConstructionVal', constImpact);
         }
 
