@@ -2164,6 +2164,53 @@
             .correlation-matrix {
                 grid-auto-rows: 22px;
             }
+
+            /* Map must have explicit height on mobile */
+            .map-card {
+                min-height: 400px;
+            }
+            .geo-map-wrap {
+                min-height: 350px;
+            }
+
+            /* Simulation popup mobile */
+            .simulation-card {
+                width: 100vw !important;
+                height: 100vh !important;
+                top: 0 !important;
+                left: 0 !important;
+                transform: none !important;
+                border-radius: 0 !important;
+                border: none !important;
+            }
+            @keyframes simPopupIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            .sim-topbar {
+                flex-wrap: wrap;
+                gap: 4px;
+                padding: 4px !important;
+            }
+            .sim-topbar-left,
+            .sim-topbar-center,
+            .sim-topbar-right {
+                width: 100% !important;
+                flex: none !important;
+                min-width: 0 !important;
+            }
+            .sim-topbar-center {
+                order: -1;
+            }
+            .sim-body-3col {
+                grid-template-columns: 1fr !important;
+                grid-template-rows: auto !important;
+                overflow-y: auto !important;
+            }
+            .sim-col {
+                max-height: none !important;
+                overflow-y: visible !important;
+            }
         }
 
         /* Loading Animation */
@@ -4150,38 +4197,39 @@
         let militaryDataActive = false;
 
         async function refreshMilitaryData() {
-            if (!geoMap) return;
             try {
                 const resp = await fetch('/api/military');
                 if (!resp.ok) return;
                 const data = await resp.json();
 
-                if (!militaryDataActive && (data.counts.aircraft > 0 || data.counts.vessels > 0 || data.counts.conflicts > 0)) {
-                    // Real data available — remove mock asset markers
-                    Object.values(mapAssetMarkers).forEach(m => {
-                        Object.values(mapLayers).forEach(lg => { try { lg.removeLayer(m); } catch {} });
-                    });
-                    mapAssetMarkers = {};
-                    militaryDataActive = true;
-                }
+                if (geoMap) {
+                    if (!militaryDataActive && (data.counts.aircraft > 0 || data.counts.vessels > 0 || data.counts.conflicts > 0)) {
+                        // Real data available — remove mock asset markers
+                        Object.values(mapAssetMarkers).forEach(m => {
+                            Object.values(mapLayers).forEach(lg => { try { lg.removeLayer(m); } catch {} });
+                        });
+                        mapAssetMarkers = {};
+                        militaryDataActive = true;
+                    }
 
-                if (data.aircraft) renderLiveAircraft(data.aircraft);
-                if (data.vessels) renderLiveVessels(data.vessels);
-                if (data.conflicts) renderLiveConflicts(data.conflicts);
-                if (data.gdeltEvents) renderLiveGdeltEvents(data.gdeltEvents);
+                    if (data.aircraft) renderLiveAircraft(data.aircraft);
+                    if (data.vessels) renderLiveVessels(data.vessels);
+                    if (data.conflicts) renderLiveConflicts(data.conflicts);
+                    if (data.gdeltEvents) renderLiveGdeltEvents(data.gdeltEvents);
+
+                    // Update heatmap with live data
+                    updateHeatmap(data);
+
+                    // Update stats bar
+                    updateMapStats(data);
+                }
 
                 if (data.timestamp) {
                     setCardTimestamp('tsCrisis', data.timestamp);
                     setCardTimestamp('tsMap', data.timestamp);
                 }
 
-                // Update heatmap with live data
-                updateHeatmap(data);
-
-                // Update stats bar
-                updateMapStats(data);
-
-                // Update threat indicators with real counts
+                // Update threat indicators with real counts (works without map)
                 updateThreatFromMilitary(data);
 
             } catch (err) {
