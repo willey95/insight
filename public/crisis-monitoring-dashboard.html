@@ -4166,13 +4166,14 @@
                 heatmapData.push([hotspot.lat, hotspot.lon, hotspot.critical ? 0.8 : 0.4]);
             });
 
-            // ── Mock assets (bases, aircraft, vessels) ──
+            // ── Reference scenario assets (map visualization only — NOT used in crisis scoring) ──
             mapAssetState.forEach(asset => {
                 const layerName = asset.type === 'base' || asset.type === 'defense' || asset.type === 'ground' ? 'bases' : asset.type === 'aircraft' ? 'aircraft' : 'vessels';
                 const marker = window.L.marker([asset.lat, asset.lon], {
                     icon: createAssetIcon(asset),
                     keyboard: false
                 }).addTo(mapLayers[layerName]);
+                marker.bindTooltip(`<span style="color:#94a3b8;font-size:9px">[참고시나리오]</span> ${asset.label}`, { direction: 'top' });
                 mapAssetMarkers[asset.id] = marker;
             });
 
@@ -4526,14 +4527,12 @@
         function updateThreatFromMilitary(data) {
             const llm = data.llmAnalysis;
 
-            // Include hardcoded map assets when API returns 0
-            const simAircraft = mapAssetState.filter(a => a.type === 'aircraft');
-            const simVessels = mapAssetState.filter(a => a.type === 'vessel');
-            const aircraftCount = (data.counts.aircraft || 0) + simAircraft.length;
+            // Use only real API data for crisis scoring — mapAssetState is map-display only
+            const aircraftCount = data.counts.aircraft || 0;
             const conflictCount = data.counts.conflicts || 0;
             const recentFatalities = (data.conflicts || []).reduce((s, c) => s + (c.fatalities || 0), 0);
-            const vesselCount = (data.counts.vessels || 0) + simVessels.length;
-            const allAssets = [...(data.aircraft || []), ...(data.vessels || []), ...simAircraft, ...simVessels];
+            const vesselCount = data.counts.vessels || 0;
+            const allAssets = [...(data.aircraft || []), ...(data.vessels || [])];
             const hormuzAssets = allAssets.filter(a =>
                 a.lat > 24 && a.lat < 28 && a.lon > 54 && a.lon < 58
             ).length;
@@ -5008,7 +5007,7 @@
             }
         }
 
-        // Ukraine war & major geopolitical events for 5Y chart annotations
+        // Major geopolitical & macro events for 5Y chart annotations (21.01~26.03)
         const WAR_EVENTS = [
             { month: '2022-02', label: '러 우크라 침공', color: '#ef4444' },
             { month: '2022-04', label: '부차 학살', color: '#f97316' },
@@ -5019,6 +5018,12 @@
             { month: '2023-10', label: '이스라엘-하마스', color: '#ef4444' },
             { month: '2024-04', label: '이란-이스라엘 교전', color: '#f97316' },
             { month: '2024-10', label: '중동 확전 우려', color: '#eab308' },
+            { month: '2025-01', label: '가자 휴전 협정', color: '#22c55e' },
+            { month: '2025-01', label: '트럼프 2기 취임', color: '#38bdf8' },
+            { month: '2025-03', label: '미 관세전쟁 개시', color: '#eab308' },
+            { month: '2025-07', label: '후티 공격 재개', color: '#f97316' },
+            { month: '2025-10', label: 'BOK 금리 인하', color: '#22c55e' },
+            { month: '2026-01', label: '원화 추가 약세', color: '#f97316' },
         ];
 
         // Chart.js plugin: draw vertical event lines on 5Y modal chart
@@ -5658,14 +5663,57 @@
             try {
                 const shocks = getSimShocks();
                 simCtx.shocks = shocks;
+                simCtx.periodLabel = ANALYSIS_PERIODS[currentAnalysisPeriod]?.label || '전체 63개월';
+                simCtx.methodLabel = { all:'All (3방법 비교)', gaussian:'Gaussian IRF', ardl:'ARDL-OLS', lp:'Local Projections' }[currentSimMethod] || currentSimMethod;
+
                 if (macroSimData && macroSimData.length > 0) {
                     const latest = macroSimData[macroSimData.length - 1];
-                    simCtx.latest = { month: latest.month, cci: latest.cci, fx: latest.fx, oil: latest.oil, ppi: latest.ppi, labor: latest.labor, policyRate: latest.policyRate };
+                    simCtx.latest = { month: latest.month, cci: macroRound(latest.constructionCost), fx: latest.fx, oil: latest.oil, ppi: latest.ppi, labor: latest.labor, policyRate: latest.policyRate };
                     simCtx.points = macroSimData.length;
+
+                    // Recent 6-month trend
+                    const trendSlice = macroSimData.slice(Math.max(0, macroSimData.length - 6));
+                    simCtx.trend = trendSlice.map(r => ({ month: r.month, cci: macroRound(r.constructionCost), fx: r.fx, oil: r.oil, costMoM: r.costMoM }));
+
                     const fc = buildScenarioForecast(macroSimData, shocks);
                     if (fc && fc[11]) {
                         simCtx.forecast = { m3: fc[2]?.deltaPct, m6: fc[5]?.deltaPct, m12: fc[11]?.deltaPct };
                     }
+
+                    // Attribution — read from last simAttributionBody render
+                    try {
+                        const attrRows = document.querySelectorAll('#simAttributionBody tr');
+                        if (attrRows.length > 0) {
+                            simCtx.attribution = Array.from(attrRows).map(tr => {
+                                const cells = tr.querySelectorAll('td');
+                                return { label: cells[0]?.textContent?.trim(), contribution: parseFloat(cells[2]?.textContent) || 0, peakLag: cells[3]?.textContent?.trim(), route: cells[4]?.textContent?.trim() };
+                            }).filter(a => a.label);
+                        }
+                    } catch(e2) {}
+
+                    // Model stats — read from modelStatsBox
+                    try {
+                        const statsText = document.getElementById('modelStatsBox')?.textContent || '';
+                        const ardlMatch = statsText.match(/ARDL.*?R²=([0-9.]+)/);
+                        const lpMatch = statsText.match(/LP.*?R²=([0-9.]+)/);
+                        const p = ANALYSIS_PERIODS[currentAnalysisPeriod];
+                        const nObs = p ? (p.endIdx - p.startIdx + 1) : null;
+                        const kParams = 41; // ARDL: 8 drivers × 5 lags + 1
+                        const valResult = validateSampleSize(currentAnalysisPeriod, currentSimMethod);
+                        simCtx.modelStats = {
+                            ardlR2: ardlMatch ? parseFloat(ardlMatch[1]) : null,
+                            lpR2: lpMatch ? parseFloat(lpMatch[1]) : null,
+                            nObs, kParams,
+                            sampleWarning: valResult?.level !== 'ok' ? valResult?.msg : null,
+                            methodConvergence: null // filled below if 'all'
+                        };
+                        // Convergence: if all methods, check if 3M/12M agree in direction
+                        if (currentSimMethod === 'all' && simCtx.forecast) {
+                            const d12 = simCtx.forecast.m12;
+                            simCtx.modelStats.methodConvergence = d12 != null ? (Math.abs(d12) < 0.5 ? '방향성 수렴 (편차 작음)' : Math.abs(d12) > 3 ? '수렴 확인 필요' : '방향성 수렴') : null;
+                        }
+                    } catch(e3) {}
+
                     // PYEONG type impacts
                     const pyeongKeys = Object.keys(PYEONG_TYPES);
                     simCtx.pyeongImpacts = pyeongKeys.map(k => {
