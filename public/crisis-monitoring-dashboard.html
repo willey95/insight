@@ -2897,7 +2897,7 @@
         const mapAssetMarkers = {};
         const DASHBOARD_API_URL = '/api/indicators';
         const DASHBOARD_NEWS_API_URL = '/api/news';
-        const NEWS_REFRESH_INTERVAL_MS = 3 * 60 * 1000;
+        const NEWS_REFRESH_INTERVAL_MS = 60 * 1000; // 1분
         console.log('%c[INSIGHT v4] loaded', 'color:#22c55e;font-weight:bold;');
         const KST_TIMEZONE = 'Asia/Seoul';
         const NEWS_SOURCES = [
@@ -3550,7 +3550,7 @@
                 renderHeaderWarnings();
             } else {
                 refreshExternalIndicators();
-                setInterval(refreshExternalIndicators, 60000);
+                setInterval(refreshExternalIndicators, 30000); // 30초
                 refreshLiveNews();
                 setInterval(refreshLiveNews, NEWS_REFRESH_INTERVAL_MS);
                 // Military data: refresh every 30s
@@ -3674,8 +3674,7 @@
             }
 
             // Pre-fill charts with sparkline data on first load
-            if (payload.sparklines && !window._sparklineApplied) {
-                window._sparklineApplied = true;
+            if (payload.sparklines) {
                 applySparklineData(payload.sparklines);
             }
 
@@ -3693,10 +3692,16 @@
         function applyValueWithPct(id, value, changeId, changePct, useGrouping) {
             const el = document.getElementById(id);
             if (!el) return;
+            const prev = externalIndicatorState[id];
             externalIndicatorState[id] = value;
-            el.textContent = useGrouping
+            const newText = useGrouping
                 ? Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                 : Number(value).toFixed(2);
+            if (el.textContent !== newText) {
+                el.textContent = newText;
+                el.style.transition = 'none'; el.style.color = (value > prev) ? '#22c55e' : (value < prev) ? '#ff4d6d' : '';
+                requestAnimationFrame(() => { el.style.transition = 'color 1.5s ease'; el.style.color = ''; });
+            }
             const changeEl = document.getElementById(changeId);
             if (!changeEl) return;
             const pct = Number.isFinite(changePct) ? changePct : 0;
