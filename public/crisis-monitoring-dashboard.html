@@ -3041,6 +3041,9 @@
 
         const MACRO_SIM_STORAGE_KEY = 'macro-construction-cost-history-5y-v5';
 
+        // 구버전 캐시 자동 정리
+        try { ['v1','v2','v3','v4'].forEach(v => localStorage.removeItem('macro-construction-cost-history-5y-' + v)); } catch(e) {}
+
         /* ─── Utilities ─── */
         function macroRound(v, d = 2) { return Number(v.toFixed(d)); }
         function macroFmt(v, d = 1) {
