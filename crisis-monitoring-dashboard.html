@@ -21,6 +21,8 @@
         :root {
             --ticker-height: 24px;
             --header-height: 52px;
+            --kpi-bar-height: 78px;
+            --situation-banner-height: 34px;
             --dashboard-gap: 8px;
             --accent: #ffb347;
             --accent-cool: #4ec9ff;
@@ -234,7 +236,7 @@
             padding: var(--dashboard-gap);
             max-width: 1920px;
             margin: 0 auto;
-            height: calc(100vh - var(--ticker-height) - var(--header-height));
+            height: calc(100vh - var(--ticker-height) - var(--header-height) - var(--kpi-bar-height) - var(--situation-banner-height));
             min-height: 0;
             position: relative;
             z-index: 1;
@@ -2083,6 +2085,7 @@
 
         /* Responsive */
         @media (max-width: 1200px) {
+            .kpi-top-bar { grid-template-columns: repeat(3, 1fr); }
             body {
                 overflow-y: auto;
             }
@@ -2295,6 +2298,106 @@
             0%, 100% { opacity: 1; }
             50%      { opacity: 0.5; }
         }
+
+        /* ── KPI Top Bar ── */
+        .kpi-top-bar {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+            padding: 5px 8px;
+            background: rgba(5, 8, 16, 0.95);
+            border-bottom: 1px solid #1a2b3f;
+            position: relative;
+            z-index: 10;
+        }
+        .kpi-top-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-stroke);
+            border-radius: 4px;
+            padding: 7px 10px;
+            height: 68px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: border-color 0.15s;
+            overflow: hidden;
+        }
+        .kpi-top-card:hover { border-color: #2a4060; }
+        .kpi-top-card.kpi-crisis { border-left: 2px solid var(--accent); }
+        .kpi-top-card.kpi-const  { border-left: 2px solid #4ec9ff; }
+        .kpi-top-label {
+            font-size: 8.5px;
+            font-weight: 700;
+            color: var(--muted);
+            letter-spacing: 0.5px;
+            font-family: 'IBM Plex Mono', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .kpi-top-value {
+            font-size: 20px;
+            font-weight: 900;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
+            color: #f0f6ff;
+            letter-spacing: -0.5px;
+            line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .kpi-top-meta {
+            font-size: 9px;
+            color: var(--muted);
+            font-family: 'IBM Plex Mono', monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        /* ── Situation Banner ── */
+        .situation-banner {
+            margin: 4px 8px;
+            padding: 6px 12px;
+            background: rgba(20, 35, 60, 0.5);
+            border: 1px solid #1e3050;
+            border-left: 3px solid var(--accent);
+            border-radius: 3px;
+            font-size: 11px;
+            color: #94a3b8;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        /* ── News more button ── */
+        .news-more-btn {
+            display: block;
+            width: 100%;
+            margin-top: 4px;
+            padding: 5px;
+            background: rgba(78,201,255,0.06);
+            border: 1px solid rgba(78,201,255,0.2);
+            border-radius: 3px;
+            color: #4ec9ff;
+            font-size: 10px;
+            font-family: 'IBM Plex Mono', monospace;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.15s;
+        }
+        .news-more-btn:hover { background: rgba(78,201,255,0.12); }
+        /* ── Header subtitle ── */
+        .header-subtitle {
+            display: block;
+            font-size: 9px;
+            font-weight: 400;
+            color: #4a6080;
+            font-family: 'IBM Plex Mono', monospace;
+            letter-spacing: 0.3px;
+            margin-top: 2px;
+            text-transform: none;
+        }
     </style>
 </head>
 <body>
@@ -2308,7 +2411,7 @@
     <!-- Header -->
     <div class="header">
         <h1>
-            <span>CCC — COST CRISIS CENTER</span>
+            <span>CCC — COST CRISIS CENTER<span class="header-subtitle">전쟁 위기 기반 원가·시장 영향 모니터링</span></span>
             <span class="alert-badge">⚠️ 전쟁 위기 경보</span>
             <span class="header-stock-inline" id="headerStockInline">
                 <span class="header-stock-item" onclick="showDetails('kospi')" role="button" tabindex="0"><span class="header-stock-label">KOSPI</span><span class="header-stock-value" id="kospi">--</span><span class="header-stock-change" id="kospi-change">--%</span></span>
@@ -2341,6 +2444,48 @@
             <span style="font-size:9px;color:#5a7090;font-family:'IBM Plex Mono',monospace" id="globalStatusText">실시간 데이터 동기화 중</span>
         </div>
         <div class="library-warning" id="libraryWarning"></div>
+    </div>
+
+    <!-- KPI Top Bar -->
+    <div class="kpi-top-bar" id="kpiTopBar">
+        <div class="kpi-top-card kpi-crisis" onclick="document.querySelector('.war-status').scrollIntoView({behavior:'smooth'})">
+            <div class="kpi-top-label">CRISIS SCORE
+                <span class="status-badge syncing" id="kpiCrisisBadge" style="font-size:8px;padding:1px 4px">SYNCING</span>
+            </div>
+            <div class="kpi-top-value" id="kpiCrisisScore">—</div>
+            <div class="kpi-top-meta" id="kpiCrisisMeta">데이터 수집 중</div>
+        </div>
+        <div class="kpi-top-card" onclick="showDetails('usd')">
+            <div class="kpi-top-label">USD/KRW <span>₩/$</span></div>
+            <div class="kpi-top-value" id="kpiUsdVal">—</div>
+            <div class="kpi-top-meta" id="kpiUsdMeta">불러오는 중</div>
+        </div>
+        <div class="kpi-top-card" onclick="showDetails('wti')">
+            <div class="kpi-top-label">WTI CRUDE <span>$/bbl</span></div>
+            <div class="kpi-top-value" id="kpiWtiVal">—</div>
+            <div class="kpi-top-meta" id="kpiWtiMeta">불러오는 중</div>
+        </div>
+        <div class="kpi-top-card" onclick="showDetails('brent')">
+            <div class="kpi-top-label">BRENT <span>$/bbl</span></div>
+            <div class="kpi-top-value" id="kpiBrentVal">—</div>
+            <div class="kpi-top-meta" id="kpiBrentMeta">불러오는 중</div>
+        </div>
+        <div class="kpi-top-card" onclick="showDetails('kospi')">
+            <div class="kpi-top-label">KOSPI <span>pt</span></div>
+            <div class="kpi-top-value" id="kpiKospiVal">—</div>
+            <div class="kpi-top-meta" id="kpiKospiMeta">불러오는 중</div>
+        </div>
+        <div class="kpi-top-card kpi-const" onclick="document.querySelector('.construction-card').scrollIntoView({behavior:'smooth'})">
+            <div class="kpi-top-label">CONST. IMPACT <span>리스크</span></div>
+            <div class="kpi-top-value" id="kpiConstVal">—</div>
+            <div class="kpi-top-meta" id="kpiConstMeta">건설원가 영향 산출 중</div>
+        </div>
+    </div>
+
+    <!-- Situation Summary Banner -->
+    <div class="situation-banner" id="situationBanner">
+        <span style="font-size:13px;flex-shrink:0">📊</span>
+        <span id="situationBannerText">핵심 요약 생성 중 — 지표 수신 대기</span>
     </div>
 
     <!-- Main Dashboard -->
@@ -2405,7 +2550,7 @@
             <div class="card-header">
                 <div>
                     <div class="card-title">GEO CRISIS MAP</div>
-                    <div class="card-subtitle">Middle East Real-Time War Situation</div>
+                    <div class="card-subtitle">군사 활동·해상 움직임·분쟁 이벤트 시각화</div>
                 </div>
                 <div style="display:flex;align-items:center;gap:5px">
                     <span class="status-badge syncing" id="tsMapBadge">SYNCING</span>
@@ -2589,6 +2734,13 @@
                     <div class="hist-range" id="hist-construction"></div>
                 </div>
             </div>
+            <!-- Construction Impact Interpretation -->
+            <div id="constInterpretBlock" style="margin-top:8px;padding:7px 10px;background:rgba(78,201,255,0.04);border:1px solid rgba(78,201,255,0.12);border-radius:3px;font-size:10px;color:#8ea9cc;line-height:1.7">
+                <div style="font-size:9px;font-weight:700;color:#4ec9ff;letter-spacing:0.4px;margin-bottom:4px">CONSTRUCTION COST DRIVERS</div>
+                <div id="constInterpret1" style="color:#64748b">환율·유가 데이터 수신 대기 중</div>
+                <div id="constInterpret2"></div>
+                <div id="constInterpret3"></div>
+            </div>
             <button class="popup-launch" onclick="openSimulationPopup()">시뮬레이션</button>
             <button class="popup-launch" onclick="openGuidePresentation()" style="margin-top:3px;background:rgba(56,189,248,0.06);border-color:rgba(56,189,248,0.25);color:#38bdf8;">GUIDE</button>
         </div>
@@ -2771,7 +2923,7 @@
                                 </div>
                                 <div style="margin-top:5px;padding:5px 8px;border:1px dashed #22324a;border-radius:4px;font-size:9px;color:#5a7a9a;" id="modelInfoBox">Gaussian IRF | ARDL-OLS | Local Projections</div>
                                 <div id="simValidationBanner" style="display:none;margin-top:3px;padding:5px 8px;border-radius:4px;font-size:9px;font-weight:600;letter-spacing:0.2px;"></div>
-                                <div style="margin-top:3px;padding:5px 8px;border-radius:4px;font-size:9px;background:rgba(251,113,133,0.06);border:1px solid #2a1520;color:#6a829f;" id="modelStatsBox">모델 통계: 실행 후 표시</div>
+                                <div style="margin-top:3px;padding:5px 8px;border-radius:4px;font-size:9px;background:rgba(251,113,133,0.06);border:1px solid #2a1520;color:#6a829f;" id="modelStatsBox">파라미터 입력 후 실행하세요</div>
                             </div>
                             <div class="sim-tab-content" id="simTabSensitivity">
                                 <div style="display:flex;flex-direction:column;gap:6px;">
@@ -3826,6 +3978,9 @@
 
             // Update war status bars from real market data
             updateWarBarsFromData();
+            // Update KPI top bar + construction interpretation
+            updateKpiBar(payload);
+            updateConstInterpret(payload);
         }
 
         function applyValueWithPct(id, value, changeId, changePct, useGrouping) {
@@ -4024,6 +4179,8 @@
                 ? Math.round(c.llmConstruction * 10)
                 : Math.min(100, Math.round((c.aircraft * 0.5 + c.conflicts * 0.3 + c.fatalities * 0.1) * 10));
             setWarBar('warBarConstruction', 'warBarConstructionVal', constImpact);
+            // Sync KPI crisis score after bars update
+            updateKpiCrisisScore();
         }
 
         function setWarBar(fillId, valId, pct) {
@@ -4031,6 +4188,154 @@
             const val = document.getElementById(valId);
             if (fill) fill.style.width = pct + '%';
             if (val) val.textContent = pct + '%';
+        }
+
+        /* ── KPI Top Bar updates ── */
+        function updateKpiBar(payload) {
+            // USD/KRW
+            if (Number.isFinite(payload.usdkrw)) {
+                const el = document.getElementById('kpiUsdVal');
+                const meta = document.getElementById('kpiUsdMeta');
+                if (el) {
+                    el.textContent = Math.round(payload.usdkrw).toLocaleString('ko-KR');
+                    const chg = payload.usdkrwChangePct || 0;
+                    el.style.color = chg > 0.3 ? '#ff4d6d' : chg < -0.3 ? '#00d084' : '#f0f6ff';
+                }
+                if (meta) {
+                    const chg = payload.usdkrwChangePct || 0;
+                    meta.textContent = `전일 대비 ${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%`;
+                    meta.style.color = chg > 0 ? '#ff4d6d' : chg < 0 ? '#00d084' : '#5a7090';
+                }
+            }
+            // WTI / Brent
+            if (payload.commodities) {
+                const pairs = [['kpiWtiVal','kpiWtiMeta', payload.commodities.wti, 1],
+                               ['kpiBrentVal','kpiBrentMeta', payload.commodities.brent, 1]];
+                pairs.forEach(([vid, mid, src]) => {
+                    if (!src || !Number.isFinite(src.value)) return;
+                    const el = document.getElementById(vid);
+                    const meta = document.getElementById(mid);
+                    const chg = src.changePct || 0;
+                    if (el) {
+                        el.textContent = src.value.toFixed(1);
+                        el.style.color = chg > 1 ? '#ff4d6d' : chg < -1 ? '#00d084' : '#f0f6ff';
+                    }
+                    if (meta) {
+                        meta.textContent = `전일 대비 ${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%`;
+                        meta.style.color = chg > 0 ? '#ff4d6d' : chg < 0 ? '#00d084' : '#5a7090';
+                    }
+                });
+            }
+            // KOSPI
+            if (payload.stockIndices && payload.stockIndices.kospi) {
+                const k = payload.stockIndices.kospi;
+                if (Number.isFinite(k.value)) {
+                    const el = document.getElementById('kpiKospiVal');
+                    const meta = document.getElementById('kpiKospiMeta');
+                    const chg = k.changePct || 0;
+                    if (el) {
+                        el.textContent = k.value.toLocaleString('ko-KR', { maximumFractionDigits: 0 });
+                        el.style.color = chg >= 0 ? '#00d084' : '#ff4d6d';
+                    }
+                    if (meta) {
+                        meta.textContent = `전일 대비 ${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%`;
+                        meta.style.color = chg >= 0 ? '#00d084' : '#ff4d6d';
+                    }
+                }
+            }
+            // Situation banner
+            updateSituationBanner(payload);
+        }
+
+        function updateKpiCrisisScore() {
+            const readBar = id => parseFloat((document.getElementById(id) || {}).textContent) || 0;
+            const blockade    = readBar('warBarBlockadeVal');
+            const energy      = readBar('warBarEnergyVal');
+            const finance     = readBar('warBarFinanceVal');
+            const construction = readBar('warBarConstructionVal');
+            const score = Math.round((blockade + energy + finance + construction) / 4);
+
+            const el    = document.getElementById('kpiCrisisScore');
+            const meta  = document.getElementById('kpiCrisisMeta');
+            const badge = document.getElementById('kpiCrisisBadge');
+            if (el) {
+                el.textContent = score + '%';
+                el.style.color = score >= 70 ? '#ff4d6d' : score >= 40 ? '#ffb347' : '#00d084';
+            }
+            if (meta) {
+                const level = score >= 70 ? 'HIGH ALERT' : score >= 40 ? 'MODERATE' : 'LOW';
+                meta.textContent = level + ' — 4개 리스크 지표 평균';
+            }
+            if (badge) {
+                badge.className = 'status-badge ' + (score >= 70 ? 'error' : score >= 40 ? 'delayed' : 'live');
+                badge.textContent = score >= 70 ? 'HIGH' : score >= 40 ? 'MOD' : 'LOW';
+            }
+            // Construction Impact KPI
+            const cEl   = document.getElementById('kpiConstVal');
+            const cMeta = document.getElementById('kpiConstMeta');
+            if (cEl) {
+                cEl.textContent = Math.round(construction) + '%';
+                cEl.style.color = construction >= 50 ? '#ff4d6d' : construction >= 25 ? '#ffb347' : '#00d084';
+            }
+            if (cMeta) {
+                cMeta.textContent = construction >= 50 ? '건설원가 영향 HIGH'
+                                  : construction >= 25 ? '건설원가 영향 MODERATE'
+                                  : '건설원가 영향 LOW';
+            }
+        }
+
+        function updateConstInterpret(payload) {
+            const lines = [];
+            const usdChg = payload.usdkrwChangePct || 0;
+            if (Math.abs(usdChg) >= 0.2) {
+                const dir = usdChg > 0 ? '상승' : '하락';
+                lines.push(`환율 ${dir} (${usdChg > 0 ? '+' : ''}${usdChg.toFixed(1)}%) — 수입 자재비 ${usdChg > 0 ? '압박' : '완화'} 신호`);
+            } else {
+                lines.push('환율 변동 안정 — 수입 자재비 압력 낮음');
+            }
+            if (payload.commodities) {
+                const wtiChg = payload.commodities.wti ? (payload.commodities.wti.changePct || 0) : 0;
+                if (Math.abs(wtiChg) >= 0.5) {
+                    lines.push(`유가 ${wtiChg > 0 ? '상승' : '하락'} (${wtiChg > 0 ? '+' : ''}${wtiChg.toFixed(1)}%) — 물류·에너지비 ${wtiChg > 0 ? '확대' : '완화'}`);
+                }
+            }
+            const vix = payload.macroIndicators && payload.macroIndicators.vix;
+            if (vix && Number.isFinite(vix.value)) {
+                if (vix.value >= 25) {
+                    lines.push(`VIX ${vix.value.toFixed(1)} — 금융 변동성 高, 단기 원가 불확실성 확대`);
+                } else if (vix.value < 15) {
+                    lines.push(`VIX ${vix.value.toFixed(1)} — 금융시장 안정, 원가 전망 리스크 낮음`);
+                }
+            }
+            ['constInterpret1','constInterpret2','constInterpret3'].forEach((id, i) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.textContent = lines[i] || '';
+                el.style.color = lines[i] ? '#8ea9cc' : 'transparent';
+            });
+        }
+
+        function updateSituationBanner(payload) {
+            const text = document.getElementById('situationBannerText');
+            if (!text) return;
+            const parts = [];
+            const usdChg = payload.usdkrwChangePct || 0;
+            if (Math.abs(usdChg) >= 0.3) {
+                parts.push(`원화 ${usdChg > 0 ? '약세' : '강세'} (${usdChg > 0 ? '+' : ''}${usdChg.toFixed(1)}%) → 수입 자재비 ${usdChg > 0 ? '상승' : '하락'} 압력`);
+            }
+            if (payload.commodities && payload.commodities.wti) {
+                const wtiChg = payload.commodities.wti.changePct || 0;
+                if (Math.abs(wtiChg) >= 1) {
+                    parts.push(`유가 ${wtiChg > 0 ? '상승' : '하락'} (${wtiChg > 0 ? '+' : ''}${wtiChg.toFixed(1)}%) → 에너지·물류비 ${wtiChg > 0 ? '확대' : '완화'}`);
+                }
+            }
+            if (payload.stockIndices && payload.stockIndices.kospi) {
+                const kChg = payload.stockIndices.kospi.changePct || 0;
+                if (Math.abs(kChg) >= 1) {
+                    parts.push(`KOSPI ${kChg >= 0 ? '강세' : '약세'} (${kChg >= 0 ? '+' : ''}${kChg.toFixed(1)}%)`);
+                }
+            }
+            text.textContent = parts.length > 0 ? parts.join('  |  ') : '주요 지표 정상 수신 — 갱신 중';
         }
 
         function applyStockIndexPayload(stockIndices) {
@@ -4887,45 +5192,60 @@
             });
         }
 
+        function buildNewsRow(item) {
+            const row = document.createElement('div');
+            row.className = 'live-news-item';
+            row.title = `${item.source} | ${formatNewsDateTime(item.time)} KST`;
+            row.tabIndex = 0;
+            row.setAttribute('role', 'button');
+            row.setAttribute('aria-label', `뉴스 상세 보기: ${item.headline}`);
+            row.addEventListener('click', () => showNewsDetail(item));
+            row.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    showNewsDetail(item);
+                }
+            });
+            const badge = document.createElement('span');
+            badge.className = getNewsBadgeClass(item.tag);
+            badge.textContent = item.tag;
+            const headline = document.createElement('span');
+            headline.className = 'news-headline';
+            headline.textContent = `[${item.source}] ${item.headline}`;
+            const time = document.createElement('span');
+            time.className = 'news-time';
+            time.textContent = formatNewsTime(item.time);
+            row.appendChild(badge);
+            row.appendChild(headline);
+            row.appendChild(time);
+            return row;
+        }
+
         function renderLiveNewsFeed() {
             const feed = document.getElementById('liveNewsFeed');
-            if (!feed) {
+            if (!feed) return;
+
+            const INITIAL = 5;
+            feed.innerHTML = '';
+
+            if (liveNewsItems.length === 0) {
+                feed.innerHTML = '<div style="padding:12px 8px;font-size:11px;color:#64748b;text-align:center">현재 수신된 주요 뉴스가 없습니다</div>';
                 return;
             }
 
-            feed.innerHTML = '';
-            liveNewsItems.slice(0, 8).forEach(item => {
-                const row = document.createElement('div');
-                row.className = 'live-news-item';
-                row.title = `${item.source} | ${formatNewsDateTime(item.time)} KST`;
-                row.tabIndex = 0;
-                row.setAttribute('role', 'button');
-                row.setAttribute('aria-label', `뉴스 상세 보기: ${item.headline}`);
-                row.addEventListener('click', () => showNewsDetail(item));
-                row.addEventListener('keydown', (event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        showNewsDetail(item);
-                    }
-                });
+            liveNewsItems.slice(0, INITIAL).forEach(item => feed.appendChild(buildNewsRow(item)));
 
-                const badge = document.createElement('span');
-                badge.className = getNewsBadgeClass(item.tag);
-                badge.textContent = item.tag;
-
-                const headline = document.createElement('span');
-                headline.className = 'news-headline';
-                headline.textContent = `[${item.source}] ${item.headline}`;
-
-                const time = document.createElement('span');
-                time.className = 'news-time';
-                time.textContent = formatNewsTime(item.time);
-
-                row.appendChild(badge);
-                row.appendChild(headline);
-                row.appendChild(time);
-                feed.appendChild(row);
-            });
+            const rest = liveNewsItems.slice(INITIAL, 20);
+            if (rest.length > 0) {
+                const btn = document.createElement('button');
+                btn.className = 'news-more-btn';
+                btn.textContent = `더 보기 (${rest.length}개)`;
+                btn.onclick = () => {
+                    rest.forEach(item => feed.insertBefore(buildNewsRow(item), btn));
+                    feed.removeChild(btn);
+                };
+                feed.appendChild(btn);
+            }
         }
 
         function renderNewsTicker() {
@@ -7544,6 +7864,11 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
         }
 
         function runSimulation() {
+            // Show running state
+            const statsBox = document.getElementById('modelStatsBox');
+            if (statsBox) statsBox.textContent = '시나리오 계산 중…';
+            const pressureSummary = document.getElementById('simPressureSummary');
+            if (pressureSummary) pressureSummary.textContent = '시나리오 계산 중…';
             const shocks = getSimShocks();
             const method = currentSimMethod;
             const periodKey = currentAnalysisPeriod;
@@ -7708,6 +8033,8 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
                     }
                 });
             }
+            // Mark complete
+            if (statsBox) statsBox.textContent = '시뮬레이션 완료 — ' + new Date().toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
         }
 
         /* Comparison: run all presets across current method/period */
