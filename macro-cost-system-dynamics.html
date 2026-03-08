@@ -67,7 +67,7 @@ body::before {
 }
 
 .top-nav-inner {
-    width: min(1420px, calc(100vw - 28px));
+    width: min(1800px, calc(100vw - 28px));
     margin: 0 auto;
     padding: 14px 10px;
     display: flex;
@@ -99,7 +99,7 @@ body::before {
 }
 
 .page {
-    width: min(1420px, calc(100vw - 28px));
+    width: min(1800px, calc(100vw - 28px));
     margin: 0 auto;
     padding: 30px 0 72px;
 }
@@ -215,21 +215,24 @@ h1 {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100px;
-    padding: 6px 2px 0;
+    min-height: 140px;
+    padding: 12px 4px 6px;
+    overflow-x: auto;
 }
 
 .mermaid svg {
+    min-width: 900px;
     max-width: 100%;
     height: auto;
+    font-size: 14px;
 }
 
 .legend {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
     width: 100%;
-    margin: 6px 0 22px;
+    margin: 10px 0 28px;
 }
 
 .legend-card {
@@ -253,9 +256,9 @@ h1 {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 14px;
-    padding: 8px 0;
-    font-size: 12px;
+    gap: 16px;
+    padding: 10px 0;
+    font-size: 13px;
     border-bottom: 1px solid rgba(15, 39, 66, 0.95);
 }
 
@@ -632,7 +635,7 @@ mermaid.initialize({
     startOnLoad: true,
     theme: 'dark',
     securityLevel: 'loose',
-    flowchart: { curve: 'basis', padding: 20 },
+    flowchart: { curve: 'basis', padding: 28, nodeSpacing: 30, rankSpacing: 40 },
     gantt: { fontSize: 12, barHeight: 24, barGap: 6 }
 });
 </script>
