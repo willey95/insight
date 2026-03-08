@@ -6,110 +6,363 @@
 <title>건설공사비 전파경로 — System Dynamics</title>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <style>
+
+:root {
+    --bg: #06111f;
+    --bg-soft: #081728;
+    --bg-card: rgba(8, 23, 40, 0.86);
+    --bg-elevated: rgba(10, 27, 47, 0.92);
+    --line: #13304d;
+    --line-soft: rgba(56, 189, 248, 0.14);
+    --text: #e2e8f0;
+    --muted: #8aa0bb;
+    --muted-2: #5d7491;
+    --cyan: #38bdf8;
+    --amber: #f59e0b;
+    --green: #34d399;
+    --pink: #fb7185;
+    --violet: #a78bfa;
+    --shadow: 0 24px 70px rgba(2, 8, 23, 0.46);
+    --radius-xl: 24px;
+    --radius-lg: 18px;
+    --radius-md: 14px;
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
 body {
-    background: #06111f;
-    color: #e2e8f0;
+    background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.11), transparent 28%),
+        radial-gradient(circle at top right, rgba(167, 139, 250, 0.10), transparent 24%),
+        linear-gradient(180deg, #071321 0%, #06111f 54%, #040c16 100%);
+    color: var(--text);
     font-family: 'IBM Plex Sans KR', 'Noto Sans KR', 'Segoe UI', sans-serif;
     min-height: 100vh;
+    overflow-x: hidden;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+        linear-gradient(rgba(19, 48, 77, 0.14) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(19, 48, 77, 0.14) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: linear-gradient(180deg, rgba(0,0,0,0.46), transparent 88%);
+    pointer-events: none;
+    opacity: 0.45;
+}
+
+.top-nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    width: 100%;
+    backdrop-filter: blur(14px);
+    background: rgba(6, 17, 31, 0.72);
+    border-bottom: 1px solid rgba(19, 48, 77, 0.85);
+}
+
+.top-nav-inner {
+    width: min(1420px, calc(100vw - 28px));
+    margin: 0 auto;
+    padding: 14px 10px;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    padding: 30px 20px;
+    gap: 18px;
 }
-h1 {
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    color: #38bdf8;
-    margin-bottom: 6px;
-}
-.subtitle {
+
+.brand {
+    color: var(--cyan);
     font-size: 13px;
-    color: #7f93ad;
-    margin-bottom: 30px;
-    text-align: center;
-    max-width: 800px;
-    line-height: 1.7;
-}
-.diagram-wrapper {
-    background: #081728;
-    border: 1px solid #13304d;
-    border-radius: 18px;
-    padding: 30px;
-    width: min(1400px, 96vw);
-    box-shadow: 0 20px 40px rgba(2,8,23,0.5);
-    margin-bottom: 30px;
-}
-.diagram-wrapper h2 {
-    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    letter-spacing: 0.25em;
-    color: #38bdf8;
-    margin-bottom: 16px;
-    opacity: 0.85;
+    margin-right: auto;
 }
+
+.top-nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    transition: color .18s ease, opacity .18s ease;
+}
+
+.top-nav a:hover,
+.top-nav a.active {
+    color: var(--cyan);
+}
+
+.page {
+    width: min(1420px, calc(100vw - 28px));
+    margin: 0 auto;
+    padding: 30px 0 72px;
+}
+
+.hero {
+    position: relative;
+    overflow: hidden;
+    background:
+        linear-gradient(135deg, rgba(11, 29, 49, 0.96), rgba(8, 23, 40, 0.92)),
+        radial-gradient(circle at 85% 15%, rgba(56, 189, 248, 0.12), transparent 26%);
+    border: 1px solid rgba(56, 189, 248, 0.16);
+    border-radius: 30px;
+    padding: 34px 32px 30px;
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    inset: auto -60px -70px auto;
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.17), transparent 70%);
+    pointer-events: none;
+}
+
+.eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 14px;
+}
+
+.eyebrow::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--cyan);
+    box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.12);
+}
+
+h1 {
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.08;
+    letter-spacing: -0.04em;
+    color: var(--text);
+    margin-bottom: 14px;
+}
+
+.subtitle {
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 920px;
+    line-height: 1.85;
+}
+
+.meta-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.meta-chip {
+    padding: 9px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(56, 189, 248, 0.16);
+    background: rgba(8, 23, 40, 0.72);
+    color: #d4e6f5;
+    font-size: 12px;
+    letter-spacing: 0.01em;
+}
+
+.diagram-wrapper {
+    position: relative;
+    overflow: hidden;
+    background:
+        linear-gradient(180deg, rgba(8, 23, 40, 0.92), rgba(8, 23, 40, 0.82));
+    border: 1px solid rgba(19, 48, 77, 0.96);
+    border-radius: 26px;
+    padding: 28px 28px 24px;
+    width: 100%;
+    box-shadow: var(--shadow);
+    margin-bottom: 22px;
+}
+
+.diagram-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.4), transparent);
+}
+
+.diagram-wrapper h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--cyan);
+    margin-bottom: 18px;
+    opacity: 0.94;
+}
+
 .mermaid {
     display: flex;
     justify-content: center;
+    align-items: center;
+    min-height: 100px;
+    padding: 6px 2px 0;
 }
+
 .mermaid svg {
     max-width: 100%;
     height: auto;
 }
+
 .legend {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 12px;
-    width: min(1400px, 96vw);
-    margin-bottom: 30px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+    width: 100%;
+    margin: 6px 0 22px;
 }
+
 .legend-card {
-    background: #081728;
-    border: 1px solid #13304d;
-    border-radius: 14px;
-    padding: 16px;
+    background:
+        linear-gradient(180deg, rgba(10, 27, 47, 0.94), rgba(8, 23, 40, 0.9));
+    border: 1px solid rgba(19, 48, 77, 0.98);
+    border-radius: 18px;
+    padding: 18px 18px 16px;
+    box-shadow: 0 18px 44px rgba(2, 8, 23, 0.3);
 }
+
 .legend-card h3 {
     font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.2em;
-    color: #38bdf8;
-    margin-bottom: 8px;
+    letter-spacing: 0.18em;
+    color: var(--cyan);
+    margin-bottom: 12px;
 }
+
 .legend-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 4px 0;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 8px 0;
     font-size: 12px;
-    border-bottom: 1px solid #0f2742;
+    border-bottom: 1px solid rgba(15, 39, 66, 0.95);
 }
+
 .legend-row:last-child { border-bottom: none; }
-.legend-label { color: #94a3b8; }
-.legend-value { color: #e2e8f0; font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
-.legend-value.red { color: #fb7185; }
-.legend-value.blue { color: #38bdf8; }
-.legend-value.amber { color: #f59e0b; }
-.legend-value.green { color: #34d399; }
-.legend-value.violet { color: #a78bfa; }
-.footer {
-    font-size: 11px;
-    color: #4a6382;
-    text-align: center;
-    line-height: 1.8;
-    max-width: 900px;
+
+.legend-label {
+    color: #93a7be;
+    line-height: 1.55;
 }
+
+.legend-value {
+    color: var(--text);
+    font-weight: 600;
+    text-align: right;
+    font-family: 'IBM Plex Mono', monospace;
+    line-height: 1.5;
+}
+
+.legend-value.red { color: var(--pink); }
+.legend-value.blue { color: var(--cyan); }
+.legend-value.amber { color: var(--amber); }
+.legend-value.green { color: var(--green); }
+.legend-value.violet { color: var(--violet); }
+
+.footer {
+    border-top: 1px solid rgba(19, 48, 77, 0.86);
+    padding-top: 18px;
+    font-size: 11px;
+    color: var(--muted-2);
+    text-align: center;
+    line-height: 1.9;
+    max-width: 980px;
+    margin: 0 auto;
+}
+
+code {
+    font-family: 'IBM Plex Mono', Consolas, monospace;
+}
+
+@media (max-width: 900px) {
+    .hero {
+        padding: 26px 22px 24px;
+        border-radius: 24px;
+    }
+    .diagram-wrapper {
+        padding: 22px 18px 20px;
+        border-radius: 22px;
+    }
+}
+
+@media (max-width: 640px) {
+    .top-nav-inner {
+        flex-wrap: wrap;
+        gap: 10px 14px;
+        padding: 12px 4px;
+    }
+    .brand {
+        width: 100%;
+        margin-right: 0;
+    }
+    .page {
+        width: calc(100vw - 20px);
+        padding: 18px 0 52px;
+    }
+    h1 {
+        font-size: 25px;
+    }
+    .subtitle {
+        font-size: 14px;
+    }
+    .meta-chip {
+        font-size: 11px;
+    }
+    .diagram-wrapper h2 {
+        letter-spacing: 0.14em;
+        font-size: 12px;
+    }
+}
+
 </style>
 </head>
+
 <body>
+<nav class="top-nav">
+    <div class="top-nav-inner">
+        <span class="brand">INSIGHT</span>
+        <a href="crisis-monitoring-dashboard.html">Dashboard</a>
+        <a href="macro-cost-system-dynamics.html" class="active">System Dynamics</a>
+        <a href="methodology-guide.html">Methodology</a>
+    </div>
+</nav>
 
-<h1>MACRO CONSTRUCTION COST — SYSTEM DYNAMICS</h1>
-<p class="subtitle">
-    거시경제 충격이 건설공사비에 전달되는 전체 인과구조를 System Dynamics CLD(Causal Loop Diagram)로 표현합니다.<br>
-    PASS-THROUGH 가중치, 대표 시차(peakLag), Gaussian IRF 확산폭을 함께 표기합니다.
-</p>
-
+<main class="page">
+<section class="hero">
+    <span class="eyebrow">System Dynamics</span>
+    <h1>Macro Construction Cost — System Dynamics</h1>
+    <p class="subtitle">
+        거시경제 충격이 건설공사비에 전달되는 전체 인과구조를 System Dynamics CLD(Causal Loop Diagram)로 정리했습니다.<br>
+        기존의 네이비·시안 색감은 유지하면서, 정보 위계와 문서의 밀도를 더 정교하게 다듬어 한 세트의 인사이트 문서처럼 보이도록 구성했습니다.
+    </p>
+    <div class="meta-strip">
+        <span class="meta-chip">4 Diagrams</span>
+        <span class="meta-chip">Pass-through Weights</span>
+        <span class="meta-chip">Peak Lag &amp; Gaussian IRF</span>
+        <span class="meta-chip">Feedback Loop Mapping</span>
+    </div>
+</section>
 <!-- ─── Diagram 1: Full Causal Loop ─── -->
 <div class="diagram-wrapper">
     <h2>1. Causal Loop Diagram — 전체 인과구조</h2>
@@ -369,7 +622,7 @@ flowchart TB
 
 <div class="footer">
     System Dynamics CLD — Multi-Method Simulation Engine v2<br>
-    <code style="color: #38bdf8;">Method 1 (Gaussian):</code> scenarioGrowth += shock × weight × exp(-(h - peakLag)² / 2σ²) × 0.1<br>
+    <code style="color: #38bdf8;">Method 1 (Gaussian):</code> scenarioGrowth += shock × weight × exp(-(h - peakLag)² / 2σ²) × scale × meanReversion<br>
     <code style="color: #f59e0b;">Method 2 (ARDL):</code> ΔCC_t = α + Σ β_{k,l} · ΔX_{k,t-l} &nbsp;&nbsp;β = (X'X)⁻¹X'y<br>
     <code style="color: #a78bfa;">Method 3 (LP):</code> y_{t+h} - y_t = α_h + β_h · shock_t &nbsp;&nbsp;(direct estimation per horizon)
 </div>
@@ -383,5 +636,6 @@ mermaid.initialize({
     gantt: { fontSize: 12, barHeight: 24, barGap: 6 }
 });
 </script>
+</main>
 </body>
 </html>
