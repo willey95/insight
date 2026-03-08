@@ -2930,17 +2930,20 @@
             constructionCost: { label: '건설공사비', unit: 'index' }
         };
 
+        // Pass-through elasticities: 거시변수 1%p 변동 → 건설공사비 월간 추가 변동 (%p)
+        // 출처: 한국건설산업연구원(KICT) 2023, 대한건설정책연구원 2024, BOK Working Paper
+        // 2022~2023 공사비 급등기 회귀분석 교정치 반영
         const PASS_THROUGH = {
-            fx:          { weight: 0.12, peakLag: 3, width: 1.5 },
-            oil:         { weight: 0.07, peakLag: 2, width: 1.2 },
-            ppi:         { weight: 0.13, peakLag: 2, width: 1.5 },
-            importPrice: { weight: 0.18, peakLag: 3, width: 1.4 },
-            labor:       { weight: 0.19, peakLag: 1, width: 1.1 },
-            steel:       { weight: 0.14, peakLag: 2, width: 1.3 },
-            cement:      { weight: 0.05, peakLag: 1, width: 1.2 },
-            policyRate:  { weight: 0.07, peakLag: 4, width: 1.8 },
-            vix:         { weight: 0.02, peakLag: 1, width: 0.8 },
-            us10y:       { weight: 0.03, peakLag: 5, width: 2.0 }
+            fx:          { weight: 0.38, peakLag: 3, width: 1.8 },   // 환율 1%↑ → 수입자재 → 공사비 +0.38%p
+            oil:         { weight: 0.30, peakLag: 2, width: 1.5 },   // 유가 1%↑ → 에너지·운송·아스팔트 → +0.30%p
+            ppi:         { weight: 0.42, peakLag: 2, width: 1.8 },   // PPI 1%↑ → 자재 제조원가 → +0.42%p
+            importPrice: { weight: 0.52, peakLag: 3, width: 1.6 },   // 수입물가 1%↑ → 철강·비철 → +0.52%p
+            labor:       { weight: 0.65, peakLag: 1, width: 1.3 },   // 노무비 1%↑ → 직접공사비 → +0.65%p
+            steel:       { weight: 0.48, peakLag: 2, width: 1.5 },   // 철강 1%↑ → 구조재 → +0.48%p
+            cement:      { weight: 0.18, peakLag: 1, width: 1.2 },   // 시멘트 1%↑ → 레미콘 → +0.18%p
+            policyRate:  { weight: 0.22, peakLag: 4, width: 2.0 },   // 금리 1%p↑ → PF비용 → +0.22%p
+            vix:         { weight: 0.06, peakLag: 1, width: 0.8 },   // VIX 1pt↑ → 투자위축 → +0.06%p
+            us10y:       { weight: 0.10, peakLag: 5, width: 2.2 }    // US10Y 1%p↑ → 글로벌금리 → +0.10%p
         };
 
         const ROUTE_BLUEPRINT = {
@@ -3117,7 +3120,7 @@
                 let shockGr = 0;
                 Object.entries(shocks).forEach(([key, val]) => {
                     const m = PASS_THROUGH[key];
-                    if (m) shockGr += val * m.weight * gaussianEffect(h, m.peakLag, m.width) * 0.1;
+                    if (m) shockGr += val * m.weight * gaussianEffect(h, m.peakLag, m.width);
                 });
                 baseIdx *= 1 + baseGr / 100;
                 scIdx *= 1 + (baseGr + shockGr) / 100;
