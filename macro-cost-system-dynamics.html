@@ -534,41 +534,60 @@ gantt
 <!-- ─── Diagram 4: Feedback Loops ─── -->
 <div class="diagram-wrapper">
     <h2>4. Feedback Loops — 강화/균형 루프 식별</h2>
-    <pre class="mermaid">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div style="background:#0f2a1a;border:2px solid #34d399;border-radius:16px;padding:20px 18px;">
+        <div style="text-align:center;font-size:12px;font-weight:700;letter-spacing:0.12em;color:#34d399;margin-bottom:14px;">B1: 금리-수요 균형루프 (Balancing)</div>
+        <pre class="mermaid">
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#0a1b2f', 'primaryTextColor': '#e2e8f0', 'lineColor': '#34d399'}}}%%
 flowchart TB
-    subgraph R1["R1: 원가-착공 강화루프 (Reinforcing)"]
-        direction TB
-        CC1["건설공사비 ↑"] -->|"사업성 악화"| START1["착공 감소"]
-        START1 -->|"저단가 공종 축소"| MIX1["고단가 비중 ↑"]
-        MIX1 -->|"가중평균 상승"| CC1
-    end
-
-    subgraph R2["R2: 환율-수입물가 강화루프"]
-        direction TB
-        FX2["환율 ↑"] -->|"수입단가 상승"| IMP2["수입물가 ↑"]
-        IMP2 -->|"자재비 상승"| CC2["건설공사비 ↑"]
-        CC2 -->|"인플레 기대"| FX2
-    end
-
-    subgraph B1["B1: 금리-수요 균형루프 (Balancing)"]
-        direction TB
-        RATE3["금리 ↑"] -->|"대출 비용 ↑"| DEM3["건설 수요 ↓"]
-        DEM3 -->|"발주 감소"| LAB3["노무비 안정"]
-        LAB3 -->|"직접비 억제"| CC3["공사비 상승 둔화"]
-    end
-
-    subgraph B2["B2: 공사비-정책 균형루프"]
-        direction TB
-        CC4["공사비 급등"] -->|"물가 압력"| POL4["긴축 정책"]
-        POL4 -->|"금리 인상"| RATE4["금리 ↑"]
-        RATE4 -->|"투자 위축"| CC4
-    end
-
-    style R1 fill:#2a0f1a,stroke:#fb7185,stroke-width:2px
-    style R2 fill:#2a0f1a,stroke:#fb7185,stroke-width:2px
-    style B1 fill:#0f2a1a,stroke:#34d399,stroke-width:2px
-    style B2 fill:#0f2a1a,stroke:#34d399,stroke-width:2px
+    RATE3["금리 ↑"] -->|"대출비용 ↑ → 수요 ↓"| DEM3["건설 수요 ↓ · 발주 감소"]
+    DEM3 -->|"노무비 안정 → 직접비 억제"| CC3["공사비 상승 둔화"]
+    CC3 -.->|"균형 복원"| RATE3
+    style RATE3 fill:#0f2742,stroke:#34d399,stroke-width:2px,color:#e2e8f0
+    style DEM3 fill:#0f2742,stroke:#34d399,stroke-width:2px,color:#e2e8f0
+    style CC3 fill:#0f2742,stroke:#34d399,stroke-width:2px,color:#e2e8f0
+        </pre>
+    </div>
+    <div style="background:#0f2a1a;border:2px solid #34d399;border-radius:16px;padding:20px 18px;">
+        <div style="text-align:center;font-size:12px;font-weight:700;letter-spacing:0.12em;color:#34d399;margin-bottom:14px;">B2: 공사비-정책 균형루프 (Balancing)</div>
+        <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#0a1b2f', 'primaryTextColor': '#e2e8f0', 'lineColor': '#34d399'}}}%%
+flowchart TB
+    CC4["공사비 급등"] -->|"물가 압력 → 긴축"| POL4["긴축 정책 · 금리 인상"]
+    POL4 -->|"금리 ↑ → 투자 위축"| RATE4["건설 투자 ↓"]
+    RATE4 -.->|"균형 복원"| CC4
+    style CC4 fill:#0f2742,stroke:#34d399,stroke-width:2px,color:#e2e8f0
+    style POL4 fill:#0f2742,stroke:#34d399,stroke-width:2px,color:#e2e8f0
+    style RATE4 fill:#0f2742,stroke:#34d399,stroke-width:2px,color:#e2e8f0
+        </pre>
+    </div>
+    <div style="background:#2a0f1a;border:2px solid #fb7185;border-radius:16px;padding:20px 18px;">
+        <div style="text-align:center;font-size:12px;font-weight:700;letter-spacing:0.12em;color:#fb7185;margin-bottom:14px;">R1: 원가-착공 강화루프 (Reinforcing)</div>
+        <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#0a1b2f', 'primaryTextColor': '#e2e8f0', 'lineColor': '#fb7185'}}}%%
+flowchart TB
+    CC1["건설공사비 ↑"] -->|"사업성 악화 → 착공 감소"| START1["저단가 공종 축소"]
+    START1 -->|"고단가 비중 ↑ → 가중평균 상승"| MIX1["건설공사비 ↑↑"]
+    MIX1 -.->|"강화 순환"| CC1
+    style CC1 fill:#2a0f1a,stroke:#fb7185,stroke-width:2px,color:#e2e8f0
+    style START1 fill:#2a0f1a,stroke:#fb7185,stroke-width:2px,color:#e2e8f0
+    style MIX1 fill:#2a0f1a,stroke:#fb7185,stroke-width:2px,color:#e2e8f0
+        </pre>
+    </div>
+    <div style="background:#2a0f1a;border:2px solid #fb7185;border-radius:16px;padding:20px 18px;">
+        <div style="text-align:center;font-size:12px;font-weight:700;letter-spacing:0.12em;color:#fb7185;margin-bottom:14px;">R2: 환율-수입물가 강화루프 (Reinforcing)</div>
+        <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#0a1b2f', 'primaryTextColor': '#e2e8f0', 'lineColor': '#fb7185'}}}%%
+flowchart TB
+    FX2["환율 ↑"] -->|"수입단가 상승 → 자재비 ↑"| IMP2["건설공사비 ↑"]
+    IMP2 -->|"인플레 기대 → 환율 압력"| CC2["환율 ↑↑"]
+    CC2 -.->|"강화 순환"| FX2
+    style FX2 fill:#2a0f1a,stroke:#fb7185,stroke-width:2px,color:#e2e8f0
+    style IMP2 fill:#2a0f1a,stroke:#fb7185,stroke-width:2px,color:#e2e8f0
+    style CC2 fill:#2a0f1a,stroke:#fb7185,stroke-width:2px,color:#e2e8f0
+        </pre>
+    </div>
+    </div>
     </pre>
 </div>
 
