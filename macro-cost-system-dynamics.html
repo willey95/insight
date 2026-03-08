@@ -226,6 +226,8 @@ h1 {
     height: auto;
     font-size: 14px;
 }
+.loop-grid .mermaid { min-height: 80px; padding: 6px 0 0; }
+.loop-grid .mermaid svg { min-width: auto; max-width: 100%; }
 
 .legend {
     display: grid;
@@ -534,7 +536,7 @@ gantt
 <!-- ─── Diagram 4: Feedback Loops ─── -->
 <div class="diagram-wrapper">
     <h2>4. Feedback Loops — 강화/균형 루프 식별</h2>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="loop-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:1100px;margin:0 auto;">
     <div style="background:#0f2a1a;border:2px solid #34d399;border-radius:16px;padding:20px 18px;">
         <div style="text-align:center;font-size:12px;font-weight:700;letter-spacing:0.12em;color:#34d399;margin-bottom:14px;">B1: 금리-수요 균형루프 (Balancing)</div>
         <pre class="mermaid">
@@ -588,7 +590,6 @@ flowchart TB
         </pre>
     </div>
     </div>
-    </pre>
 </div>
 
 <!-- Legend -->
