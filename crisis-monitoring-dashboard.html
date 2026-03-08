@@ -2630,8 +2630,8 @@
                         <select class="sim-select" id="analysisPeriod" onchange="onPeriodChange()">
                             <option value="warEra">우크라 전쟁기 (22.02~23.08)</option>
                             <option value="postWar">전쟁 후 안정기 (23.09~24.06)</option>
-                            <option value="recent">최근 12개월</option>
-                            <option value="full" selected>전체 (21.01~25.12)</option>
+                            <option value="recent">최근 12개월 (25.04~26.03)</option>
+                            <option value="full" selected>전체 (21.01~26.03)</option>
                         </select>
                     </div>
                     <div class="sim-ctrl-row">
@@ -3028,10 +3028,10 @@
                         desc: '러-우 전쟁 발발~유가 정상화, 공급망 충격 최대 구간 (19M — 소표본, 방향성 중심 해석)' },
             postWar:  { label: '전쟁 후 안정기 (23.09~24.06)', startIdx: 32, endIdx: 41,
                         desc: '공급망 정상화, 금리 고점 구간 (10M — 소표본, 탐색적 해석 권장)' },
-            recent:   { label: '최근 12개월', startIdx: 48, endIdx: 59,
+            recent:   { label: '최근 12개월 (25.04~26.03)', startIdx: 51, endIdx: 62,
                         desc: '최근 12개월 — 현재 추세 반영 (ARDL·LP는 표본 제약 주의)' },
-            full:     { label: '전체 (21.01~25.12)', startIdx: 0, endIdx: 59,
-                        desc: '60개월 전구간 — 평균 장기구조 파악에 상대적으로 적합; 극단 충격은 평균에 희석 가능' }
+            full:     { label: '전체 (21.01~26.03)', startIdx: 0, endIdx: 62,
+                        desc: '63개월 전구간 — 평균 장기구조 파악에 상대적으로 적합; 극단 충격은 평균에 희석 가능' }
         };
         let currentAnalysisPeriod = 'full';
         let currentSimMethod = 'all';
@@ -3041,10 +3041,10 @@
             return series.slice(p.startIdx, p.endIdx + 1);
         }
 
-        const MACRO_SIM_STORAGE_KEY = 'macro-construction-cost-history-5y-v5';
+        const MACRO_SIM_STORAGE_KEY = 'macro-construction-cost-history-5y-v6';
 
-        // 구버전 캐시 자동 정리
-        try { ['v1','v2','v3','v4'].forEach(v => localStorage.removeItem('macro-construction-cost-history-5y-' + v)); } catch(e) {}
+        // 구버전 캐시 자동 정리 (v6로 확장: 60M→63M)
+        try { ['v1','v2','v3','v4','v5'].forEach(v => localStorage.removeItem('macro-construction-cost-history-5y-' + v)); } catch(e) {}
 
         /* ─── Utilities ─── */
         function macroRound(v, d = 2) { return Number(v.toFixed(d)); }
@@ -3063,11 +3063,11 @@
             return Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, (v / total) * 100]));
         }
 
-        /* ─── Data Generation (60M synthetic) ─── */
+        /* ─── Data Generation (63M synthetic, 21.01~26.03) ─── */
         function generateBaseSeries() {
             const months = [];
             const start = new Date(2021, 0, 1);
-            for (let i = 0; i < 60; i++) {
+            for (let i = 0; i < 63; i++) {
                 const d = new Date(start);
                 d.setMonth(start.getMonth() + i);
                 months.push({ month: macroMonthLabel(d), idx: i });
@@ -3134,7 +3134,7 @@
                 const raw = window.localStorage.getItem(MACRO_SIM_STORAGE_KEY);
                 if (!raw) return generateBaseSeries();
                 const parsed = JSON.parse(raw);
-                if (Array.isArray(parsed) && parsed.length >= 60
+                if (Array.isArray(parsed) && parsed.length >= 63
                     && parsed[0].vix !== undefined && parsed[0].us10y !== undefined) return parsed;
             } catch (e) { console.error('failed to load stored history', e); }
             return generateBaseSeries();
