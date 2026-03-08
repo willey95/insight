@@ -3777,8 +3777,11 @@
                     const brentData = charts.energy.data.datasets[1].data;
                     wtiData.push(wtiPrice);
                     brentData.push(brentPrice);
-                    if (wtiData.length > 48) { wtiData.shift(); brentData.shift(); }
-                    charts.energy.data.labels = generateTimeLabels(wtiData.length);
+                    const eLabels = charts.energy.data.labels;
+                    const eNow = new Date();
+                    eLabels.push(`${eNow.getMonth()+1}/${eNow.getDate()} ` +
+                        String(eNow.getHours()).padStart(2,'0') + ':' + String(eNow.getMinutes()).padStart(2,'0'));
+                    if (wtiData.length > 48) { wtiData.shift(); brentData.shift(); eLabels.length > 48 && eLabels.shift(); }
                     charts.energy.update('none');
                 }
             }
@@ -3794,18 +3797,25 @@
             const fxData = charts.finance.data.datasets[0].data;
             const goldData = charts.finance.data.datasets[1].data;
             const silverData = charts.finance.data.datasets[2].data;
+            const labels = charts.finance.data.labels;
 
             if (Number.isFinite(usdkrw)) fxData.push(usdkrw);
             if (Number.isFinite(gold)) goldData.push(gold);
             if (Number.isFinite(silver)) silverData.push(silver);
+
+            // Append current date+time label — do NOT regenerate all labels
+            const now = new Date();
+            const liveLabel = `${now.getMonth()+1}/${now.getDate()} ` +
+                String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+            labels.push(liveLabel);
 
             const maxLen = Math.max(fxData.length, goldData.length, silverData.length);
             if (maxLen > 48) {
                 fxData.length > 48 && fxData.shift();
                 goldData.length > 48 && goldData.shift();
                 silverData.length > 48 && silverData.shift();
+                labels.length > 48 && labels.shift();
             }
-            charts.finance.data.labels = generateTimeLabels(maxLen);
             charts.finance.update('none');
         }
 
@@ -3818,8 +3828,9 @@
         }
 
         function sparkLabel(raw) {
-            // "3/5 14:30" → "3/5" (date only, dedup handled by Chart.js maxTicksLimit)
-            return raw.split(' ')[0];
+            // Keep "M/D HH:MM" as-is — Chart.js maxTicksLimit handles tick density
+            // Splitting to date-only caused same-time-repeating artifact across days
+            return raw;
         }
 
         function applySparklineData(sparklines) {
