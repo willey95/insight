@@ -4076,6 +4076,10 @@
             }
         }
 
+        // Baseline values for Gold/Silver % change normalization (set on first data point)
+        let _financeGoldBase = null;
+        let _financeSilverBase = null;
+
         function applyFinanceChartData(payload) {
             if (!charts.finance) return;
             const usdkrw = payload.usdkrw;
@@ -4089,8 +4093,16 @@
             const labels = charts.finance.data.labels;
 
             if (Number.isFinite(usdkrw)) fxData.push(usdkrw);
-            if (Number.isFinite(gold)) goldData.push(gold);
-            if (Number.isFinite(silver)) silverData.push(silver);
+
+            // Gold/Silver: store as % change from first received value
+            if (Number.isFinite(gold)) {
+                if (_financeGoldBase === null) _financeGoldBase = gold;
+                goldData.push(parseFloat(((gold - _financeGoldBase) / _financeGoldBase * 100).toFixed(3)));
+            }
+            if (Number.isFinite(silver)) {
+                if (_financeSilverBase === null) _financeSilverBase = silver;
+                silverData.push(parseFloat(((silver - _financeSilverBase) / _financeSilverBase * 100).toFixed(3)));
+            }
 
             // Append current date+time label — do NOT regenerate all labels
             const now = new Date();
@@ -4134,7 +4146,7 @@
                 charts.energy.data.datasets[1].data = brent.slice(0, len).map(p => p.value);
                 charts.energy.update('none');
             }
-            // Finance chart: USD/KRW, Gold, Silver
+            // Finance chart: USD/KRW (left, absolute), Gold/Silver (right, % change)
             if (charts.finance) {
                 const fx = downsample(sparklines.usdkrw || [], STEP);
                 const gold = downsample(sparklines.gold || [], STEP);
@@ -4143,8 +4155,14 @@
                 if (longest.length > 0) {
                     charts.finance.data.labels = longest.map(p => sparkLabel(p.label));
                     charts.finance.data.datasets[0].data = fx.map(p => p.value);
-                    charts.finance.data.datasets[1].data = gold.map(p => p.value);
-                    charts.finance.data.datasets[2].data = silver.map(p => p.value);
+                    // Normalize Gold and Silver to % change from first value
+                    const toChangePct = arr => {
+                        if (!arr.length) return [];
+                        const base = arr[0].value;
+                        return base ? arr.map(p => parseFloat(((p.value - base) / base * 100).toFixed(3))) : [];
+                    };
+                    charts.finance.data.datasets[1].data = toChangePct(gold);
+                    charts.finance.data.datasets[2].data = toChangePct(silver);
                     charts.finance.update('none');
                 }
             }
@@ -5424,7 +5442,7 @@
                             fill: true,
                             yAxisID: 'y'
                         }, {
-                            label: 'Gold',
+                            label: 'Gold %',
                             data: [],
                             borderColor: '#ffca28',
                             backgroundColor: 'rgba(255, 202, 40, 0.06)',
@@ -5432,10 +5450,10 @@
                             borderWidth: 1.5,
                             pointRadius: 0,
                             pointHitRadius: 6,
-                            fill: true,
+                            fill: false,
                             yAxisID: 'y1'
                         }, {
-                            label: 'Silver',
+                            label: 'Silver %',
                             data: [],
                             borderColor: '#b0bec5',
                             backgroundColor: 'rgba(176, 190, 197, 0.06)',
@@ -5443,8 +5461,8 @@
                             borderWidth: 1.2,
                             pointRadius: 0,
                             pointHitRadius: 6,
-                            fill: true,
-                            yAxisID: 'y2'
+                            fill: false,
+                            yAxisID: 'y1'
                         }]
                     },
                     options: {
@@ -5461,14 +5479,14 @@
                                 type: 'linear',
                                 display: true,
                                 position: 'right',
-                                ticks: { color: '#95a8c6', font: { size: 9 }, maxTicksLimit: 4 },
-                                grid: { display: false }
-                            },
-                            y2: {
-                                type: 'linear',
-                                display: false,
-                                position: 'right',
-                                grid: { display: false }
+                                ticks: {
+                                    color: '#95a8c6',
+                                    font: { size: 9 },
+                                    maxTicksLimit: 4,
+                                    callback: v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%'
+                                },
+                                grid: { display: false },
+                                grace: '10%'
                             },
                             x: {
                                 ticks: { color: '#95a8c6', font: { size: 9 }, maxTicksLimit: 5 },
