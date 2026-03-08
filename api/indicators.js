@@ -12,7 +12,7 @@ module.exports = async function handler(req, res) {
 
     try {
         const payload = await buildIndicatorsPayload();
-        res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=30');
+        res.setHeader('Cache-Control', 's-maxage=15, stale-while-revalidate=10');
         res.status(200).json(payload);
     } catch (error) {
         res.status(500).json({ error: error.message || 'indicator fetch failed' });
