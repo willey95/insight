@@ -277,9 +277,10 @@ const USER_MSG = (context) => `다음 실시간 시장 데이터와 시뮬레이
 
 async function callLLM(context) {
     const providers = [];
+    // Moonshot (primary) → Claude (fallback) → GPT-4o (fallback)
+    if (MOONSHOT_API_KEY) providers.push({ fn: callMoonshot, name: 'Moonshot Kimi' });
     if (ANTHROPIC_API_KEY) providers.push({ fn: callAnthropic, name: 'Claude' });
     if (OPENAI_API_KEY) providers.push({ fn: callOpenAI, name: 'GPT-4o' });
-    if (MOONSHOT_API_KEY) providers.push({ fn: callMoonshot, name: 'Moonshot' });
     for (const { fn, name } of providers) {
         try {
             const text = await fn(context);

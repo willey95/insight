@@ -6369,9 +6369,10 @@
                     const baseRate = latest.policyRate || 2.5;
                     const delta12 = fc && fc[11] ? fc[11].deltaPct : 0;
                     simCtx.pfImpacts = PF_GRADES.map(pf => {
-                        const costImpact = delta12 * 0.15;
-                        const riskPremium = delta12 > 0 ? delta12 * pf.baseSpread * 0.08 : delta12 * pf.baseSpread * 0.03;
-                        const totalDelta = (shocks.policyRate || 0) + riskPremium + costImpact;
+                        const costRiskPremium = delta12 > 0
+                            ? delta12 * pf.baseSpread * 0.023
+                            : delta12 * pf.baseSpread * 0.012;
+                        const totalDelta = (shocks.policyRate || 0) + costRiskPremium;
                         return { grade: pf.grade, currentRate: +(baseRate + pf.baseSpread).toFixed(2), newRate: +(baseRate + pf.baseSpread + totalDelta).toFixed(2), delta: +totalDelta.toFixed(2) };
                     });
                 }
@@ -6404,7 +6405,7 @@
                     + '<div style="font-size:24px;margin-bottom:14px;">⚠️</div>'
                     + '<div style="color:#ff6b6b;font-size:15px;font-weight:600;margin-bottom:10px;">리포트 생성 실패</div>'
                     + '<div style="color:#6d8db0;font-size:12px;max-width:500px;margin:0 auto;line-height:1.6;">' + err.message + '</div>'
-                    + '<div style="color:#4a5568;font-size:11px;margin-top:18px;padding:10px 14px;background:rgba(56,189,248,0.04);border:1px solid #1a2a42;border-radius:6px;display:inline-block;">Vercel 환경변수에 ANTHROPIC_API_KEY 또는 OPENAI_API_KEY 설정 필요</div></div>';
+                    + '<div style="color:#4a5568;font-size:11px;margin-top:18px;padding:10px 14px;background:rgba(56,189,248,0.04);border:1px solid #1a2a42;border-radius:6px;display:inline-block;">Vercel 환경변수에 MOONSHOT_API_KEY 설정 필요</div></div>';
             }
             btn.textContent = 'AI분석';
             btn.disabled = false;
