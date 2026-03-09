@@ -1067,9 +1067,9 @@
             box-shadow: 0 0 8px rgba(255,179,0,0.2);
             white-space: nowrap; margin-left: -20px; margin-top: -10px;
         }
-        .oil-infra-marker .oil-icon { font-size: 11px; }
+        .oil-infra-marker .oil-icon { font-size: 13px; }
         .oil-infra-marker .oil-label {
-            font-size: 8px; color: #d4a844;
+            font-size: 10px; color: #d4a844;
             font-family: 'IBM Plex Mono', Consolas, monospace;
             letter-spacing: 0.3px;
         }
@@ -4729,7 +4729,7 @@
                 const mid = pipe.coords[Math.floor(pipe.coords.length / 2)];
                 const labelIcon = window.L.divIcon({
                     className: 'map-asset-icon',
-                    html: `<span style="font-size:7px;color:${pipe.color};text-shadow:0 0 4px #000,0 0 2px #000;white-space:nowrap;font-family:'IBM Plex Mono',Consolas,monospace;font-weight:700;letter-spacing:0.5px;">${pipe.name.split('(')[0].trim()}</span>`,
+                    html: `<span style="font-size:10px;color:${pipe.color};text-shadow:0 0 4px #000,0 0 2px #000;white-space:nowrap;font-family:'IBM Plex Mono',Consolas,monospace;font-weight:700;letter-spacing:0.5px;">${pipe.name.split('(')[0].trim()}</span>`,
                     iconSize: [0, 0], iconAnchor: [0, 0]
                 });
                 window.L.marker(mid, { icon: labelIcon, interactive: false, keyboard: false }).addTo(mapLayers.pipelines);
