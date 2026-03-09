@@ -51,6 +51,8 @@
             overflow: hidden;
             line-height: 1.15;
             position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
         body::before {
@@ -239,7 +241,7 @@
             padding: var(--dashboard-gap);
             max-width: 1920px;
             margin: 0 auto;
-            height: calc(100vh - var(--ticker-height) - var(--header-height) - var(--kpi-bar-height) - var(--situation-banner-height));
+            flex: 1;
             min-height: 0;
             position: relative;
             z-index: 1;
