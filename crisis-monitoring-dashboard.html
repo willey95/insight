@@ -1,10 +1,13 @@
 <!DOCTYPE html>
-<!-- v2026.03.08-a -->
+<!-- v2026.03.09-a -->
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crisis Monitoring Dashboard | Bloomberg Style</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <script>if(sessionStorage.getItem('bshy_auth')!=='1')window.location.replace('/');</script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -8062,6 +8065,13 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
                 renderReImpact(); renderPfImpact();
                 return;
             }
+            try { _runSimulationCore(); } catch(e) {
+                const statsBox = document.getElementById('modelStatsBox');
+                if (statsBox) statsBox.innerHTML = '<span style="color:#ff4d6d;">⚠ 오류: ' + e.message + '</span>';
+                console.error('[runSimulation] crash:', e);
+            }
+        }
+        function _runSimulationCore() {
             // Show running state
             const statsBox = document.getElementById('modelStatsBox');
             if (statsBox) statsBox.textContent = '시나리오 계산 중…';
@@ -8698,10 +8708,11 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
             html += '</tbody></table>';
 
             const avgImpact = d12;
+            const mLabel = { all:'3M평균', gaussian:'Gaussian', ardl:'ARDL', lp:'LP' }[currentSimMethod] || currentSimMethod;
             html += `<div style="margin-top:6px;padding:6px 8px;background:rgba(255,179,71,0.06);border:1px solid rgba(255,179,71,0.2);border-radius:5px;text-align:center;">
                 <div style="font-size:8px;color:#ffb347;text-transform:uppercase;letter-spacing:0.5px;">건설공사비 평균 영향 (12M)</div>
                 <div style="font-size:16px;font-weight:700;font-family:'IBM Plex Mono',Consolas,monospace;color:${avgImpact > 0 ? '#ff6b00' : '#22c55e'};">${avgImpact >= 0 ? '+' : ''}${avgImpact.toFixed(2)}%</div>
-                <div style="font-size:8px;color:#5a7a9a;">재료비·노무비 민감도 반영</div>
+                <div style="font-size:8px;color:#5a7a9a;">${mLabel} · ${ANALYSIS_PERIODS[currentAnalysisPeriod]?.label || currentAnalysisPeriod}</div>
             </div>`;
             container.innerHTML = html;
         }
