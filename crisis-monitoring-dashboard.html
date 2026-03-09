@@ -3839,6 +3839,7 @@
             initLiveNews();
             initMapAssets();
             scheduleStockReset(); // daily 08:00 KST reset
+            updateWarBarsFromData(); // initialize bars immediately with floor values
             setInterval(updateTimestamp, 1000);
             setInterval(updateMarketData, 5000);
             if (window.location.protocol === 'file:') {
