@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v2026.03.09-g -->
+<!-- v2026.03.09-h -->
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -22,9 +22,9 @@
         }
 
         :root {
-            --ticker-height: 0px;
+            --ticker-height: 24px;
             --header-height: 52px;
-            --kpi-bar-height: 78px;
+            --kpi-bar-height: 0px;
             --situation-banner-height: 34px;
             --dashboard-gap: 8px;
             --accent: #ffb347;
@@ -2404,6 +2404,13 @@
     </style>
 </head>
 <body>
+    <!-- News Ticker -->
+    <div class="news-ticker">
+        <div class="ticker-content" id="newsTicker">
+            <span class="ticker-item">LOADING LIVE NEWS...</span>
+        </div>
+    </div>
+
     <!-- Header -->
     <div class="header">
         <h1>
@@ -2442,34 +2449,6 @@
         <div class="library-warning" id="libraryWarning"></div>
     </div>
 
-    <!-- KPI Top Bar -->
-    <div class="kpi-top-bar" id="kpiTopBar">
-        <div class="kpi-top-card" onclick="showDetails('usd')">
-            <div class="kpi-top-label">USD/KRW <span>₩/$</span></div>
-            <div class="kpi-top-value" id="kpiUsdVal">—</div>
-            <div class="kpi-top-meta" id="kpiUsdMeta">불러오는 중</div>
-        </div>
-        <div class="kpi-top-card" onclick="showDetails('wti')">
-            <div class="kpi-top-label">WTI CRUDE <span>$/bbl</span></div>
-            <div class="kpi-top-value" id="kpiWtiVal">—</div>
-            <div class="kpi-top-meta" id="kpiWtiMeta">불러오는 중</div>
-        </div>
-        <div class="kpi-top-card" onclick="showDetails('brent')">
-            <div class="kpi-top-label">BRENT <span>$/bbl</span></div>
-            <div class="kpi-top-value" id="kpiBrentVal">—</div>
-            <div class="kpi-top-meta" id="kpiBrentMeta">불러오는 중</div>
-        </div>
-        <div class="kpi-top-card" onclick="showDetails('kospi')">
-            <div class="kpi-top-label">KOSPI <span>pt</span></div>
-            <div class="kpi-top-value" id="kpiKospiVal">—</div>
-            <div class="kpi-top-meta" id="kpiKospiMeta">불러오는 중</div>
-        </div>
-        <div class="kpi-top-card kpi-const" onclick="document.querySelector('.construction-card').scrollIntoView({behavior:'smooth'})">
-            <div class="kpi-top-label">CONST. IMPACT <span>리스크</span></div>
-            <div class="kpi-top-value" id="kpiConstVal">—</div>
-            <div class="kpi-top-meta" id="kpiConstMeta">건설원가 영향 산출 중</div>
-        </div>
-    </div>
 
     <!-- Situation Summary Banner -->
     <div class="situation-banner" id="situationBanner">
@@ -3113,7 +3092,6 @@
         const NEWS_SOURCES = [
             { url: 'https://www.aljazeera.com/xml/rss/all.xml', name: 'Al Jazeera' },
             { url: 'http://feeds.bbci.co.uk/news/world/rss.xml', name: 'BBC' },
-            { url: 'https://feeds.reuters.com/reuters/worldNews', name: 'Reuters' },
             { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', name: 'NYT' },
             { url: 'https://feeds.bloomberg.com/markets/news.rss', name: 'Bloomberg' },
             { url: 'https://www.ft.com/?format=rss', name: 'Financial Times' }
@@ -4328,6 +4306,38 @@
             setWarBar('warBarConstruction', 'warBarConstructionVal', constImpact);
 
             updateKpiCrisisScore();
+
+            // Fallback: when external crisis APIs return zero (CORS/unavailable),
+            // derive threat indicators from market data that's already working
+            if (c.aircraft === 0 && c.conflicts === 0 && c.hormuz === 0 && c.llmIntensity == null) {
+                const milEl = document.getElementById('threatMilitary');
+                if (milEl) {
+                    const lvl = blockade > 60 ? 'HIGH' : blockade > 30 ? 'ELEVATED' : 'NORMAL';
+                    milEl.textContent = lvl + ` (mkt)`;
+                    milEl.style.color = blockade > 60 ? 'var(--down)' : blockade > 30 ? '#ffc56f' : 'var(--up)';
+                }
+                const conflictEl = document.getElementById('threatConflict');
+                if (conflictEl) {
+                    const score = Math.min(10, Math.round((energyShock + finContagion) / 20));
+                    const lvl = score >= 8 ? 'CRITICAL' : score >= 5 ? 'HIGH' : score >= 2 ? 'MODERATE' : 'LOW';
+                    conflictEl.textContent = lvl + ` (${score}/10)`;
+                    conflictEl.style.color = score >= 8 ? 'var(--down)' : score >= 5 ? '#ffc56f' : 'var(--up)';
+                }
+                const oilEl = document.getElementById('threatOilRisk');
+                if (oilEl) {
+                    const pct = Math.min(100, Math.round(energyShock * 0.65));
+                    const lvl = pct > 60 ? 'CRITICAL' : pct > 30 ? 'HIGH' : pct > 10 ? 'ELEVATED' : 'LOW';
+                    oilEl.textContent = lvl + ` (${pct}%)`;
+                    oilEl.style.color = pct > 60 ? 'var(--down)' : pct > 30 ? '#ffc56f' : 'var(--up)';
+                }
+                const econEl = document.getElementById('threatEconImpact');
+                if (econEl) {
+                    const score = (constImpact / 10).toFixed(1);
+                    econEl.textContent = score + '/10';
+                    const num = parseFloat(score);
+                    econEl.style.color = num > 7 ? 'var(--down)' : num > 4 ? '#ffc56f' : 'var(--up)';
+                }
+            }
         }
 
         function setWarBar(fillId, valId, pct) {
