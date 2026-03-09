@@ -4085,6 +4085,7 @@
                 const point = commodities[key];
                 if (!point || !Number.isFinite(point.value)) return;
                 applyValueWithPct(key, point.value, key + '-change', point.changePct);
+                externalIndicatorState[key] = point.value;          // absolute level
                 externalIndicatorState[key + 'ChangePct'] = point.changePct || 0;
             });
 
@@ -4195,47 +4196,60 @@
         }
 
         // Regional baseline floors — Hormuz / Middle East has chronic structural tension
-        const CRISIS_FLOOR = { blockade: 18, energy: 14, finance: 8, construction: 12 };
+        // Structural baseline floors — reflect chronic Middle East tension even on calm days
+        const CRISIS_FLOOR = { blockade: 22, energy: 18, finance: 12, construction: 16 };
 
         function updateWarBarsFromData() {
             const s = externalIndicatorState;
             const c = crisisCounts;
 
-            // Blockade risk: max(LLM, formula) so neither alone can zero the bar
             const wtiChange = Math.abs(s.wtiChangePct || 0);
             const brentChange = Math.abs(s.brentChangePct || 0);
-            const blockadeFormula = Math.min(100, Math.round(c.hormuz * 10 + c.conflicts * 3 + Math.min(20, c.aircraft * 2)));
+            const fxChange = Math.abs(s.usdkrwChangePct || 0);
+            const kospiChange = Math.abs(s.kospiChangePct || 0);
+            const nasdaqChange = Math.abs(s.nasdaqChangePct || 0);
+
+            // Absolute-level bonuses: sustained elevated prices → persistent pressure signal
+            // WTI: each $1 above $75 = 1.2 pts (oil at $85 → +12pts, at $100 → +30pts)
+            const wti = s.wti || 75;
+            const oilLevelBonus = Math.max(0, Math.round((wti - 75) * 1.2));
+            // USD/KRW: each 10W above 1350 = 1.5 pts (1400 → +7.5pts, 1450 → +15pts)
+            const usdkrw = s.usdkrw || 1350;
+            const fxLevelBonus = Math.max(0, Math.round((usdkrw - 1350) * 0.15));
+
+            // 1. 해협 봉쇄 위험도: military activity + LLM + oil level
+            const blockadeFormula = Math.min(100, Math.round(
+                c.hormuz * 15 + c.conflicts * 4 + Math.min(25, c.aircraft * 2.5) + oilLevelBonus * 0.4
+            ));
             const blockadeLlm = c.llmHormuz ?? 0;
             const blockade = Math.max(CRISIS_FLOOR.blockade, blockadeLlm, blockadeFormula);
             setWarBar('warBarBlockade', 'warBarBlockadeVal', blockade);
 
-            // Energy supply shock: max(LLM, formula)
-            const energyFormula = Math.min(100, Math.round((wtiChange + brentChange) * 8 + c.aircraft * 3 + c.hormuz * 5));
+            // 2. 에너지 공급 충격: daily oil change + absolute level + military
+            const energyFormula = Math.min(100, Math.round(
+                (wtiChange + brentChange) * 10 + c.aircraft * 4 + c.hormuz * 6 + oilLevelBonus
+            ));
             const energyLlm = c.llmEnergy ?? 0;
             const energyShock = Math.max(CRISIS_FLOOR.energy, energyLlm, energyFormula);
             setWarBar('warBarEnergy', 'warBarEnergyVal', energyShock);
 
-            // Financial contagion: FX + stock + military activity
-            const fxChange = Math.abs(s.usdkrwChangePct || 0);
-            const kospiChange = Math.abs(s.kospiChangePct || 0);
-            // Scale up: 1% FX move = 15 points; use usdkrw as primary signal on weekends
+            // 3. 금융시장 전염도: FX daily + level + equity indices + military
             const finFormula = Math.min(100, Math.round(
-                fxChange * 15 + kospiChange * 8 +
-                c.fatalities * 0.5 + c.conflicts * 2 + c.aircraft * 1.5
+                fxChange * 18 + kospiChange * 10 + nasdaqChange * 6 +
+                fxLevelBonus + c.fatalities * 0.5 + c.conflicts * 2 + c.aircraft * 1.5
             ));
             const finContagion = Math.max(CRISIS_FLOOR.finance, finFormula);
             setWarBar('warBarFinance', 'warBarFinanceVal', finContagion);
 
-            // Construction cost impact: max(LLM, formula)
+            // 4. 건설비 영향도: oil level + daily change + FX level + LLM
             const constFormula = Math.min(100, Math.round(
-                (wtiChange + brentChange) * 4 +
+                (wtiChange + brentChange) * 6 + oilLevelBonus * 0.7 + fxLevelBonus * 0.4 +
                 (c.aircraft * 0.5 + c.conflicts * 0.3 + c.fatalities * 0.1) * 10
             ));
             const constLlm = c.llmConstruction != null ? Math.round(c.llmConstruction * 10) : 0;
             const constImpact = Math.max(CRISIS_FLOOR.construction, constLlm, constFormula);
             setWarBar('warBarConstruction', 'warBarConstructionVal', constImpact);
 
-            // Sync KPI crisis score after bars update
             updateKpiCrisisScore();
         }
 
@@ -6469,12 +6483,45 @@
             });
         }
 
+        // Auto-set simulation sliders from current live market state
+        function initSimParamsFromMarket() {
+            const s = externalIndicatorState;
+            const wti    = s.wti    || 75;
+            const usdkrw = s.usdkrw || 1350;
+
+            // FX shock: deviation of USD/KRW from structural baseline 1,350W
+            const fxShock = Math.max(-15, Math.min(15, parseFloat(((usdkrw - 1350) / 1350 * 100).toFixed(1))));
+            // Oil shock: deviation of WTI from structural baseline $75
+            const oilShock = Math.max(-30, Math.min(50, parseFloat(((wti - 75) / 75 * 100).toFixed(1))));
+            // PPI: approximate from oil + FX pass-through (rough empirical weights)
+            const ppiShock = Math.max(-5, Math.min(15, parseFloat((oilShock * 0.15 + fxShock * 0.25).toFixed(1))));
+            // Labor: chronic Korean construction labor cost increase baseline (no live data)
+            const laborShock = 2.5;
+            // Rate: policy change is deliberate, not derived from daily prices — default 0
+            const rateShock = 0;
+
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+            set('shockFx',    fxShock);
+            set('shockOil',   oilShock);
+            set('shockPpi',   ppiShock);
+            set('shockLabor', laborShock);
+            set('shockRate',  rateShock);
+            // Update displayed labels
+            ['Fx', 'Oil', 'Ppi', 'Labor', 'Rate'].forEach(n => {
+                const el = document.getElementById('shock' + n);
+                const lbl = document.getElementById('sliderVal' + n);
+                if (!el || !lbl) return;
+                const v = parseFloat(el.value);
+                lbl.textContent = (v >= 0 ? '+' : '') + v.toFixed(1) + (n === 'Rate' ? '%p' : '%');
+            });
+        }
+
         function openSimulationPopup() {
             const popup = document.getElementById('simulationPopup');
-            popup.style.removeProperty('display'); // clear any stale inline display:none from close
+            popup.style.removeProperty('display');
             popup.classList.add('active');
-            // Force 3-column layout via JS (CSS alone doesn't work reliably)
             forceSimLayout();
+            initSimParamsFromMarket(); // set sliders to current market conditions
             renderMechanism();
             renderReImpact(); renderPfImpact();
             // Double-rAF: fires after layout is fully computed — more reliable than setTimeout for canvas
