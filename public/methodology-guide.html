@@ -746,73 +746,153 @@ flowchart LR
     style ENGINE fill:#081728,stroke:#13304d,stroke-width:1px
     </pre>
 
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+        핵심 질문은 하나입니다: <strong style="color:var(--text);">"충격이 발생하면 경제가 어떻게 반응하는가?"</strong>
+        세 방법론은 이 질문에 서로 다른 관점으로 답합니다.
+    </p>
+
     <table class="cmp">
         <thead>
             <tr>
                 <th>기준</th>
-                <th><span class="badge-sm blue">Gaussian IRF</span></th>
+                <th><span class="badge-sm blue">Gaussian / VAR 기반</span></th>
                 <th><span class="badge-sm amber">ARDL-OLS</span></th>
                 <th><span class="badge-sm violet">Local Projections</span></th>
             </tr>
         </thead>
         <tbody>
-            <tr><td>계수 추정</td><td>수기 입력 (고정)</td><td>OLS 데이터 추정</td><td>OLS 데이터 추정</td></tr>
-            <tr><td>IRF 형태</td><td>Gaussian (가정)</td><td>시차별 계수 (자유)</td><td>horizon별 직접 추정</td></tr>
-            <tr><td>오차 누적</td><td>없음</td><td>재귀 누적</td><td>없음 (직접 추정)</td></tr>
-            <tr><td>소표본 안정성</td><td>표본 무관</td><td>n ≥ 41 권장</td><td>n ≥ 30 권장</td></tr>
-            <tr><td>대형충격 적합성</td><td>기준선</td><td>표본 충분 시 적합</td><td>가장 강건</td></tr>
-            <tr><td>적합한 질문</td><td style="color:#8aa0bb;font-size:11px;">충격이 어떻게 퍼지는가?</td><td style="color:#8aa0bb;font-size:11px;">장기 평균 관계는?</td><td style="color:#8aa0bb;font-size:11px;">h기 후 얼마나 남는가?</td></tr>
+            <tr><td>모델 구조</td><td>연립방정식 (변수 간 상호작용)</td><td>단일 방정식 (시차 분산)</td><td>개별 회귀 (horizon별 직접)</td></tr>
+            <tr><td>가정 의존도</td><td style="color:#fb7185;">높음 (정규분포·파라미터 고정)</td><td style="color:#f59e0b;">중간 (선형 시차)</td><td style="color:#34d399;">낮음 (최소 가정)</td></tr>
+            <tr><td>비선형 대응</td><td>어려움</td><td>보통</td><td style="color:#34d399;">쉬움 (강점)</td></tr>
+            <tr><td>장기효과 분석</td><td>가능</td><td style="color:#34d399;">강점 (공적분)</td><td>가능</td></tr>
+            <tr><td>오차 누적</td><td>없음 (고정식)</td><td style="color:#fb7185;">재귀 누적</td><td>없음 (직접 추정)</td></tr>
+            <tr><td>최근 학계 트렌드</td><td>전통적</td><td>중간</td><td style="color:#34d399;">주류 (2020s~)</td></tr>
+            <tr><td>직관적 비유</td><td style="color:#38bdf8;font-size:11px;">⚙️ 맞물린 톱니바퀴 시계</td><td style="color:#f59e0b;font-size:11px;">🌤 오늘 날씨 = 어제+그제 기압</td><td style="color:#a78bfa;font-size:11px;">📷 1년/2년/3년 후를 각각 촬영</td></tr>
+            <tr><td>적합한 질문</td><td style="color:#8aa0bb;font-size:11px;">변수들이 서로 어떻게 영향?</td><td style="color:#8aa0bb;font-size:11px;">장단기 관계 · 공적분?</td><td style="color:#8aa0bb;font-size:11px;">h기 후 충격이 얼마나 남는가?</td></tr>
         </tbody>
     </table>
 
     <!-- Method 1 -->
     <div class="method-card m1" style="margin-top:20px;">
-        <div class="tag">Method 1 — Gaussian IRF</div>
-        <div class="method-title">고정 가중치 + Gaussian 충격반응함수</div>
+        <div class="tag">Method 1 — Gaussian / VAR 기반</div>
+        <div class="method-title">⚙️ 모든 톱니바퀴가 맞물려 돌아간다</div>
+        <div class="method-subtitle">
+            VAR(벡터자기회귀) 모델에 정규분포(Gaussian) 가정을 얹은 방식.
+            <strong>모든 변수가 서로 영향을 주고받는다고 가정</strong>하여 연립방정식으로 동시 모델링합니다.
+        </div>
         <div class="formula-box">
             $$\Delta CC_h = \sum_{k} \text{shock}_k \times w_k \times \exp\!\left(-\frac{(h - \mu_k)^2}{2\sigma_k^2}\right) \times 0.1$$
         </div>
-        <p style="font-size:13px;">$w_k$: 드라이버 가중치, $\mu_k$: peak lag(최대 반응 시점), $\sigma_k$: 확산폭. 관성 감쇠: $\max(0.1,\; \overline{\Delta CC} \cdot e^{-h/10})$</p>
+        <p style="font-size:13px;">
+            $w_k$: 드라이버 가중치, $\mu_k$: peak lag(최대 반응 시점), $\sigma_k$: 확산폭.<br>
+            관성 감쇠: $\max(0.1,\; \overline{\Delta CC} \cdot e^{-h/10})$
+        </p>
+        <div class="pros-cons">
+            <div class="pros">
+                <h4>장점</h4>
+                <ul>
+                    <li>변수 간 상호작용 포착 (환율↑→수입물가↑→건설비↑ 연쇄)</li>
+                    <li>데이터 없이도 작동 — 파라미터만 설정하면 즉시 결과</li>
+                    <li>소표본에서도 안정적, 계산 즉시 완료</li>
+                </ul>
+            </div>
+            <div class="cons">
+                <h4>한계</h4>
+                <ul>
+                    <li>구조적 충격 식별 어려움 (식별 문제)</li>
+                    <li>가중치가 <strong>추정이 아닌 가정</strong> — 비선형 관계 놓침</li>
+                    <li>구조 변화(전쟁, 정책 전환)에 적응 불가</li>
+                </ul>
+            </div>
+        </div>
         <div class="when-box">
-            <strong>권장 사용 시점:</strong> 데이터가 부족하거나 빠른 방향성 판단이 필요할 때. Baseline 기준선으로 적합.
+            <strong>권장 사용 시점:</strong> 데이터가 부족하거나 빠른 방향성 판단이 필요할 때. Baseline 기준선 역할.
         </div>
     </div>
 
     <!-- Method 2 -->
     <div class="method-card m2">
         <div class="tag">Method 2 — ARDL-OLS</div>
-        <div class="method-title">데이터 기반 시차 계수 추정</div>
+        <div class="method-title">🌤 오늘 날씨 = 어제 날씨 + 어제 기압 + 그제 기압</div>
+        <div class="method-subtitle">
+            AutoRegressive Distributed Lag — <strong>변수의 과거(lag)와 다른 변수의 과거를 함께 고려</strong>합니다.
+            단기·장기 효과를 분리하고 공적분(cointegration) 관계 분석에 적합합니다.
+        </div>
         <div class="formula-box">
             $$\Delta CC_t = \alpha + \sum_{k=1}^{K} \sum_{l=0}^{L} \beta_{k,l} \cdot \Delta X_{k,t-l} + \varepsilon_t$$
         </div>
         <p style="font-size:13px;">
             $K=8$ 드라이버, $L=4$ 최대 시차 → 총 41개 계수 OLS 추정.
-            IRF 계산 시 maxLag를 초과한 지점은 마지막 계수에서 <strong>지수 감쇠</strong>로 연결:
+            단일 방정식 중심이므로 피드백 효과는 제한적입니다.<br>
+            IRF 계산 시 maxLag 초과 구간은 <strong>지수 감쇠</strong>로 연결:
         </p>
         <div class="formula-box">
             $$\text{IRF}(h) = \begin{cases} \beta_{k,h} & h \leq L_{\max} \\ \beta_{k,L_{\max}} \cdot e^{-0.4(h - L_{\max})} & h > L_{\max} \end{cases}$$
         </div>
+        <div class="pros-cons">
+            <div class="pros">
+                <h4>장점</h4>
+                <ul>
+                    <li>단기·장기 효과 분리 가능</li>
+                    <li>공적분 관계 분석에 적합</li>
+                    <li>R²로 모델 적합도 정량 검증</li>
+                    <li>분석 기간 변경 시 계수 자동 재추정</li>
+                </ul>
+            </div>
+            <div class="cons">
+                <h4>한계</h4>
+                <ul>
+                    <li>소표본(n &lt; 41)에서 과적합 위험</li>
+                    <li>재귀 전망 시 오차 누적</li>
+                    <li>단일 방정식 → 피드백 효과 제한적</li>
+                </ul>
+            </div>
+        </div>
         <div class="info-box amber">
-            <strong>IRF 절벽(Cliff) 수정:</strong> h > maxLag에서 계수를 0으로 끊지 않고 지수 감쇠로 처리하여 전망 경로에 급격한 단절이 생기지 않도록 합니다.
+            <strong>IRF 절벽(Cliff) 수정:</strong> h > maxLag에서 0으로 끊지 않고 지수 감쇠 처리 → 전망 경로의 급격한 단절 방지.
         </div>
         <div class="when-box">
-            <strong>권장 사용 시점:</strong> 전체 5년 기간(n=60) — 장기 평균 구조 파악. <strong>n &lt; 40이면 Gaussian 폴백 권장.</strong>
+            <strong>권장 사용 시점:</strong> 전체 5년 기간(n=60)에서 장기 평균 구조 파악. <strong>n &lt; 40이면 Gaussian 폴백 권장.</strong>
         </div>
     </div>
 
     <!-- Method 3 -->
     <div class="method-card m3">
         <div class="tag">Method 3 — Local Projections (Jordà, 2005)</div>
-        <div class="method-title">각 예측 시점에서 독립적으로 추정</div>
+        <div class="method-title">📷 1년 후, 2년 후, 3년 후를 각각 별도 카메라로 찍는다</div>
+        <div class="method-subtitle">
+            Jordà(2005) 제안, 최근 가장 많이 쓰이는 방법론.
+            <strong>h시점 이후 반응을 h번 각각 별도 회귀분석으로 직접 추정</strong>합니다.
+            VAR/ARDL의 재귀 누적 오차를 원천 차단합니다.
+        </div>
         <div class="formula-box">
             $$y_{t+h} - y_t = \alpha_h + \sum_{k=1}^{K} \beta_{h,k} \cdot \Delta X_{k,t} + \varepsilon_{t+h} \quad \forall\, h = 1,\ldots,12$$
         </div>
         <p style="font-size:13px;">
-            12개의 독립 OLS 회귀. $\beta_{h,k}$는 "드라이버 $k$가 1단위 변화할 때 $h$개월 후 누적 영향".
-            ARDL과 달리 오차가 재귀적으로 누적되지 않아 대형 충격에 강건합니다.
+            12개의 독립 OLS 회귀. $\beta_{h,k}$: "드라이버 $k$가 1단위 변화할 때 $h$개월 후 누적 영향".<br>
+            모델 오류(misspecification)에 강건. 비선형·비대칭 효과 포착 용이.
         </p>
+        <div class="pros-cons">
+            <div class="pros">
+                <h4>장점</h4>
+                <ul>
+                    <li><strong>오차 비누적</strong> — 장기 전망에서도 신뢰구간 안정</li>
+                    <li>비선형·비대칭 충격 반응 포착</li>
+                    <li>모델 misspecification에 강건</li>
+                    <li>직관적 해석: "$\beta_{6,\text{oil}}$은 유가 1% 충격의 6개월 후 누적 영향"</li>
+                </ul>
+            </div>
+            <div class="cons">
+                <h4>한계</h4>
+                <ul>
+                    <li>단기(1~3M) 추정치 분산이 ARDL보다 클 수 있음</li>
+                    <li>h↑ 시 유효 표본 감소 → 정밀도 하락</li>
+                    <li>소표본(&lt; 20)에서 불안정</li>
+                </ul>
+            </div>
+        </div>
         <div class="when-box">
-            <strong>권장 사용 시점:</strong> 전쟁·금융위기 등 비선형 대형 충격 분석. 방향성 중심 해석 권장 (소표본 수치 과신 금지).
+            <strong>권장 사용 시점:</strong> 전쟁·금융위기 등 비선형 대형 충격 분석. 최근 학계 주류 방법론. 방향성 중심 해석 권장.
         </div>
     </div>
 </div>
@@ -1067,6 +1147,80 @@ flowchart TD
     style C fill:#0a2540,stroke:#22c55e,color:#22c55e
     style D fill:#0a2540,stroke:#f59e0b,color:#f59e0b
     style E fill:#0a2540,stroke:#dc3545,color:#dc3545
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     10. System Dynamics 관계
+     ═══════════════════════════════════════════════ -->
+<div class="section">
+    <h2><span class="dot" style="background:#fb923c;"></span> 10. System Dynamics와의 관계</h2>
+
+    <p style="font-size:13px;margin-bottom:16px;">
+        <strong style="color:var(--text);">SD는 "구조"를 그리고, 계량경제는 "크기"를 잰다.</strong><br>
+        두 접근법은 경쟁 관계가 아니라 <strong>보완 관계</strong>입니다.
+    </p>
+
+    <table class="cmp">
+        <thead><tr><th></th><th>계량경제 3종 (Gaussian · ARDL · LP)</th><th>System Dynamics</th></tr></thead>
+        <tbody>
+            <tr><td><strong>목적</strong></td><td>과거 데이터로 관계 추정</td><td>인과 구조로 미래 시뮬레이션</td></tr>
+            <tr><td><strong>출발점</strong></td><td>데이터</td><td>이론 / 구조</td></tr>
+            <tr><td><strong>인과관계</strong></td><td>통계적 추론 (암묵적)</td><td>명시적 설계 (루프로 그림)</td></tr>
+            <tr><td><strong>피드백 루프</strong></td><td>암묵적 (선형 근사)</td><td>핵심 구조 (강화·균형 루프)</td></tr>
+            <tr><td><strong>비선형</strong></td><td>LP가 부분적으로 허용</td><td>완전 허용 (설계 그대로)</td></tr>
+            <tr><td><strong>비유</strong></td><td>사진 분석가 (데이터를 읽는다)</td><td>설계 엔지니어 (구조를 그린다)</td></tr>
+        </tbody>
+    </table>
+
+    <h3>어떻게 함께 쓰는가</h3>
+
+    <pre class="mermaid">
+%%{init: {'theme': 'dark'}}%%
+flowchart LR
+    subgraph SD["System Dynamics (구조 설계)"]
+        direction TB
+        SD1["인과 루프 설계\nStock & Flow"]
+        SD2["피드백 메커니즘\n강화/균형 루프"]
+        SD1 --> SD2
+    end
+    subgraph ECON["계량경제 (크기 측정)"]
+        direction TB
+        E1["실제 데이터로 검증\nARDL · LP · Gaussian"]
+        E2["충격반응함수 IRF\n파급경로 추정"]
+        E1 --> E2
+    end
+    SD2 -->|"왜 이런 루프인가?\n이론 제공"| ECON
+    ECON -->|"얼마나 크게, 얼마나 오래?\n파라미터 추정"| SD1
+    style SD fill:#1a0f2e,stroke:#fb923c
+    style ECON fill:#0f2742,stroke:#38bdf8
+    </pre>
+
+    <div class="two-col" style="margin-top:16px;">
+        <div class="info-card">
+            <div class="ic-title" style="color:#fb923c;">충격 반응 관점에서 비교</div>
+            <div style="line-height:2;">
+                <div><span class="badge-sm violet">LP</span> — 데이터에서 충격반응 추출 (측정)</div>
+                <div><span class="badge-sm blue">VAR</span> — 변수 간 상호작용 포착 (선형 피드백)</div>
+                <div><span class="badge-sm amber">ARDL</span> — 장단기 관계 추정 (단순 피드백)</div>
+                <div style="margin-top:8px;color:var(--orange);font-weight:600;">SD — 왜 그런 반응 모양인지 피드백 루프로 설명</div>
+            </div>
+        </div>
+        <div class="info-card">
+            <div class="ic-title" style="color:#34d399;">위기 모니터링에서의 통합</div>
+            <div style="line-height:2;font-size:11px;">
+                <div>① SD 모델로 <strong>위기 확산 루프</strong> 설계</div>
+                <div>② LP/ARDL로 <strong>실제 확산 속도·크기</strong> 추정</div>
+                <div>③ 추정된 파라미터를 SD 모델에 주입</div>
+                <div>④ SD로 정책 피드백 포함 <strong>시나리오 시뮬레이션</strong></div>
+                <div style="margin-top:8px;color:#34d399;">→ 대시보드의 System Dynamics 탭이 이 역할</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-box green" style="margin-top:14px;">
+        <strong>한 줄 정리:</strong> SD로 메커니즘을 설계하고 → LP/ARDL로 파라미터를 추정하고 → SD로 시뮬레이션한다.<br>
+        계량경제가 "얼마나"를 측정하면, System Dynamics는 "왜"를 설명합니다.
     </div>
 </div>
 
