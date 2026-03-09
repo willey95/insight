@@ -2931,7 +2931,7 @@
                                     <div><label class="sim-control-label" style="font-size:11px;">측정 시점</label><select class="sim-input" id="sensitivityHorizon" style="font-size:11px;padding:5px;"><option value="2">3M</option><option value="5">6M</option><option value="11" selected>12M</option></select></div>
                                 </div>
                                 <button class="sim-button" onclick="runSensitivity()" style="width:100%;margin-top:6px;padding:6px;font-size:11px;">민감도 분석</button>
-                                <div id="sensitivityResult" style="margin-top:6px;"></div>
+                                <div id="sensitivityResult" style="margin-top:6px;overflow-x:auto;"></div>
                             </div>
                             <div class="sim-tab-content" id="simTabMonteCarlo">
                                 <div style="display:flex;flex-direction:column;gap:6px;">
@@ -8115,10 +8115,13 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
             if (simulationChart2Obj) simulationChart2Obj.destroy();
 
             const presetKeys = Object.keys(SIM_PRESETS);
-            const colors = ['#64748b', '#38bdf8', '#22c55e', '#f59e0b', '#fb7185', '#a78bfa'];
+            const colors = ['#64748b', '#38bdf8', '#22c55e', '#f59e0b', '#fb7185', '#a78bfa', '#34d399'];
             const method = currentSimMethod === 'all' ? 'gaussian' : currentSimMethod;
+            // Abbreviated labels so x-axis doesn't crowd with 7 groups
+            const shortLabels = { baseline:'기준', fxShock:'환율', oilSpike:'유가', laborCrunch:'노무비', rateHike:'금리', allShock:'복합', severeWar:'전쟁' };
 
-            const ctx1 = document.getElementById('simulationChart').getContext('2d');
+            // LEFT (simulationChart2, wider 1.2fr): 시나리오별 추가 상승 압력 bar chart
+            const ctx1 = document.getElementById('simulationChart2').getContext('2d');
             const deltaData = presetKeys.map(k => {
                 const p = SIM_PRESETS[k];
                 const shocks = { fx: p.fx, oil: p.oil, ppi: p.ppi, labor: p.labor, policyRate: p.rate };
@@ -8127,21 +8130,30 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
             });
             simulationChartObj = new Chart(ctx1, {
                 type: 'bar',
-                data: { labels: presetKeys.map(k => SIM_PRESETS[k].label),
+                data: { labels: presetKeys.map(k => shortLabels[k] || SIM_PRESETS[k].label),
                     datasets: [
                         { label: '3M', data: deltaData.map(d => d.d3), backgroundColor: 'rgba(56,189,248,0.7)' },
                         { label: '6M', data: deltaData.map(d => d.d6), backgroundColor: 'rgba(167,139,250,0.7)' },
                         { label: '12M', data: deltaData.map(d => d.d12), backgroundColor: 'rgba(251,113,133,0.7)' }
                     ] },
-                options: { ...getChartOptions(''), plugins: { ...getChartOptions('').plugins, title: { display: true, text: '시나리오별 추가 상승 압력 (%)', color: '#8ea9cc', font: { size: 10 } } } }
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#8ea9cc', font: { size: 8 }, boxWidth: 10 } },
+                        title: { display: true, text: '시나리오별 추가 상승 압력 (%)', color: '#8ea9cc', font: { size: 10 } } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#8ea9cc', font: { size: 9 }, autoSkip: false, maxRotation: 30, minRotation: 30 } },
+                        y: { grid: { color: 'rgba(100,140,190,0.1)' }, ticks: { color: '#5a7a9e', font: { size: 8 } } }
+                    }
+                }
             });
 
-            const ctx2 = document.getElementById('simulationChart2').getContext('2d');
+            // RIGHT (simulationChart, narrower 0.8fr): 시나리오별 건설공사비 전망 line chart
+            const ctx2 = document.getElementById('simulationChart').getContext('2d');
             const lineDS = presetKeys.map((k, i) => {
                 const p = SIM_PRESETS[k];
                 const shocks = { fx: p.fx, oil: p.oil, ppi: p.ppi, labor: p.labor, policyRate: p.rate };
                 const fc = buildScenarioForecast(macroSimData, shocks, method, currentAnalysisPeriod);
-                return { label: p.label, data: fc.map(r => r.scenario), borderColor: colors[i], borderWidth: 1.5, pointRadius: 0, tension: 0.4 };
+                return { label: shortLabels[k] || p.label, data: fc.map(r => r.scenario),
+                    borderColor: colors[i % colors.length], borderWidth: 1.5, pointRadius: 0, tension: 0.4 };
             });
             simulationChart2Obj = new Chart(ctx2, {
                 type: 'line',
@@ -8168,7 +8180,7 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
 
             let html = '<table class="sensitivity-table"><thead><tr>';
             html += '<th>' + varLabels[varName] + '</th>';
-            html += '<th>3M 압력</th><th>6M 압력</th><th>12M 압력</th><th>Signal</th>';
+            html += '<th>3M</th><th>6M</th><th>12M</th>';
             html += '</tr></thead><tbody>';
 
             steps.forEach(delta => {
@@ -8177,18 +8189,14 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
                 shocks[shockKey] = delta;
                 const fc = buildScenarioForecast(macroSimData, shocks);
                 const d3 = fc[2].deltaPct, d6 = fc[5].deltaPct, d12 = fc[11].deltaPct;
-                const latest = macroSimData[macroSimData.length - 1];
-                const attr = buildAttribution(macroSimData);
-                const pr = buildPressureState(latest, fc, attr);
                 const cellColor = v => v > 0 ? 'color: var(--down)' : v < 0 ? 'color: var(--up)' : '';
-                const signalColor = { 'HIGH PRESSURE': 'var(--down)', 'WATCH': 'var(--accent)', 'STABLE': 'var(--up)' };
+                const rowBg = delta === 0 ? 'background:rgba(56,189,248,0.06);' : '';
 
-                html += '<tr>';
+                html += '<tr style="' + rowBg + '">';
                 html += '<td>' + (delta >= 0 ? '+' : '') + delta + '</td>';
                 html += '<td style="' + cellColor(d3) + '">' + (d3 >= 0 ? '+' : '') + macroFmt(d3, 2) + '%</td>';
                 html += '<td style="' + cellColor(d6) + '">' + (d6 >= 0 ? '+' : '') + macroFmt(d6, 2) + '%</td>';
                 html += '<td style="' + cellColor(d12) + '; font-weight: 600;">' + (d12 >= 0 ? '+' : '') + macroFmt(d12, 2) + '%</td>';
-                html += '<td style="color: ' + (signalColor[pr.label] || '#8ea3c1') + '; font-size: 9px;">' + pr.label + '</td>';
                 html += '</tr>';
             });
             html += '</tbody></table>';
