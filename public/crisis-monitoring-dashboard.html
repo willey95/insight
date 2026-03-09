@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v2026.03.09-j -->
+<!-- v2026.03.09-k -->
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -295,6 +295,8 @@
         .map-card {
             grid-column: 2 / span 2;
             grid-row: 1 / span 2;
+            padding-top: 3%;
+            padding-bottom: 3%;
         }
 
         .news-card {
@@ -3940,14 +3942,23 @@
             }
         });
 
+        let _gstBase = '';  // base text of globalStatusText, set separately from news warning
         function renderHeaderWarnings() {
+            // libraryWarning: chart / API / map warnings only
             const warningElement = document.getElementById('libraryWarning');
-            if (!warningElement) {
-                return;
+            if (warningElement) {
+                const messages = [chartWarningMessage, apiWarningMessage, mapWarningMessage].filter(Boolean);
+                warningElement.textContent = messages.join(' | ');
             }
-
-            const messages = [chartWarningMessage, apiWarningMessage, newsWarningMessage, mapWarningMessage].filter(Boolean);
-            warningElement.textContent = messages.join(' | ');
+            // news warning: append inline next to globalStatusText
+            const gst = document.getElementById('globalStatusText');
+            if (gst) {
+                if (_gstBase) {
+                    gst.textContent = newsWarningMessage ? _gstBase + '  ·  ' + newsWarningMessage : _gstBase;
+                } else if (newsWarningMessage) {
+                    gst.textContent = (gst.textContent.split('  ·  ')[0] || gst.textContent) + '  ·  ' + newsWarningMessage;
+                }
+            }
         }
 
         async function refreshExternalIndicators() {
@@ -3970,7 +3981,7 @@
                 // Update global header status
                 setStatusBadge('globalStatusBadge', 'live');
                 const gst = document.getElementById('globalStatusText');
-                if (gst) gst.textContent = '외부 시장 데이터가 순차 반영됩니다';
+                if (gst) { _gstBase = '외부 시장 데이터가 순차 반영됩니다'; gst.textContent = _gstBase; }
                 apiWarningMessage = Array.isArray(payload.warnings) && payload.warnings.length > 0
                     ? 'API 경고: ' + payload.warnings.join(', ')
                     : '';
