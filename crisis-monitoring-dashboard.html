@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v2026.03.09-a -->
+<!-- v2026.03.09-n -->
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -24,8 +24,8 @@
         :root {
             --ticker-height: 24px;
             --header-height: 52px;
-            --kpi-bar-height: 78px;
-            --situation-banner-height: 34px;
+            --kpi-bar-height: 0px;
+            --situation-banner-height: 0px;
             --dashboard-gap: 8px;
             --accent: #ffb347;
             --accent-cool: #4ec9ff;
@@ -234,7 +234,7 @@
         .dashboard {
             display: grid;
             grid-template-columns: minmax(220px, 1.22fr) minmax(290px, 1.38fr) minmax(290px, 1.38fr) minmax(220px, 1fr);
-            grid-template-rows: minmax(170px, 1fr) minmax(170px, 1fr) minmax(189px, 1.05fr);
+            grid-template-rows: minmax(160px, 0.94fr) minmax(160px, 0.94fr) minmax(200px, 1.18fr);
             gap: var(--dashboard-gap);
             padding: var(--dashboard-gap);
             max-width: 1920px;
@@ -295,6 +295,8 @@
         .map-card {
             grid-column: 2 / span 2;
             grid-row: 1 / span 2;
+            padding-top: 3%;
+            padding-bottom: 3%;
         }
 
         .news-card {
@@ -2449,47 +2451,7 @@
         <div class="library-warning" id="libraryWarning"></div>
     </div>
 
-    <!-- KPI Top Bar -->
-    <div class="kpi-top-bar" id="kpiTopBar">
-        <div class="kpi-top-card kpi-crisis" onclick="document.querySelector('.war-status').scrollIntoView({behavior:'smooth'})">
-            <div class="kpi-top-label">CRISIS SCORE
-                <span class="status-badge syncing" id="kpiCrisisBadge" style="font-size:8px;padding:1px 4px">SYNCING</span>
-            </div>
-            <div class="kpi-top-value" id="kpiCrisisScore">—</div>
-            <div class="kpi-top-meta" id="kpiCrisisMeta">데이터 수집 중</div>
-        </div>
-        <div class="kpi-top-card" onclick="showDetails('usd')">
-            <div class="kpi-top-label">USD/KRW <span>₩/$</span></div>
-            <div class="kpi-top-value" id="kpiUsdVal">—</div>
-            <div class="kpi-top-meta" id="kpiUsdMeta">불러오는 중</div>
-        </div>
-        <div class="kpi-top-card" onclick="showDetails('wti')">
-            <div class="kpi-top-label">WTI CRUDE <span>$/bbl</span></div>
-            <div class="kpi-top-value" id="kpiWtiVal">—</div>
-            <div class="kpi-top-meta" id="kpiWtiMeta">불러오는 중</div>
-        </div>
-        <div class="kpi-top-card" onclick="showDetails('brent')">
-            <div class="kpi-top-label">BRENT <span>$/bbl</span></div>
-            <div class="kpi-top-value" id="kpiBrentVal">—</div>
-            <div class="kpi-top-meta" id="kpiBrentMeta">불러오는 중</div>
-        </div>
-        <div class="kpi-top-card" onclick="showDetails('kospi')">
-            <div class="kpi-top-label">KOSPI <span>pt</span></div>
-            <div class="kpi-top-value" id="kpiKospiVal">—</div>
-            <div class="kpi-top-meta" id="kpiKospiMeta">불러오는 중</div>
-        </div>
-        <div class="kpi-top-card kpi-const" onclick="document.querySelector('.construction-card').scrollIntoView({behavior:'smooth'})">
-            <div class="kpi-top-label">CONST. IMPACT <span>리스크</span></div>
-            <div class="kpi-top-value" id="kpiConstVal">—</div>
-            <div class="kpi-top-meta" id="kpiConstMeta">건설원가 영향 산출 중</div>
-        </div>
-    </div>
 
-    <!-- Situation Summary Banner -->
-    <div class="situation-banner" id="situationBanner">
-        <span style="font-size:13px;flex-shrink:0">📊</span>
-        <span id="situationBannerText">핵심 요약 생성 중 — 지표 수신 대기</span>
-    </div>
 
     <!-- Main Dashboard -->
     <div class="dashboard">
@@ -2736,13 +2698,6 @@
                     </div>
                     <div class="hist-range" id="hist-construction"></div>
                 </div>
-            </div>
-            <!-- Construction Impact Interpretation -->
-            <div id="constInterpretBlock" style="margin-top:8px;padding:7px 10px;background:rgba(78,201,255,0.04);border:1px solid rgba(78,201,255,0.12);border-radius:3px;font-size:10px;color:#8ea9cc;line-height:1.7">
-                <div style="font-size:9px;font-weight:700;color:#4ec9ff;letter-spacing:0.4px;margin-bottom:4px">CONSTRUCTION COST DRIVERS</div>
-                <div id="constInterpret1" style="color:#64748b">환율·유가 데이터 수신 대기 중</div>
-                <div id="constInterpret2"></div>
-                <div id="constInterpret3"></div>
             </div>
             <button class="popup-launch" onclick="openSimulationPopup()">시뮬레이션</button>
             <button class="popup-launch" onclick="openGuidePresentation()" style="margin-top:3px;background:rgba(56,189,248,0.06);border-color:rgba(56,189,248,0.25);color:#38bdf8;">GUIDE</button>
@@ -3127,7 +3082,6 @@
         const NEWS_SOURCES = [
             { url: 'https://www.aljazeera.com/xml/rss/all.xml', name: 'Al Jazeera' },
             { url: 'http://feeds.bbci.co.uk/news/world/rss.xml', name: 'BBC' },
-            { url: 'https://feeds.reuters.com/reuters/worldNews', name: 'Reuters' },
             { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', name: 'NYT' },
             { url: 'https://feeds.bloomberg.com/markets/news.rss', name: 'Bloomberg' },
             { url: 'https://www.ft.com/?format=rss', name: 'Financial Times' }
@@ -3930,6 +3884,26 @@
             initMapAssets();
             scheduleStockReset(); // daily 08:00 KST reset
             updateWarBarsFromData(); // initialize bars immediately with floor values
+
+            // Construction index: populate from macroSimData (most recent monthly value)
+            if (macroSimData && macroSimData.length > 0) {
+                const latest = macroSimData[macroSimData.length - 1];
+                const prev   = macroSimData.length > 1 ? macroSimData[macroSimData.length - 2] : null;
+                const cci    = latest.constructionCost;
+                const momPct = prev ? ((cci / prev.constructionCost) - 1) * 100 : 0;
+                const el   = document.getElementById('construction');
+                const chEl = document.getElementById('construction-change');
+                const rgEl = document.getElementById('hist-construction');
+                if (el)   { el.textContent = cci.toFixed(1); el.style.color = 'var(--text-primary)'; }
+                if (chEl) {
+                    chEl.textContent = (momPct >= 0 ? '+' : '') + momPct.toFixed(2) + '%';
+                    chEl.className = 'market-change ' + (momPct > 0 ? 'down' : momPct < 0 ? 'up' : '');
+                }
+                if (rgEl && latest.month) {
+                    rgEl.textContent = '기준: ' + latest.month;
+                    rgEl.style.cssText = 'font-size:9px;color:#5a7a9a;margin-top:2px;';
+                }
+            }
             setInterval(updateTimestamp, 1000);
             setInterval(updateMarketData, 5000);
             if (window.location.protocol === 'file:') {
@@ -3968,14 +3942,23 @@
             }
         });
 
+        let _gstBase = '';  // base text of globalStatusText, set separately from news warning
         function renderHeaderWarnings() {
+            // libraryWarning: chart / API / map warnings only
             const warningElement = document.getElementById('libraryWarning');
-            if (!warningElement) {
-                return;
+            if (warningElement) {
+                const messages = [chartWarningMessage, apiWarningMessage, mapWarningMessage].filter(Boolean);
+                warningElement.textContent = messages.join(' | ');
             }
-
-            const messages = [chartWarningMessage, apiWarningMessage, newsWarningMessage, mapWarningMessage].filter(Boolean);
-            warningElement.textContent = messages.join(' | ');
+            // news warning: append inline next to globalStatusText
+            const gst = document.getElementById('globalStatusText');
+            if (gst) {
+                if (_gstBase) {
+                    gst.textContent = newsWarningMessage ? _gstBase + '  ·  ' + newsWarningMessage : _gstBase;
+                } else if (newsWarningMessage) {
+                    gst.textContent = (gst.textContent.split('  ·  ')[0] || gst.textContent) + '  ·  ' + newsWarningMessage;
+                }
+            }
         }
 
         async function refreshExternalIndicators() {
@@ -3998,7 +3981,7 @@
                 // Update global header status
                 setStatusBadge('globalStatusBadge', 'live');
                 const gst = document.getElementById('globalStatusText');
-                if (gst) gst.textContent = '외부 시장 데이터가 순차 반영됩니다';
+                if (gst) { _gstBase = '외부 시장 데이터가 순차 반영됩니다'; gst.textContent = _gstBase; }
                 apiWarningMessage = Array.isArray(payload.warnings) && payload.warnings.length > 0
                     ? 'API 경고: ' + payload.warnings.join(', ')
                     : '';
@@ -4342,6 +4325,38 @@
             setWarBar('warBarConstruction', 'warBarConstructionVal', constImpact);
 
             updateKpiCrisisScore();
+
+            // Fallback: when external crisis APIs return zero (CORS/unavailable),
+            // derive threat indicators from market data that's already working
+            if (c.aircraft === 0 && c.conflicts === 0 && c.hormuz === 0 && c.llmIntensity == null) {
+                const milEl = document.getElementById('threatMilitary');
+                if (milEl) {
+                    const lvl = blockade > 60 ? 'HIGH' : blockade > 30 ? 'ELEVATED' : 'NORMAL';
+                    milEl.textContent = lvl + ` (mkt)`;
+                    milEl.style.color = blockade > 60 ? 'var(--down)' : blockade > 30 ? '#ffc56f' : 'var(--up)';
+                }
+                const conflictEl = document.getElementById('threatConflict');
+                if (conflictEl) {
+                    const score = Math.min(10, Math.round((energyShock + finContagion) / 20));
+                    const lvl = score >= 8 ? 'CRITICAL' : score >= 5 ? 'HIGH' : score >= 2 ? 'MODERATE' : 'LOW';
+                    conflictEl.textContent = lvl + ` (${score}/10)`;
+                    conflictEl.style.color = score >= 8 ? 'var(--down)' : score >= 5 ? '#ffc56f' : 'var(--up)';
+                }
+                const oilEl = document.getElementById('threatOilRisk');
+                if (oilEl) {
+                    const pct = Math.min(100, Math.round(energyShock * 0.65));
+                    const lvl = pct > 60 ? 'CRITICAL' : pct > 30 ? 'HIGH' : pct > 10 ? 'ELEVATED' : 'LOW';
+                    oilEl.textContent = lvl + ` (${pct}%)`;
+                    oilEl.style.color = pct > 60 ? 'var(--down)' : pct > 30 ? '#ffc56f' : 'var(--up)';
+                }
+                const econEl = document.getElementById('threatEconImpact');
+                if (econEl) {
+                    const score = (constImpact / 10).toFixed(1);
+                    econEl.textContent = score + '/10';
+                    const num = parseFloat(score);
+                    econEl.style.color = num > 7 ? 'var(--down)' : num > 4 ? '#ffc56f' : 'var(--up)';
+                }
+            }
         }
 
         function setWarBar(fillId, valId, pct) {
@@ -5386,7 +5401,7 @@
             const feed = document.getElementById('liveNewsFeed');
             if (!feed) return;
 
-            const INITIAL = 5;
+            const INITIAL = 4;
             feed.innerHTML = '';
 
             if (liveNewsItems.length === 0) {
@@ -8072,17 +8087,36 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
             el.style.borderLeftColor = d12 >= 0.5 ? '#fb7185' : d12 <= -0.5 ? '#22c55e' : '#38bdf8';
         }
 
+        // Module-level storage so renderReImpact/renderPfImpact always get latest computed values
+        // even when _runSimulationCore crashes partway through
+        let _simLastD3 = 0, _simLastD6 = 0, _simLastD12 = 0, _simLastShocks = null;
+
         function runSimulation() {
             if (!macroSimData || macroSimData.length < 13) {
-                // Data not yet loaded — render panels with placeholder, retry when data arrives
                 renderReImpact(); renderPfImpact();
                 return;
             }
+            // Reset stored values so Gaussian fallback kicks in if core crashes before storing
+            _simLastD3 = 0; _simLastD6 = 0; _simLastD12 = 0; _simLastShocks = null;
             try { _runSimulationCore(); } catch(e) {
                 const statsBox = document.getElementById('modelStatsBox');
                 if (statsBox) statsBox.innerHTML = '<span style="color:#ff4d6d;">⚠ 오류: ' + e.message + '</span>';
                 console.error('[runSimulation] crash:', e);
             }
+            // ALWAYS render right panels regardless of any crash in _runSimulationCore
+            const shocks = _simLastShocks || getSimShocks();
+            let d3 = _simLastD3, d6 = _simLastD6, d12 = _simLastD12;
+            if (d3 === 0 && d6 === 0 && d12 === 0) {
+                // Core crashed before storing values — use Gaussian fallback
+                try {
+                    const gfc = buildForecastGaussian(macroSimData, shocks, currentAnalysisPeriod);
+                    d3 = gfc[2]?.deltaPct || 0;
+                    d6 = gfc[5]?.deltaPct || 0;
+                    d12 = gfc[11]?.deltaPct || 0;
+                } catch(_) {}
+            }
+            try { renderReImpact({ d3, d6, d12 }, shocks); } catch(e) { console.error('[renderReImpact]', e); }
+            try { renderPfImpact({ d3, d6, d12 }, shocks); } catch(e) { console.error('[renderPfImpact]', e); }
         }
         function _runSimulationCore() {
             // Show running state
@@ -8185,8 +8219,12 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
 
             document.getElementById('simResults').classList.add('active');
 
-            renderMechanism();
-            renderReImpact({ d3, d6, d12 }, shocks); renderPfImpact({ d3, d6, d12 }, shocks);
+            // Store computed values for runSimulation's unconditional render pass
+            _simLastD3 = d3; _simLastD6 = d6; _simLastD12 = d12; _simLastShocks = shocks;
+
+            // Isolate renderMechanism so a crash there doesn't block chart rendering below
+            try { renderMechanism(); } catch(e) { console.error('[renderMechanism]', e); }
+            // NOTE: renderReImpact / renderPfImpact are called by runSimulation AFTER this function returns
 
             if (!chartLibraryAvailable) {
                 drawChartPlaceholder('simulationChart', '차트 로딩 실패');
@@ -8737,6 +8775,9 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
                 <div style="font-size:8px;color:#ffb347;text-transform:uppercase;letter-spacing:0.5px;">건설공사비 평균 영향 (12M)</div>
                 <div style="font-size:16px;font-weight:700;font-family:'IBM Plex Mono',Consolas,monospace;color:${avgImpact > 0 ? '#ff6b00' : '#22c55e'};">${avgImpact >= 0 ? '+' : ''}${avgImpact.toFixed(2)}%</div>
                 <div style="font-size:8px;color:#5a7a9a;">${mLabel} · ${ANALYSIS_PERIODS[currentAnalysisPeriod]?.label || currentAnalysisPeriod}</div>
+            </div>
+            <div style="margin-top:4px;padding:3px 6px;background:rgba(14,30,50,0.7);border:1px solid #1a2d48;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:8px;color:#3d5570;text-align:right;">
+                d3=${d3.toFixed(2)}% d6=${d6.toFixed(2)}% d12=${d12.toFixed(2)}% · oil=${(shocks.oil||0).toFixed(1)} fx=${(shocks.fx||0).toFixed(1)} · ${new Date().toLocaleTimeString()}
             </div>`;
             container.innerHTML = html;
         }
@@ -8759,14 +8800,18 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
               desc: '중소 시행사, 광역시',
               seniorDisc: -0.1, mezzDisc: 2.0, juniorDisc: 5.5,
               source: '회사채BBB 스프레드 + PF가산 1.5%p', ltv: '65~70%', dscr: '≥1.1' },
+            { grade: 'BBB+(Neg)', label: 'BBB+ (Neg)', baseSpread: 4.6, color: '#fb923c',
+              desc: '중소 시행사, 부정적 전망',
+              seniorDisc: 0.0, mezzDisc: 2.2, juniorDisc: 6.2,
+              source: '회사채BBB 부정적 전망 스프레드 + PF가산 1.8%p', ltv: '68~73%', dscr: '≥1.05' },
             { grade: 'BBB0', label: 'BBB0', baseSpread: 5.2, color: '#fb7185',
               desc: '고위험 시행사, 지방',
               seniorDisc: 0.0, mezzDisc: 2.5, juniorDisc: 7.0,
               source: '회사채BBB- 스프레드 + PF가산 2.0%p', ltv: '70~75%', dscr: '≥1.0' },
-            { grade: 'BBB-', label: 'BBB- (Neg)', baseSpread: 7.0, color: '#ff4d6d',
-              desc: '부실 우려, 워치리스트',
-              seniorDisc: 0.5, mezzDisc: 3.5, juniorDisc: 9.0,
-              source: 'High Yield + 사업위험 가산', ltv: '75~80%', dscr: '<1.0' }
+            { grade: 'BBB-', label: 'BBB-', baseSpread: 6.2, color: '#ff4d6d',
+              desc: '최저투자등급, 고위험지역',
+              seniorDisc: 0.2, mezzDisc: 3.0, juniorDisc: 8.0,
+              source: '회사채BBB- 스프레드 + PF가산 2.5%p', ltv: '73~78%', dscr: '~1.0' }
         ];
 
         function renderPfImpact(deltas, shocks) {
