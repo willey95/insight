@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QA 제안서 — 방법론 도움말·가이드 수정 v1.0</title>
+<style>
+:root {
+  --bg: #06111f;
+  --card: #081828;
+  --line: #0f2740;
+  --text: #d0e4f4;
+  --muted: #6a8aaa;
+  --cyan: #38bdf8;
+  --amber: #f59e0b;
+  --green: #34d399;
+  --red: #fb7185;
+  --violet: #a78bfa;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background: linear-gradient(160deg, #071321 0%, #06111f 60%, #040c16 100%);
+  color: var(--text);
+  font-family: 'Segoe UI', 'Noto Sans KR', sans-serif;
+  font-size: 14px;
+  line-height: 1.75;
+}
+.page { max-width: 960px; margin: 0 auto; padding: 60px 24px 120px; }
+
+/* ── Header ── */
+.doc-header { border-bottom: 1px solid var(--line); padding-bottom: 32px; margin-bottom: 48px; }
+.doc-tag { font-size: 11px; letter-spacing: 3px; color: var(--cyan); text-transform: uppercase; margin-bottom: 12px; }
+.doc-title { font-size: 32px; font-weight: 800; color: #fff; line-height: 1.2; }
+.doc-title span { color: var(--amber); }
+.doc-meta { display: flex; gap: 24px; margin-top: 20px; flex-wrap: wrap; }
+.doc-meta-item { font-size: 12px; color: var(--muted); }
+.doc-meta-item strong { color: var(--text); }
+
+/* ── Sections ── */
+.section { margin-bottom: 48px; }
+.sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px; }
+.sec-num { font-size: 11px; letter-spacing: 3px; color: var(--cyan); text-transform: uppercase; min-width: 64px; }
+.sec-title { font-size: 18px; font-weight: 700; color: #fff; }
+.subsec { font-size: 13px; font-weight: 700; color: var(--amber); letter-spacing: 1px; margin: 24px 0 10px; }
+.text { color: var(--muted); line-height: 1.8; }
+.text strong { color: var(--text); }
+
+/* ── Summary Cards ── */
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 24px 0; }
+.sum-card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; }
+.sum-card-label { font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+.sum-card-val { font-size: 22px; font-weight: 800; color: var(--cyan); }
+.sum-card-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* ── Priority Badges ── */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+.badge-p1 { background: rgba(251,113,133,0.15); color: var(--red); border: 1px solid rgba(251,113,133,0.3); }
+.badge-p2 { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+.badge-p3 { background: rgba(52,211,153,0.15); color: var(--green); border: 1px solid rgba(52,211,153,0.3); }
+.badge-scope { background: rgba(56,189,248,0.1); color: var(--cyan); border: 1px solid rgba(56,189,248,0.2); }
+.badge-new { background: rgba(167,139,250,0.15); color: var(--violet); border: 1px solid rgba(167,139,250,0.3); }
+
+/* ── Change Items ── */
+.change-list { display: flex; flex-direction: column; gap: 14px; }
+.change-item { background: var(--card); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.change-item-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.change-item-id { font-size: 11px; color: var(--muted); font-family: monospace; min-width: 60px; }
+.change-item-title { flex: 1; font-weight: 600; color: var(--text); font-size: 13px; }
+.change-item-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.diff-block { border-radius: 6px; overflow: hidden; font-size: 12px; font-family: monospace; }
+.diff-head { padding: 4px 12px; font-size: 10px; letter-spacing: 1px; font-family: 'Segoe UI', sans-serif; }
+.diff-before-head { background: rgba(251,113,133,0.12); color: var(--red); border-bottom: 1px solid rgba(251,113,133,0.2); }
+.diff-after-head { background: rgba(52,211,153,0.12); color: var(--green); border-bottom: 1px solid rgba(52,211,153,0.2); }
+.diff-before { background: rgba(251,113,133,0.05); padding: 10px 14px; color: #f8a0ae; line-height: 1.6; border: 1px solid rgba(251,113,133,0.15); border-top: none; border-radius: 0 0 0 0; }
+.diff-after { background: rgba(52,211,153,0.05); padding: 10px 14px; color: #7de8c0; line-height: 1.6; border: 1px solid rgba(52,211,153,0.15); border-top: none; }
+.note { font-size: 11px; color: var(--muted); padding: 8px 12px; background: rgba(255,255,255,0.02); border-radius: 4px; border-left: 2px solid var(--cyan); }
+
+/* ── Tables ── */
+table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 12px 0; }
+th { text-align: left; padding: 8px 12px; color: var(--muted); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--line); }
+td { padding: 8px 12px; border-bottom: 1px solid rgba(15,39,64,0.6); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+.td-key { color: var(--cyan); font-weight: 600; font-size: 11px; min-width: 120px; }
+.td-loc { color: var(--muted); font-family: monospace; font-size: 11px; }
+.td-p1 { color: var(--red); font-weight: 700; font-size: 11px; }
+.td-p2 { color: var(--amber); font-weight: 700; font-size: 11px; }
+.td-p3 { color: var(--green); font-size: 11px; }
+.td-new { color: var(--violet); font-size: 11px; }
+
+/* ── Code Block ── */
+pre { background: rgba(0,0,0,0.4); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; font-family: 'Consolas', monospace; font-size: 12px; color: #9ecff0; overflow-x: auto; line-height: 1.7; }
+pre .c { color: #4a7a9b; }
+pre .s { color: var(--green); }
+pre .k { color: var(--violet); }
+pre .n { color: var(--amber); }
+pre .w { color: var(--red); }
+
+/* ── Divider ── */
+hr { border: none; border-top: 1px solid var(--line); margin: 40px 0; }
+
+/* ── Checklist ── */
+.checklist { display: flex; flex-direction: column; gap: 8px; }
+.check-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 6px; }
+.check-box { width: 16px; height: 16px; border: 1px solid var(--muted); border-radius: 3px; flex-shrink: 0; margin-top: 2px; }
+.check-label { font-size: 12px; color: var(--text); line-height: 1.5; }
+.check-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* ── TOC ── */
+.toc { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 20px 24px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; }
+.toc-list { display: flex; flex-direction: column; gap: 4px; }
+.toc-item { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--muted); font-size: 12px; padding: 3px 0; transition: color 0.15s; }
+.toc-item:hover { color: var(--cyan); }
+.toc-num { font-family: monospace; font-size: 11px; color: var(--line); min-width: 30px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Header ── -->
+  <div class="doc-header">
+    <div class="doc-tag">QA 제안서 · 방법론 UI 개선</div>
+    <div class="doc-title">방법론 도움말 &amp; 가이드<br><span>절대 우열 → 조건부 선택형</span> 개선</div>
+    <div class="doc-meta">
+      <div class="doc-meta-item"><strong>작성일</strong> 2026-03-09</div>
+      <div class="doc-meta-item"><strong>대상 파일</strong> crisis-monitoring-dashboard.html · methodology-guide.html</div>
+      <div class="doc-meta-item"><strong>요청자</strong> Product Owner</div>
+      <div class="doc-meta-item"><strong>예상 난이도</strong> Medium (1~2 sprint)</div>
+    </div>
+  </div>
+
+  <!-- ── Summary ── -->
+  <div class="summary-grid">
+    <div class="sum-card">
+      <div class="sum-card-label">수정 항목</div>
+      <div class="sum-card-val">14</div>
+      <div class="sum-card-sub">문구·표·로직·배지 포함</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-card-label">P1 (필수)</div>
+      <div class="sum-card-val" style="color:var(--red);">5</div>
+      <div class="sum-card-sub">단정 표현 오해 유발</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-card-label">P2 (권장)</div>
+      <div class="sum-card-val" style="color:var(--amber);">6</div>
+      <div class="sum-card-sub">표 컬럼 추가 / 구조 변경</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-card-label">P3 (선택)</div>
+      <div class="sum-card-val" style="color:var(--green);">3</div>
+      <div class="sum-card-sub">결과 해석 박스 / UI</div>
+    </div>
+  </div>
+
+  <!-- ── TOC ── -->
+  <div class="toc">
+    <div class="toc-title">목차</div>
+    <div class="toc-list">
+      <a href="#motivation" class="toc-item"><span class="toc-num">01</span> 배경 및 수정 의도</a>
+      <a href="#scope" class="toc-item"><span class="toc-num">02</span> 수정 범위 요약</a>
+      <a href="#p1" class="toc-item"><span class="toc-num">03</span> P1 — 단정 표현 제거 (필수)</a>
+      <a href="#p2" class="toc-item"><span class="toc-num">04</span> P2 — 표 구조 보강 / 추천 조합 재편 (권장)</a>
+      <a href="#p2-validation" class="toc-item"><span class="toc-num">05</span> P2 — 계산 전 Validation 로직 (권장)</a>
+      <a href="#p3" class="toc-item"><span class="toc-num">06</span> P3 — 결과 해석 박스 / 배지 (선택)</a>
+      <a href="#checklist" class="toc-item"><span class="toc-num">07</span> QA 체크리스트</a>
+    </div>
+  </div>
+
+  <!-- ── 01. 배경 ── -->
+  <div class="section" id="motivation">
+    <div class="sec-head">
+      <span class="sec-num">01</span>
+      <span class="sec-title">배경 및 수정 의도</span>
+    </div>
+    <div class="text">
+      현재 도움말(PART I 비교표·PART VII 권장 조합)과 가이드 슬라이드는 방법론의 <strong>절대적 우열</strong>로 읽힐 수 있는 표현을 포함하고 있습니다.
+      이는 통계적 일반론으로 오해되어 사용자가 특정 방법론을 맹목적으로 선택하거나, 반대로 다른 방법론 결과를 불신하는 원인이 됩니다.
+    </div>
+    <div class="subsec">핵심 문제</div>
+    <div class="change-list">
+      <div class="change-item">
+        <div class="change-item-head">
+          <span class="badge badge-p1">P1</span>
+          <span class="change-item-title">"LP가 유일하게 강건" — 맥락 없는 단정</span>
+        </div>
+        <div class="change-item-body">
+          <div class="text">LP(Local Projections)는 대형 구조충격의 horizon별 반응 추정에 유연하지만, <strong>소표본에서는 신뢰구간이 급격히 확대</strong>됩니다.
+          전쟁기(19개월)나 최근 12개월 구간에서 LP를 "유일하게 강건"으로 표시하면 결과를 과신하게 됩니다.</div>
+        </div>
+      </div>
+      <div class="change-item">
+        <div class="change-item-head">
+          <span class="badge badge-p1">P1</span>
+          <span class="change-item-title">"전체 구간이 최적" — 희석 효과 미안내</span>
+        </div>
+        <div class="change-item-body">
+          <div class="text">전체 60개월 구간은 평균적 장기 구조 파악에 상대적으로 적합하지만, <strong>전쟁기 극단 충격 반응이 평균에 희석</strong>됩니다. 단순히 "최적"이라 표시하면 이 한계가 전달되지 않습니다.</div>
+        </div>
+      </div>
+    </div>
+    <div class="subsec">수정 방향</div>
+    <div class="text">
+      이 페이지는 "어떤 모델이 더 우수한가"를 보여주는 화면이 아니라,<br>
+      <strong>분석 목적 / 표본 구간 / 충격 성격 / 표본 크기에 따라 어떤 방법을 어떻게 써야 하는가를 안내하는 화면</strong>으로 정리합니다.
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ── 02. 범위 ── -->
+  <div class="section" id="scope">
+    <div class="sec-head">
+      <span class="sec-num">02</span>
+      <span class="sec-title">수정 범위 요약</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>파일</th>
+          <th>위치</th>
+          <th>유형</th>
+          <th>우선순위</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="td-key">CHG-01</td><td class="td-loc">dashboard.html</td><td class="td-loc">L6144 비교표 "전쟁 적합도" 셀</td><td>문구</td><td class="td-p1">P1</td></tr>
+        <tr><td class="td-key">CHG-02</td><td class="td-loc">dashboard.html</td><td class="td-loc">L6409 권장 조합표 "유일하게 강건"</td><td>문구</td><td class="td-p1">P1</td></tr>
+        <tr><td class="td-key">CHG-03</td><td class="td-loc">dashboard.html</td><td class="td-loc">L6400 "가장 안정적 추정"</td><td>문구</td><td class="td-p1">P1</td></tr>
+        <tr><td class="td-key">CHG-04</td><td class="td-loc">dashboard.html</td><td class="td-loc">L6141 소표본 안정성 "강건"</td><td>문구</td><td class="td-p1">P1</td></tr>
+        <tr><td class="td-key">CHG-05</td><td class="td-loc">methodology-guide.html</td><td class="td-loc">히어로 섹션 "신뢰도를 높입니다"</td><td>문구</td><td class="td-p1">P1</td></tr>
+        <tr><td class="td-key">CHG-06</td><td class="td-loc">dashboard.html</td><td class="td-loc">비교표 — 항목 4개 추가</td><td>표 구조</td><td class="td-p2">P2</td></tr>
+        <tr><td class="td-key">CHG-07</td><td class="td-loc">dashboard.html</td><td class="td-loc">L6407 권장 조합표 재구성</td><td>표 구조</td><td class="td-p2">P2</td></tr>
+        <tr><td class="td-key">CHG-08</td><td class="td-loc">dashboard.html</td><td class="td-loc">방법론 카드 배지 문구</td><td>배지</td><td class="td-p2">P2</td></tr>
+        <tr><td class="td-key">CHG-09</td><td class="td-loc">methodology-guide.html</td><td class="td-loc">동일 비교표·배지 동기화</td><td>동기화</td><td class="td-p2">P2</td></tr>
+        <tr><td class="td-key">CHG-10</td><td class="td-loc">dashboard.html</td><td class="td-loc">L3024 ANALYSIS_PERIODS desc</td><td>문구</td><td class="td-p2">P2</td></tr>
+        <tr><td class="td-key">CHG-11</td><td class="td-loc">dashboard.html</td><td class="td-loc">계산 전 n_obs / n_params 검사</td><td>로직</td><td class="td-p2">P2</td></tr>
+        <tr><td class="td-key">CHG-12</td><td class="td-loc">dashboard.html</td><td class="td-loc">결과 카드 하단 자동 해석 박스</td><td>UI</td><td class="td-p3">P3</td></tr>
+        <tr><td class="td-key">CHG-13</td><td class="td-loc">dashboard.html</td><td class="td-loc">긴 horizon LP 경고 배너</td><td>UI</td><td class="td-p3">P3</td></tr>
+        <tr><td class="td-key">CHG-14</td><td class="td-loc">dashboard.html</td><td class="td-loc">전체 구간 극단 충격 희석 경고</td><td>UI</td><td class="td-p3">P3</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr>
+
+  <!-- ── 03. P1 ── -->
+  <div class="section" id="p1">
+    <div class="sec-head">
+      <span class="sec-num">03</span>
+      <span class="sec-title">P1 — 단정 표현 제거 <span class="badge badge-p1" style="font-size:11px;margin-left:8px;">필수</span></span>
+    </div>
+    <div class="text" style="margin-bottom:20px;">아래 6개 표현은 통계적 사실과 맥락이 다르게 전달될 수 있어 우선 수정이 필요합니다.</div>
+
+    <div class="change-list">
+
+      <!-- CHG-01 -->
+      <div class="change-item">
+        <div class="change-item-head">
+          <span class="change-item-id">CHG-01</span>
+          <span class="badge badge-p1">P1</span>
+          <span class="change-item-title">비교표 "전쟁 적합도" 행 — "최적" 제거</span>
+          <span class="badge badge-scope">dashboard L6144</span>
+        </div>
+        <div class="change-item-body">
+          <div class="diff-block">
+            <div class="diff-head diff-before-head">BEFORE</div>
+            <div class="diff-before">| 전쟁 적합도 | 낮음 | 보통 | ★★★ 최적 |</div>
+          </div>
+          <div class="diff-block">
+            <div class="diff-head diff-after-head">AFTER</div>
+            <div class="diff-after">| 대형충격 반응 | 조건부 기준선 | 표본 충분 시 적합 | 방향성 추정에 유연 (소표본 주의) |</div>
+          </div>
+          <div class="note">행 제목도 "전쟁 적합도" → "대형충격 반응"으로 변경. "최적"은 소표본 구간에서 성립하지 않음.</div>
+        </div>
+      </div>
+
+      <!-- CHG-02 -->
+      <div class="change-item">
+        <div class="change-item-head">
+          <span class="change-item-id">CHG-02</span>
+          <span class="badge badge-p1">P1</span>
+          <span class="change-item-title">권장 조합표 — "유일하게 강건" 제거</span>
+          <span class="badge badge-scope">dashboard L6409</span>
+        </div>
+        <div class="change-item-body">
+          <div class="diff-block">
+            <div class="diff-head diff-before-head">BEFORE</div>
+            <div class="diff-before">| 전쟁 재발 시나리오 | 전쟁기 | LP | 소표본 + 대형 충격 → LP가 유일하게 강건 |</div>
+          </div>
+          <div class="diff-block">
+            <div class="diff-head diff-after-head">AFTER</div>
+            <div class="diff-after">| 전쟁 재발 시나리오 | 전쟁기 | LP | Gaussian | 구조충격 방향성 추정 목적 | 소표본(19M)이므로 방향성 중심 해석, 수치 과신 금지 |</div>
+          </div>
+          <div class="note">1차 방법·보조 검증·선택 조건·경고 컬럼 추가 (CHG-07 참조)</div>
+        </div>
+      </div>
+
+      <!-- CHG-03 -->
+      <div class="change-item">
+        <div class="change-item-head">
+          <span class="change-item-id">CHG-03</span>
+          <span class="badge badge-p1">P1</span>
+          <span class="change-item-title">분석 기간 설명 — "가장 안정적 추정" 수정</span>
+          <span class="badge badge-scope">dashboard L6400</span>
+        </div>
+        <div class="change-item-body">
+          <div class="diff-block">
+            <div class="diff-head diff-before-head">BEFORE</div>
+            <div class="diff-before">| 전체 | 21.01~25.12 | 60개월 전구간 — 가장 안정적 추정 |</div>
+          </div>
+          <div class="diff-block">
+            <div class="diff-head diff-after-head">AFTER</div>
+            <div class="diff-after">| 전체 | 21.01~25.12 | 60개월 전구간 — 평균 장기구조 파악에 상대적으로 적합; 극단 충격 반응은 평균에 희석될 수 있음 |</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHG-04 -->
+      <div class="change-item">
+        <div class="change-item-head">
+          <span class="change-item-id">CHG-04</span>
+          <span class="badge badge-p1">P1</span>
+          <span class="change-item-title">비교표 "소표본 안정성" — Gaussian "강건" 수정</span>
+          <span class="badge badge-scope">dashboard L6141</span>
+        </div>
+        <div class="change-item-body">
+          <div class="diff-block">
+            <div class="diff-head diff-before-head">BEFORE</div>
+            <div class="diff-before">| 소표본 안정성 | ★★★ 강건 | 보통 | 취약 (h 증가) |</div>
+          </div>
+          <div class="diff-block">
+            <div class="diff-head diff-after-head">AFTER</div>
+            <div class="diff-after">| 소표본 안정성 | 가정 고정형 (변동 없음) | 표본 증가 시 향상 | 표본 증가 시 향상; h 증가 시 급감 |</div>
+          </div>
+          <div class="note">Gaussian은 "강건"이 아니라 "가정이 고정되어 있어 표본 크기에 무관하게 일정"한 것. 이는 장점이자 한계.</div>
+        </div>
+      </div>
+
+      <!-- CHG-05 -->
+      <div class="change-item">
+        <div class="change-item-head">
+          <span class="change-item-id">CHG-05</span>
+          <span class="badge badge-p1">P1</span>
+          <span class="change-item-title">히어로 서브타이틀 — "신뢰도를 높입니다" 수정</span>
+          <span class="badge badge-scope">dashboard L6842 / methodology-guide.html 히어로</span>
+        </div>
+        <div class="change-item-body">
+          <div class="diff-block">
+            <div class="diff-head diff-before-head">BEFORE</div>
+            <div class="diff-before">교차 검증을 통해 전망의 신뢰도를 높입니다.</div>
+          </div>
+          <div class="diff-block">
+            <div class="diff-head diff-after-head">AFTER</div>
+            <div class="diff-after">교차 검증을 통해 방법론 간 일치 여부를 확인하고, 결과의 강건성을 판단하는 데 활용합니다.</div>
+          </div>
+          <div class="note">"신뢰도를 높인다"는 표현은 모델이 현실을 정확히 예측한다는 인상을 줄 수 있음.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ── 04. P2 표 구조 ── -->
+  <div class="section" id="p2">
+    <div class="sec-head">
+      <span class="sec-num">04</span>
+      <span class="sec-title">P2 — 표 구조 보강 / 추천 조합 재편 <span class="badge badge-p2" style="font-size:11px;margin-left:8px;">권장</span></span>
+    </div>
+
+    <!-- CHG-06 -->
+    <div class="subsec">CHG-06 · 방법론 비교표 컬럼 추가</div>
+    <div class="text" style="margin-bottom:12px;">기존 비교표에 아래 4개 항목을 추가합니다.</div>
+    <table>
+      <thead>
+        <tr><th>추가 행</th><th>Gaussian IRF</th><th>ARDL-OLS</th><th>Local Projections</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-key">적합한 질문</td>
+          <td>"충격이 시간에 따라 어떻게 퍼지는가?" (Baseline 확인)</td>
+          <td>"변수 간 장기 평균 관계는?"</td>
+          <td>"이 충격이 h기 후 얼마나 남아있는가?"</td>
+        </tr>
+        <tr>
+          <td class="td-key">표본 크기 제약</td>
+          <td>없음 (가정 기반)</td>
+          <td>n ≥ 41 권장 (변수 수 = 계수 수)</td>
+          <td>n ≥ 30+h 권장; 소표본에서 신뢰구간 급팽창</td>
+        </tr>
+        <tr>
+          <td class="td-key">주요 약점</td>
+          <td>실제 데이터 무시; 가정이 틀리면 전체 결과 편향</td>
+          <td>다중공선성·과적합; 오차 재귀 누적</td>
+          <td>자유도 소모 큼; 긴 horizon에서 불안정</td>
+        </tr>
+        <tr>
+          <td class="td-key">해석 시 주의</td>
+          <td>비교 기준선으로 활용; 데이터 검증 불가</td>
+          <td>R² 낮으면 계수 해석 금지</td>
+          <td>방향성 중심 해석; 수치 정밀도 과신 금지</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- CHG-07 -->
+    <div class="subsec" style="margin-top:32px;">CHG-07 · 권장 조합표 구조 변경 (4컬럼 → 6컬럼)</div>
+    <div class="text" style="margin-bottom:12px;">기존 "분석목적 / 기간 / 방법론 / 이유" → <strong>"분석목적 / 기간 / 1차방법 / 보조검증 / 선택조건 / 경고"</strong></div>
+    <table>
+      <thead>
+        <tr><th>분석 목적</th><th>기간</th><th>1차 방법</th><th>보조 검증</th><th>선택 조건</th><th>경고</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>전쟁 재발 시나리오</td>
+          <td>전쟁기</td>
+          <td class="td-key">LP</td>
+          <td>Gaussian</td>
+          <td>구조충격 방향성 확인 목적</td>
+          <td class="td-p1">소표본(19M) — 수치 과신 금지, 방향성 중심</td>
+        </tr>
+        <tr>
+          <td>현재 추세 기반 전망</td>
+          <td>최근 12M</td>
+          <td class="td-key">Gaussian</td>
+          <td>제한형 ARDL 비교</td>
+          <td>현재 구조 반영 목적</td>
+          <td class="td-p2">ARDL 변수 수·lag 강제 제한 필요 (n=12)</td>
+        </tr>
+        <tr>
+          <td>장기 구조 분석</td>
+          <td>전체</td>
+          <td class="td-key">ARDL</td>
+          <td>3-Method 비교</td>
+          <td>평균 장기 관계 파악 목적</td>
+          <td class="td-p2">전쟁기 극단 반응 희석 가능; R² 확인 필수</td>
+        </tr>
+        <tr>
+          <td>방법론 비교 (보고용)</td>
+          <td>전체</td>
+          <td class="td-key">3-Method 앙상블</td>
+          <td>—</td>
+          <td>방법론 간 편차 확인</td>
+          <td class="td-p3">편차 큰 결과 = 불확실성 높음으로 해석</td>
+        </tr>
+        <tr>
+          <td>안정기 비용 예측</td>
+          <td>전쟁 후 안정기</td>
+          <td class="td-key">ARDL</td>
+          <td>Gaussian</td>
+          <td>노무비·금리 주도 구간</td>
+          <td class="td-p3">표본 10M — 계수 불안정; 탐색적 해석</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- CHG-08 -->
+    <div class="subsec" style="margin-top:32px;">CHG-08 · 방법론 카드 배지 문구 변경</div>
+    <div class="text" style="margin-bottom:12px;">우열 표현 → 성격 표현</div>
+    <table>
+      <thead><tr><th>카드</th><th>기존 배지</th><th>변경 배지</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Gaussian IRF</td>
+          <td><span class="badge badge-p1">초기 스크리닝에 적합</span></td>
+          <td><span class="badge badge-scope">Baseline · 비교 기준선</span></td>
+        </tr>
+        <tr>
+          <td>ARDL-OLS</td>
+          <td><span class="badge badge-p1">정밀 비용 예측</span></td>
+          <td><span class="badge badge-scope">Long-run · 표본 충분 시 장기 구조</span></td>
+        </tr>
+        <tr>
+          <td>Local Projections</td>
+          <td><span class="badge badge-p1">위기 상황 분석 최적</span></td>
+          <td><span class="badge badge-scope">Shock-flexible · 충격 방향성 추정</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- CHG-10 -->
+    <div class="subsec" style="margin-top:32px;">CHG-10 · ANALYSIS_PERIODS desc 문구 수정</div>
+    <div class="change-list">
+      <div class="change-item">
+        <div class="change-item-head">
+          <span class="change-item-id">CHG-10</span>
+          <span class="badge badge-p2">P2</span>
+          <span class="change-item-title">코드 내 기간 설명 문구</span>
+          <span class="badge badge-scope">dashboard L3025~3032</span>
+        </div>
+        <div class="change-item-body">
+          <div class="diff-block">
+            <div class="diff-head diff-before-head">BEFORE</div>
+            <div class="diff-before">warEra:  { desc: '러-우 전쟁 발발~유가 정상화, 공급망 충격 최대 구간' }
+postWar: { desc: '전쟁 충격 소화, 금리 고점, 원자재 안정화 구간' }
+full:    { desc: '60개월 전체 데이터 — 장기 구조 추정에 적합' }</div>
+          </div>
+          <div class="diff-block">
+            <div class="diff-head diff-after-head">AFTER</div>
+            <div class="diff-after">warEra:  { desc: '러-우 전쟁 발발~유가 정상화, 공급망 충격 최대 구간 (19M — 소표본, 방향성 중심 해석)' }
+postWar: { desc: '공급망 정상화, 금리 고점 구간 (10M — 소표본, 탐색적 해석)' }
+full:    { desc: '60개월 전구간 — 평균 장기구조 파악에 상대적으로 적합; 극단 충격은 희석 가능' }</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ── 05. P2 Validation ── -->
+  <div class="section" id="p2-validation">
+    <div class="sec-head">
+      <span class="sec-num">05</span>
+      <span class="sec-title">P2 — 계산 전 Validation 로직 <span class="badge badge-p2" style="font-size:11px;margin-left:8px;">권장</span></span>
+    </div>
+    <div class="text" style="margin-bottom:16px;">
+      방법론을 실행하기 전 표본 크기(n_obs)와 파라미터 수(n_params) 비율을 검사하여 사용자에게 경고를 표시합니다.
+    </div>
+
+    <div class="subsec">CHG-11 · 권장 검사 로직 (pseudo-code)</div>
+<pre><span class="c">// 호출 위치: runSimulation() 내, 모델 추정 직전</span>
+<span class="k">function</span> <span class="n">validateSampleSize</span>(periodKey, method) {
+    <span class="k">const</span> p = ANALYSIS_PERIODS[periodKey];
+    <span class="k">const</span> n = p.endIdx - p.startIdx + 1;   <span class="c">// 표본 크기</span>
+    <span class="k">const</span> k = DRIVER_KEYS.length * 4 + 1;  <span class="c">// ARDL 계수 수 (~41)</span>
+
+    <span class="k">if</span> (method === <span class="s">'ardl'</span>) {
+        <span class="k">if</span> (n &lt;= k)
+            <span class="k">return</span> { level: <span class="s">'block'</span>,  msg: <span class="w">`n(${n}) ≤ k(${k}): ARDL 추정 불가. Gaussian으로 전환 권장`</span> };
+        <span class="k">if</span> (n &lt;= k * 2)
+            <span class="k">return</span> { level: <span class="s">'error'</span>,  msg: <span class="w">`n/k = ${(n/k).toFixed(1)} — 추정 매우 불안정. 탐색적 해석만 권장`</span> };
+        <span class="k">if</span> (n &lt;= k * 3)
+            <span class="k">return</span> { level: <span class="s">'warn'</span>,   msg: <span class="w">`n/k = ${(n/k).toFixed(1)} — 과적합 주의. 결과 방향성 위주 해석`</span> };
+    }
+    <span class="k">if</span> (method === <span class="s">'lp'</span>) {
+        <span class="k">const</span> h = 12;  <span class="c">// max horizon</span>
+        <span class="k">if</span> (n &lt; 30 + h)
+            <span class="k">return</span> { level: <span class="s">'warn'</span>, msg: <span class="w">`LP horizon ${h}M에서 n(${n}) 부족 — 신뢰구간 넓음, 방향성 중심`</span> };
+    }
+    <span class="k">return</span> { level: <span class="s">'ok'</span>, msg: <span class="s">''</span> };
+}</pre>
+
+    <div class="subsec" style="margin-top:24px;">경고 표시 UI 규칙</div>
+    <table>
+      <thead><tr><th>level</th><th>색상</th><th>동작</th></tr></thead>
+      <tbody>
+        <tr><td class="td-key">block</td><td class="td-p1">빨강 (#fb7185)</td><td>실행 차단 + 대체 방법론 자동 선택 안내</td></tr>
+        <tr><td class="td-key">error</td><td class="td-p1">빨강 반투명</td><td>실행 허용, 결과 상단에 빨강 경고 배너 표시</td></tr>
+        <tr><td class="td-key">warn</td><td class="td-p2">노랑 (#f59e0b)</td><td>실행 허용, 결과 상단에 노랑 경고 배너 표시</td></tr>
+        <tr><td class="td-key">ok</td><td class="td-p3">—</td><td>경고 없음</td></tr>
+      </tbody>
+    </table>
+
+    <div class="subsec" style="margin-top:24px;">전체 구간 + LP 조합 특별 경고</div>
+    <div class="change-item" style="margin-top:8px;">
+      <div class="change-item-body">
+        <div class="note">전체(60M) + LP 선택 시: "LP는 각 horizon에서 독립 추정합니다. 전체 구간에서는 전쟁기·안정기 구조가 혼재하므로 결과는 두 국면의 평균 반응에 가깝습니다."</div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ── 06. P3 ── -->
+  <div class="section" id="p3">
+    <div class="sec-head">
+      <span class="sec-num">06</span>
+      <span class="sec-title">P3 — 결과 해석 박스 / 배지 개선 <span class="badge badge-p3" style="font-size:11px;margin-left:8px;">선택</span></span>
+    </div>
+
+    <!-- CHG-12 -->
+    <div class="subsec">CHG-12 · 결과 카드 하단 자동 해석 박스</div>
+    <div class="text" style="margin-bottom:12px;">현재 방법론 + 기간 조합에 따라 해석 안내 문구를 자동으로 표시합니다.</div>
+    <table>
+      <thead><tr><th>방법론</th><th>기간</th><th>표시 문구</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Gaussian</td>
+          <td>전체</td>
+          <td class="td-p3">가정 고정형 baseline입니다. 데이터 기반 추정치와 비교하여 방향성 일치 여부를 확인하세요.</td>
+        </tr>
+        <tr>
+          <td>ARDL</td>
+          <td>전쟁기</td>
+          <td class="td-p1">n=19, 계수 수=41 — 자유도 부족. 수치보다 방향성 중심으로 해석하세요.</td>
+        </tr>
+        <tr>
+          <td>ARDL</td>
+          <td>전체</td>
+          <td class="td-p3">장기 평균 구조를 반영합니다. R² 확인 후 낮으면 계수 해석 주의.</td>
+        </tr>
+        <tr>
+          <td>LP</td>
+          <td>전쟁기</td>
+          <td class="td-p2">구조충격 방향성 추정에 조건부로 유연합니다. 소표본(19M)으로 신뢰구간이 넓을 수 있습니다.</td>
+        </tr>
+        <tr>
+          <td>LP</td>
+          <td>최근 12M</td>
+          <td class="td-p1">n=12, horizon 12M — n &lt; 30+h 조건 미충족. 탐색적 참고 자료로만 활용하세요.</td>
+        </tr>
+        <tr>
+          <td>앙상블</td>
+          <td>전체</td>
+          <td class="td-p3">3가지 방법론의 단순 평균입니다. 방법론 간 편차가 클수록 불확실성이 높습니다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- CHG-13/14 -->
+    <div class="subsec" style="margin-top:32px;">CHG-13/14 · 경고 배너 샘플 HTML</div>
+<pre><span class="c">&lt;!-- LP 긴 horizon 경고 --&gt;</span>
+&lt;<span class="k">div</span> class=<span class="s">"sim-warn-banner"</span> style=<span class="s">"
+  background: rgba(245,158,11,0.08);
+  border-left: 3px solid #f59e0b;
+  padding: 8px 14px; border-radius: 4px;
+  font-size: 11px; color: #f59e0b; margin-bottom: 10px;"</span>&gt;
+  ⚠ LP · 전쟁기: 표본 19개월로 신뢰구간이 넓습니다.
+  결과는 충격 방향성 확인용으로 활용하세요.
+&lt;/<span class="k">div</span>&gt;
+
+<span class="c">&lt;!-- 전체 구간 극단 희석 경고 --&gt;</span>
+&lt;<span class="k">div</span> class=<span class="s">"sim-warn-banner"</span> style=<span class="s">"border-left-color:#38bdf8; color:#38bdf8;..."</span>&gt;
+  ℹ 전체 구간: 전쟁기 극단 충격이 평균에 희석될 수 있습니다.
+  전쟁 시나리오 분석 시 전쟁기 구간 선택을 검토하세요.
+&lt;/<span class="k">div</span>&gt;</pre>
+  </div>
+
+  <hr>
+
+  <!-- ── 07. Checklist ── -->
+  <div class="section" id="checklist">
+    <div class="sec-head">
+      <span class="sec-num">07</span>
+      <span class="sec-title">QA 체크리스트</span>
+    </div>
+    <div class="subsec">P1 완료 기준</div>
+    <div class="checklist" style="margin-bottom:20px;">
+      <div class="check-row"><div class="check-box"></div><div><div class="check-label">CHG-01: 비교표 "전쟁 적합도 → 대형충격 반응", "최적" 제거</div></div></div>
+      <div class="check-row"><div class="check-box"></div><div><div class="check-label">CHG-02: 권장 조합표 "유일하게 강건" 제거 + 6컬럼 구조로 교체</div></div></div>
+      <div class="check-row"><div class="check-box"></div><div><div class="check-label">CHG-03: 기간 설명 "가장 안정적 추정" → 조건부 표현</div></div></div>
+      <div class="check-row"><div class="check-box"></div><div><div class="check-label">CHG-04: 소표본 안정성 셀 "강건" → "가정 고정형" 설명</div></div></div>
+      <div class="check-row"><div class="check-box"></div><div><div class="check-label">CHG-05: 히어로 "신뢰도를 높입니다" → 교차검증 목적 설명으로 교체</div></div></div>
+      <div class="check-row"><div class="check-box"></div><div><div class="check-label">dashboard.html ↔ methodology-guide.html 동일 내용 양쪽 모두 반영</div></div></div>
+    </div>
+    <div class="subsec">P2 완료 기준</div>
+    <div class="checklist" style="margin-bottom:20px;">
+      <div class="check-row"><div class="check-box"></div><div><div class="check-label">CHG-06: 비교표 4행 추가 (적합한 질문 / 표본 제약 / 약점 / 주의)</div></div></div>
+      <div class="check-row"><div class="check-box"></div><div><div class="check-label">CHG-07: 권장 조합표 6컬럼 구조 (1차+보조+조건+경고)</div></div></div>
+      <div class="check-row"><div class="check-box"></div><div><div class="check-label">CHG-08: 방법론 카드 배지 Baseline / Long-run / Shock-flexible</div></div></div>
+      <div class="check-row"><div class="check-box"></div><div><div class="check-label">CHG-10: ANALYSIS_PERIODS desc 표본 크기 경고 추가</div></div></div>
+      <div class="check-row"><div class="check-box"></div><div><div class="check-label">CHG-11: validateSampleSize() 함수 구현 + 경고 배너 UI 연결</div></div></div>
+    </div>
+    <div class="subsec">P3 완료 기준</div>
+    <div class="checklist">
+      <div class="check-row"><div class="check-box"></div><div><div class="check-label">CHG-12: 방법론×기간 조합별 자동 해석 박스 (6가지 케이스)</div></div></div>
+      <div class="check-row"><div class="check-box"></div><div><div class="check-label">CHG-13: LP 긴 horizon 경고 배너</div></div></div>
+      <div class="check-row"><div class="check-box"></div><div><div class="check-label">CHG-14: 전체 구간 극단 충격 희석 경고 배너</div></div></div>
+    </div>
+  </div>
+
+  <div style="margin-top:60px;padding:20px 24px;background:var(--card);border:1px solid var(--line);border-radius:8px;font-size:12px;color:var(--muted);">
+    이 문서는 crisis-monitoring-dashboard.html (BSHY CCC) 방법론 도움말 개선을 위한 QA 제안서입니다. 2026-03-09 기준.
+  </div>
+
+</div>
+</body>
+</html>
