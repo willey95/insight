@@ -1,10 +1,13 @@
 <!DOCTYPE html>
-<!-- v2026.03.08-a -->
+<!-- v2026.03.09-c -->
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crisis Monitoring Dashboard | Bloomberg Style</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <script>if(sessionStorage.getItem('bshy_auth')!=='1')window.location.replace('/');</script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -21,6 +24,8 @@
         :root {
             --ticker-height: 24px;
             --header-height: 52px;
+            --kpi-bar-height: 78px;
+            --situation-banner-height: 34px;
             --dashboard-gap: 8px;
             --accent: #ffb347;
             --accent-cool: #4ec9ff;
@@ -234,7 +239,7 @@
             padding: var(--dashboard-gap);
             max-width: 1920px;
             margin: 0 auto;
-            height: calc(100vh - var(--ticker-height) - var(--header-height));
+            height: calc(100vh - var(--ticker-height) - var(--header-height) - var(--kpi-bar-height) - var(--situation-banner-height));
             min-height: 0;
             position: relative;
             z-index: 1;
@@ -2083,6 +2088,7 @@
 
         /* Responsive */
         @media (max-width: 1200px) {
+            .kpi-top-bar { grid-template-columns: repeat(3, 1fr); }
             body {
                 overflow-y: auto;
             }
@@ -2249,6 +2255,152 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* ── Skeleton Loader ── */
+        @keyframes shimmer {
+            0%   { background-position: -400% 0; }
+            100% { background-position:  400% 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #111d32 25%, #1c2f4a 50%, #111d32 75%);
+            background-size: 400% 100%;
+            animation: shimmer 1.8s ease-in-out infinite;
+            border-radius: 3px;
+            color: transparent !important;
+            user-select: none;
+            pointer-events: none;
+        }
+        .skeleton-news-item {
+            display: grid;
+            grid-template-columns: 30px 1fr 36px;
+            gap: 5px;
+            align-items: center;
+            background: rgba(255,255,255,0.015);
+            border: 1px solid #1a2b3f;
+            border-left: 2px solid #1a2b3f;
+            border-radius: 3px;
+            padding: 6px 5px;
+            min-height: 30px;
+        }
+        /* ── Status Badges ── */
+        .status-badge {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 2px;
+            letter-spacing: 0.5px;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
+            display: inline-block;
+            white-space: nowrap;
+        }
+        .status-badge.live    { background: rgba(0,208,132,0.12); color: #00d084; border: 1px solid rgba(0,208,132,0.3); }
+        .status-badge.syncing { background: rgba(78,201,255,0.12); color: #4ec9ff; border: 1px solid rgba(78,201,255,0.3); animation: pulse-badge 1.5s ease-in-out infinite; }
+        .status-badge.delayed { background: rgba(255,179,71,0.12); color: #ffb347; border: 1px solid rgba(255,179,71,0.3); }
+        .status-badge.error   { background: rgba(255,77,109,0.12); color: #ff4d6d; border: 1px solid rgba(255,77,109,0.3); }
+        @keyframes pulse-badge {
+            0%, 100% { opacity: 1; }
+            50%      { opacity: 0.5; }
+        }
+
+        /* ── KPI Top Bar ── */
+        .kpi-top-bar {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+            padding: 5px 8px;
+            background: rgba(5, 8, 16, 0.95);
+            border-bottom: 1px solid #1a2b3f;
+            position: relative;
+            z-index: 10;
+        }
+        .kpi-top-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-stroke);
+            border-radius: 4px;
+            padding: 7px 10px;
+            height: 68px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: border-color 0.15s;
+            overflow: hidden;
+        }
+        .kpi-top-card:hover { border-color: #2a4060; }
+        .kpi-top-card.kpi-crisis { border-left: 2px solid var(--accent); }
+        .kpi-top-card.kpi-const  { border-left: 2px solid #4ec9ff; }
+        .kpi-top-label {
+            font-size: 8.5px;
+            font-weight: 700;
+            color: var(--muted);
+            letter-spacing: 0.5px;
+            font-family: 'IBM Plex Mono', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .kpi-top-value {
+            font-size: 20px;
+            font-weight: 900;
+            font-family: 'IBM Plex Mono', Consolas, monospace;
+            color: #f0f6ff;
+            letter-spacing: -0.5px;
+            line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .kpi-top-meta {
+            font-size: 9px;
+            color: var(--muted);
+            font-family: 'IBM Plex Mono', monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        /* ── Situation Banner ── */
+        .situation-banner {
+            margin: 4px 8px;
+            padding: 6px 12px;
+            background: rgba(20, 35, 60, 0.5);
+            border: 1px solid #1e3050;
+            border-left: 3px solid var(--accent);
+            border-radius: 3px;
+            font-size: 11px;
+            color: #94a3b8;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        /* ── News more button ── */
+        .news-more-btn {
+            display: block;
+            width: 100%;
+            margin-top: 4px;
+            padding: 5px;
+            background: rgba(78,201,255,0.06);
+            border: 1px solid rgba(78,201,255,0.2);
+            border-radius: 3px;
+            color: #4ec9ff;
+            font-size: 10px;
+            font-family: 'IBM Plex Mono', monospace;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.15s;
+        }
+        .news-more-btn:hover { background: rgba(78,201,255,0.12); }
+        /* ── Header subtitle ── */
+        .header-subtitle {
+            display: block;
+            font-size: 9px;
+            font-weight: 400;
+            color: #4a6080;
+            font-family: 'IBM Plex Mono', monospace;
+            letter-spacing: 0.3px;
+            margin-top: 2px;
+            text-transform: none;
+        }
     </style>
 </head>
 <body>
@@ -2262,7 +2414,7 @@
     <!-- Header -->
     <div class="header">
         <h1>
-            <span>CCC — COST CRISIS CENTER</span>
+            <span>CCC — COST CRISIS CENTER<span class="header-subtitle">전쟁 위기 기반 원가·시장 영향 모니터링</span></span>
             <span class="alert-badge">⚠️ 전쟁 위기 경보</span>
             <span class="header-stock-inline" id="headerStockInline">
                 <span class="header-stock-item" onclick="showDetails('kospi')" role="button" tabindex="0"><span class="header-stock-label">KOSPI</span><span class="header-stock-value" id="kospi">--</span><span class="header-stock-change" id="kospi-change">--%</span></span>
@@ -2290,7 +2442,53 @@
             </span>
         </div>
         <div class="timestamp" id="timestamp"></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+            <span class="status-badge syncing" id="globalStatusBadge">SYNCING</span>
+            <span style="font-size:9px;color:#5a7090;font-family:'IBM Plex Mono',monospace" id="globalStatusText">실시간 데이터 동기화 중</span>
+        </div>
         <div class="library-warning" id="libraryWarning"></div>
+    </div>
+
+    <!-- KPI Top Bar -->
+    <div class="kpi-top-bar" id="kpiTopBar">
+        <div class="kpi-top-card kpi-crisis" onclick="document.querySelector('.war-status').scrollIntoView({behavior:'smooth'})">
+            <div class="kpi-top-label">CRISIS SCORE
+                <span class="status-badge syncing" id="kpiCrisisBadge" style="font-size:8px;padding:1px 4px">SYNCING</span>
+            </div>
+            <div class="kpi-top-value" id="kpiCrisisScore">—</div>
+            <div class="kpi-top-meta" id="kpiCrisisMeta">데이터 수집 중</div>
+        </div>
+        <div class="kpi-top-card" onclick="showDetails('usd')">
+            <div class="kpi-top-label">USD/KRW <span>₩/$</span></div>
+            <div class="kpi-top-value" id="kpiUsdVal">—</div>
+            <div class="kpi-top-meta" id="kpiUsdMeta">불러오는 중</div>
+        </div>
+        <div class="kpi-top-card" onclick="showDetails('wti')">
+            <div class="kpi-top-label">WTI CRUDE <span>$/bbl</span></div>
+            <div class="kpi-top-value" id="kpiWtiVal">—</div>
+            <div class="kpi-top-meta" id="kpiWtiMeta">불러오는 중</div>
+        </div>
+        <div class="kpi-top-card" onclick="showDetails('brent')">
+            <div class="kpi-top-label">BRENT <span>$/bbl</span></div>
+            <div class="kpi-top-value" id="kpiBrentVal">—</div>
+            <div class="kpi-top-meta" id="kpiBrentMeta">불러오는 중</div>
+        </div>
+        <div class="kpi-top-card" onclick="showDetails('kospi')">
+            <div class="kpi-top-label">KOSPI <span>pt</span></div>
+            <div class="kpi-top-value" id="kpiKospiVal">—</div>
+            <div class="kpi-top-meta" id="kpiKospiMeta">불러오는 중</div>
+        </div>
+        <div class="kpi-top-card kpi-const" onclick="document.querySelector('.construction-card').scrollIntoView({behavior:'smooth'})">
+            <div class="kpi-top-label">CONST. IMPACT <span>리스크</span></div>
+            <div class="kpi-top-value" id="kpiConstVal">—</div>
+            <div class="kpi-top-meta" id="kpiConstMeta">건설원가 영향 산출 중</div>
+        </div>
+    </div>
+
+    <!-- Situation Summary Banner -->
+    <div class="situation-banner" id="situationBanner">
+        <span style="font-size:13px;flex-shrink:0">📊</span>
+        <span id="situationBannerText">핵심 요약 생성 중 — 지표 수신 대기</span>
     </div>
 
     <!-- Main Dashboard -->
@@ -2302,9 +2500,9 @@
                     <div class="card-title">CRISIS INTENSITY RISK</div>
                     <div class="card-subtitle">전쟁상황모니터링</div>
                 </div>
-                <div>
-                    <div class="card-timestamp" id="tsCrisis">기준: --</div>
-                    <div class="loading"></div>
+                <div style="display:flex;align-items:center;gap:5px">
+                    <span class="status-badge syncing" id="tsCrisisBadge">SYNCING</span>
+                    <div class="card-timestamp" id="tsCrisis"></div>
                 </div>
             </div>
             <div class="threat-level">
@@ -2355,18 +2553,21 @@
             <div class="card-header">
                 <div>
                     <div class="card-title">GEO CRISIS MAP</div>
-                    <div class="card-subtitle">Middle East Real-Time War Situation</div>
+                    <div class="card-subtitle">군사 활동·해상 움직임·분쟁 이벤트 시각화</div>
                 </div>
-                <div class="card-timestamp" id="tsMap">LIVE</div>
+                <div style="display:flex;align-items:center;gap:5px">
+                    <span class="status-badge syncing" id="tsMapBadge">SYNCING</span>
+                    <div class="card-timestamp" id="tsMap"></div>
+                </div>
             </div>
             <div class="geo-map-wrap">
                 <div class="geo-map-canvas" id="geoMapCanvas" aria-label="Middle East Crisis Map"></div>
                 <!-- Map Stats Bar (top-left) -->
                 <div class="map-stats-bar" id="mapStatsBar">
-                    <div class="map-stat-badge">AIRCRAFT <span class="stat-count low" id="statAircraft">0</span></div>
-                    <div class="map-stat-badge">VESSELS <span class="stat-count low" id="statVessels">0</span></div>
-                    <div class="map-stat-badge">CONFLICTS <span class="stat-count low" id="statConflicts">0</span></div>
-                    <div class="map-stat-badge">GDELT <span class="stat-count low" id="statGdelt">0</span></div>
+                    <div class="map-stat-badge">AIRCRAFT <span class="stat-count low" id="statAircraft">…</span></div>
+                    <div class="map-stat-badge">VESSELS <span class="stat-count low" id="statVessels">…</span></div>
+                    <div class="map-stat-badge">CONFLICTS <span class="stat-count low" id="statConflicts">…</span></div>
+                    <div class="map-stat-badge">GDELT <span class="stat-count low" id="statGdelt">…</span></div>
                 </div>
                 <!-- Layer Control (top-right) -->
                 <div class="map-layer-ctrl" id="mapLayerCtrl">
@@ -2417,7 +2618,10 @@
                     <div class="card-title">FX & MACRO PRESSURE</div>
                     <div class="card-subtitle">금융지표</div>
                 </div>
-                <div class="card-timestamp" id="tsFinance">기준: --</div>
+                <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
+                    <span class="status-badge syncing" id="tsFinanceBadge">SYNCING</span>
+                    <div class="card-timestamp" id="tsFinance"></div>
+                </div>
             </div>
             <div class="market-grid">
                 <div class="market-item" onclick="showDetails('fedfunds')">
@@ -2494,7 +2698,10 @@
                     <div class="card-title">CONSTRUCTION / REAL ESTATE</div>
                     <div class="card-subtitle">건설/부동산</div>
                 </div>
-                <div class="card-timestamp" id="tsConstruction">기준: --</div>
+                <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
+                    <span class="status-badge syncing" id="tsConstructionBadge">SYNCING</span>
+                    <div class="card-timestamp" id="tsConstruction"></div>
+                </div>
             </div>
             <div class="market-grid">
                 <div class="market-item" onclick="showDetails('steel')">
@@ -2530,6 +2737,13 @@
                     <div class="hist-range" id="hist-construction"></div>
                 </div>
             </div>
+            <!-- Construction Impact Interpretation -->
+            <div id="constInterpretBlock" style="margin-top:8px;padding:7px 10px;background:rgba(78,201,255,0.04);border:1px solid rgba(78,201,255,0.12);border-radius:3px;font-size:10px;color:#8ea9cc;line-height:1.7">
+                <div style="font-size:9px;font-weight:700;color:#4ec9ff;letter-spacing:0.4px;margin-bottom:4px">CONSTRUCTION COST DRIVERS</div>
+                <div id="constInterpret1" style="color:#64748b">환율·유가 데이터 수신 대기 중</div>
+                <div id="constInterpret2"></div>
+                <div id="constInterpret3"></div>
+            </div>
             <button class="popup-launch" onclick="openSimulationPopup()">시뮬레이션</button>
             <button class="popup-launch" onclick="openGuidePresentation()" style="margin-top:3px;background:rgba(56,189,248,0.06);border-color:rgba(56,189,248,0.25);color:#38bdf8;">GUIDE</button>
         </div>
@@ -2541,7 +2755,10 @@
                     <div class="card-title">ENERGY SHOCK BETA</div>
                     <div class="card-subtitle">에너지 시장</div>
                 </div>
-                <div class="card-timestamp" id="tsEnergy">기준: --</div>
+                <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
+                    <span class="status-badge syncing" id="tsEnergyBadge">SYNCING</span>
+                    <div class="card-timestamp" id="tsEnergy"></div>
+                </div>
             </div>
             <div class="market-grid">
                 <div class="market-item" onclick="showDetails('wti')">
@@ -2631,10 +2848,12 @@
                     <div class="sim-ctrl-row">
                         <span class="sim-ctrl-tag">분석기간</span>
                         <select class="sim-select" id="analysisPeriod" onchange="onPeriodChange()">
-                            <option value="warEra">우크라 전쟁기 (22.02~23.08)</option>
-                            <option value="postWar">전쟁 후 안정기 (23.09~24.06)</option>
-                            <option value="recent">최근 12개월 (25.04~26.03)</option>
-                            <option value="full" selected>전체 (21.01~26.03)</option>
+                            <option value="full" selected>전체 (18.01~25.12, 96M)</option>
+                            <option value="post2020">2021~2024 (48M)</option>
+                            <option value="recent3Y">최근 3년 (23.01~25.12, 36M)</option>
+                            <option value="warEra">우크라 전쟁기 (22.02~23.08, 19M)</option>
+                            <option value="covid">COVID 충격기 (20.01~21.12, 24M)</option>
+                            <option value="recent">최근 12개월 (25.01~25.12)</option>
                         </select>
                     </div>
                     <div class="sim-ctrl-row">
@@ -2682,18 +2901,18 @@
                             <div class="sim-accordion-title" onclick="toggleAccordion(this)">파라미터 설정</div>
                             <div class="sim-accordion-body">
                             <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;margin-top:6px;">
-                                <button class="sim-preset-btn" onclick="loadPreset('baseline')" style="font-size:11px;padding:4px 10px;">기준</button>
-                                <button class="sim-preset-btn" onclick="loadPreset('fxShock')" style="font-size:11px;padding:4px 10px;">환율급등</button>
-                                <button class="sim-preset-btn active" onclick="loadPreset('oilSpike')" style="font-size:11px;padding:4px 10px;">유가급등</button>
-                                <button class="sim-preset-btn" onclick="loadPreset('laborCrunch')" style="font-size:11px;padding:4px 10px;">노무비</button>
-                                <button class="sim-preset-btn" onclick="loadPreset('rateHike')" style="font-size:11px;padding:4px 10px;">금리</button>
-                                <button class="sim-preset-btn" onclick="loadPreset('allShock')" style="font-size:11px;padding:4px 10px;">복합</button>
-                                <button class="sim-preset-btn" onclick="loadPreset('severeWar')" style="font-size:11px;padding:4px 10px;border-color:#ff4d6d;color:#ff4d6d;">전쟁</button>
+                                <button class="sim-preset-btn" onclick="loadPreset('baseline',this)" style="font-size:11px;padding:4px 10px;">기준</button>
+                                <button class="sim-preset-btn" onclick="loadPreset('fxShock',this)" style="font-size:11px;padding:4px 10px;">환율급등</button>
+                                <button class="sim-preset-btn active" onclick="loadPreset('oilSpike',this)" style="font-size:11px;padding:4px 10px;">유가급등</button>
+                                <button class="sim-preset-btn" onclick="loadPreset('laborCrunch',this)" style="font-size:11px;padding:4px 10px;">노무비</button>
+                                <button class="sim-preset-btn" onclick="loadPreset('rateHike',this)" style="font-size:11px;padding:4px 10px;">금리</button>
+                                <button class="sim-preset-btn" onclick="loadPreset('allShock',this)" style="font-size:11px;padding:4px 10px;">복합</button>
+                                <button class="sim-preset-btn" onclick="loadPreset('severeWar',this)" style="font-size:11px;padding:4px 10px;border-color:#ff4d6d;color:#ff4d6d;">전쟁</button>
                             </div>
                             <div class="sim-tabs" style="margin-bottom:6px;">
-                                <button class="sim-tab active" onclick="switchSimTab('params')" style="padding:5px 12px;font-size:11px;">파라미터</button>
-                                <button class="sim-tab" onclick="switchSimTab('sensitivity')" style="padding:5px 12px;font-size:11px;">민감도</button>
-                                <button class="sim-tab" onclick="switchSimTab('montecarlo')" style="padding:5px 12px;font-size:11px;">M.Carlo</button>
+                                <button class="sim-tab active" onclick="switchSimTab('params', this)" style="padding:5px 12px;font-size:11px;">파라미터</button>
+                                <button class="sim-tab" onclick="switchSimTab('sensitivity', this)" style="padding:5px 12px;font-size:11px;">민감도</button>
+                                <button class="sim-tab" onclick="switchSimTab('montecarlo', this)" style="padding:5px 12px;font-size:11px;">M.Carlo</button>
                             </div>
                             <div class="sim-tab-content active" id="simTabParams">
                                 <div style="display:flex;flex-direction:column;gap:6px;">
@@ -2709,7 +2928,7 @@
                                 </div>
                                 <div style="margin-top:5px;padding:5px 8px;border:1px dashed #22324a;border-radius:4px;font-size:9px;color:#5a7a9a;" id="modelInfoBox">Gaussian IRF | ARDL-OLS | Local Projections</div>
                                 <div id="simValidationBanner" style="display:none;margin-top:3px;padding:5px 8px;border-radius:4px;font-size:9px;font-weight:600;letter-spacing:0.2px;"></div>
-                                <div style="margin-top:3px;padding:5px 8px;border-radius:4px;font-size:9px;background:rgba(251,113,133,0.06);border:1px solid #2a1520;color:#6a829f;" id="modelStatsBox">모델 통계: 실행 후 표시</div>
+                                <div style="margin-top:3px;padding:5px 8px;border-radius:4px;font-size:9px;background:rgba(251,113,133,0.06);border:1px solid #2a1520;color:#6a829f;" id="modelStatsBox">파라미터 입력 후 실행하세요</div>
                             </div>
                             <div class="sim-tab-content" id="simTabSensitivity">
                                 <div style="display:flex;flex-direction:column;gap:6px;">
@@ -2717,7 +2936,7 @@
                                     <div><label class="sim-control-label" style="font-size:11px;">측정 시점</label><select class="sim-input" id="sensitivityHorizon" style="font-size:11px;padding:5px;"><option value="2">3M</option><option value="5">6M</option><option value="11" selected>12M</option></select></div>
                                 </div>
                                 <button class="sim-button" onclick="runSensitivity()" style="width:100%;margin-top:6px;padding:6px;font-size:11px;">민감도 분석</button>
-                                <div id="sensitivityResult" style="margin-top:6px;"></div>
+                                <div id="sensitivityResult" style="margin-top:6px;overflow-x:auto;"></div>
                             </div>
                             <div class="sim-tab-content" id="simTabMonteCarlo">
                                 <div style="display:flex;flex-direction:column;gap:6px;">
@@ -2739,7 +2958,7 @@
                                     <span class="sim-pressure-badge" id="simPressureBadge">STANDBY</span>
                                     <span class="sim-pressure-summary" id="simPressureSummary">시뮬레이션을 실행하세요</span>
                                 </div>
-                                <div id="periodMethodDesc" class="sim-method-desc">전체 60개월 데이터로 3가지 방법론의 전망을 비교합니다.</div>
+                                <div id="periodMethodDesc" class="sim-method-desc">전체 96개월 (18.01~25.12) 데이터로 3가지 방법론의 전망을 비교합니다.</div>
                                 <div class="sim-attribution-wrap">
                                     <table class="sim-attribution-table">
                                         <thead><tr>
@@ -2754,8 +2973,8 @@
                                 </div>
                                 <div id="simInterpretBox" style="display:none;margin:6px 0;padding:8px 10px;border-radius:5px;font-size:10px;line-height:1.7;background:rgba(14,30,50,0.85);border-left:3px solid #38bdf8;color:#94a3b8;"></div>
                                 <div class="sim-chart-grid">
-                                    <div class="chart-container" style="height:288px;"><canvas id="simulationChart"></canvas></div>
-                                    <div class="chart-container" style="height:288px;"><canvas id="simulationChart2"></canvas></div>
+                                    <div class="chart-container" style="height:346px;"><canvas id="simulationChart2"></canvas></div>
+                                    <div class="chart-container" style="height:346px;"><canvas id="simulationChart"></canvas></div>
                                 </div>
                             </div>
                         </div>
@@ -3027,14 +3246,18 @@
 
         /* ─── Analysis Periods ─── */
         const ANALYSIS_PERIODS = {
-            warEra:   { label: '우크라 전쟁기 (22.02~23.08)', startIdx: 13, endIdx: 31,
-                        desc: '러-우 전쟁 발발~유가 정상화, 공급망 충격 최대 구간 (19M — 소표본, 방향성 중심 해석)' },
-            postWar:  { label: '전쟁 후 안정기 (23.09~24.06)', startIdx: 32, endIdx: 41,
-                        desc: '공급망 정상화, 금리 고점 구간 (10M — 소표본, 탐색적 해석 권장)' },
-            recent:   { label: '최근 12개월 (25.04~26.03)', startIdx: 51, endIdx: 62,
-                        desc: '최근 12개월 — 현재 추세 반영 (ARDL·LP는 표본 제약 주의)' },
-            full:     { label: '전체 (21.01~26.03)', startIdx: 0, endIdx: 62,
-                        desc: '63개월 전구간 — 평균 장기구조 파악에 상대적으로 적합; 극단 충격은 평균에 희석 가능' }
+            full:     { label: '전체 (18.01~25.12)', startIdx: 0, endIdx: 95,
+                        desc: '96개월 전구간 — COVID·전쟁 두 충격 모두 포함; ARDL·LP 안정 추정 가능' },
+            post2020: { label: '2021~2024 (21.01~24.12)', startIdx: 36, endIdx: 83,
+                        desc: '코로나 회복~금리 정상화 48개월 — ARDL·LP 추정 가능 (전쟁 충격 포함)' },
+            recent3Y: { label: '최근 3년 (23.01~25.12)', startIdx: 60, endIdx: 95,
+                        desc: '전쟁 후 안정기~현재 36개월 — ARDL·LP 한계 내 추정 가능' },
+            warEra:   { label: '우크라 전쟁기 (22.02~23.08)', startIdx: 49, endIdx: 67,
+                        desc: '러-우 전쟁 발발~유가 정상화, 공급망 충격 최대 구간 (19M — 소표본, 방향성 중심)' },
+            covid:    { label: 'COVID 충격기 (20.01~21.12)', startIdx: 24, endIdx: 47,
+                        desc: 'COVID 충격~저금리 유동성 팽창 24개월 — 극단 공급 충격 구간' },
+            recent:   { label: '최근 12개월 (25.01~25.12)', startIdx: 84, endIdx: 95,
+                        desc: '최근 12개월 — 현재 추세 반영 (ARDL·LP 표본 부족, Gaussian 권장)' }
         };
         let currentAnalysisPeriod = 'full';
         let currentSimMethod = 'all';
@@ -3044,7 +3267,7 @@
             return series.slice(p.startIdx, p.endIdx + 1);
         }
 
-        const MACRO_SIM_STORAGE_KEY = 'macro-construction-cost-history-5y-v6';
+        const MACRO_SIM_STORAGE_KEY = 'macro-construction-cost-history-8y-v7';
 
         // 구버전 캐시 자동 정리 (v6로 확장: 60M→63M)
         try { ['v1','v2','v3','v4','v5'].forEach(v => localStorage.removeItem('macro-construction-cost-history-5y-' + v)); } catch(e) {}
@@ -3066,51 +3289,119 @@
             return Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, (v / total) * 100]));
         }
 
-        /* ─── Data Generation (63M synthetic, 21.01~26.03) ─── */
+        /* ─── Data Generation (96M synthetic, 18.01~25.12) ─── */
         function generateBaseSeries() {
+            // 96개월: 2018.01 ~ 2025.12
+            // idx 0 = 2018.01, COVID 충격 idx 24~35 (2020.01~2021.12), 전쟁 충격 idx 49~55 (2022.02~2022.08)
+            const TOTAL = 96;
             const months = [];
-            const start = new Date(2021, 0, 1);
-            for (let i = 0; i < 63; i++) {
+            const start = new Date(2018, 0, 1);
+            for (let i = 0; i < TOTAL; i++) {
                 const d = new Date(start);
                 d.setMonth(start.getMonth() + i);
                 months.push({ month: macroMonthLabel(d), idx: i });
             }
             return months.map(({ month, idx }) => {
                 const cycA = Math.sin(idx / 2.6), cycB = Math.cos(idx / 3.8), cycC = Math.sin(idx / 5.1);
-                // 전쟁 충격: idx 13(2022.02) ~ 19(2022.08) 유가·환율·수입물가 급등
-                const warShock = (idx >= 13 && idx <= 19) ? Math.exp(-((idx - 15) ** 2) / 8) : 0;
-                const fx = 1240 + idx * 5.7 + cycA * 20 + cycB * 8 + warShock * 120;
-                const oil = 76 + idx * 0.15 + cycB * 4.6 + cycA * 1.8 + warShock * 45;
-                const ppi = 99 + idx * 0.36 + cycA * 0.8 + cycB * 0.42 + warShock * 3.5;
-                const importPrice = 100 + idx * 0.48 + (fx - 1240) * 0.014 + (oil - 76) * 0.23 + cycA * 0.9 + warShock * 8;
-                const steel = 100 + idx * 0.55 + (importPrice - 100) * 0.33 + cycB * 0.7 + warShock * 12;
-                const cement = 100 + idx * 0.32 + (ppi - 100) * 0.18 + cycC * 0.45 + warShock * 2;
-                const labor = 100 + idx * 0.34 + (idx >= 14 ? 1.0 : 0) + (idx >= 32 ? 0.8 : 0) + cycC * 0.3;
-                const policyRate = 1.25 + (idx > 12 ? Math.min((idx - 12) * 0.18, 2.55) : 0)
-                                       - (idx > 40 ? (idx - 40) * 0.11 : 0) + cycB * 0.05;
-                const vix = 18 + cycA * 3.5 + cycB * 2.1 + warShock * 15 + (idx > 40 ? (idx - 40) * 0.3 : 0);
-                const us10y = 1.6 + (idx > 6 ? Math.min((idx - 6) * 0.09, 3.2) : 0)
-                              - (idx > 45 ? (idx - 45) * 0.06 : 0) + cycB * 0.15;
+
+                // ── COVID 충격: idx 24~35 (2020.01~2021.12) ─────────────────
+                // 유가 급락(-60%), 환율 급등, VIX 60+ (2020.03 피크 = idx 26)
+                const covidPeak = 26;
+                const covidShock = (idx >= 24 && idx <= 35) ? Math.exp(-((idx - covidPeak) ** 2) / 10) : 0;
+                const covidOilCrash = (idx >= 24 && idx <= 32) ? -Math.exp(-((idx - covidPeak) ** 2) / 6) : 0;
+
+                // ── 러-우 전쟁 충격: idx 49~55 (2022.02~2022.08) ─────────────
+                const warPeak = 51; // 2022.04 피크
+                const warShock = (idx >= 49 && idx <= 55) ? Math.exp(-((idx - warPeak) ** 2) / 8) : 0;
+
+                // ── 기준금리 경로 (BOK 실제 경로 근사) ──────────────────────
+                // 2018: 1.50 → 2019 인하 1.25 → 2020 COVID 인하 0.50 → 2021 동결
+                // 2021.08~ 인상 사이클 → 2023.01 3.50 피크 → 2024~ 인하
+                let policyRate;
+                if (idx < 12)       policyRate = 1.50 + cycB * 0.03;               // 2018: 1.50%
+                else if (idx < 18)  policyRate = 1.50 - (idx - 12) * 0.005 + cycB * 0.03; // 1.50→1.47 완만
+                else if (idx < 24)  policyRate = Math.max(1.25, 1.47 - (idx - 18) * 0.037) + cycB * 0.02; // 2019 인하 1.25
+                else if (idx < 29)  policyRate = Math.max(0.50, 1.25 - (idx - 24) * 0.15); // 2020 COVID 인하
+                else if (idx < 43)  policyRate = 0.50 + cycB * 0.02;               // 2020.06~2021.09 동결
+                else if (idx < 60)  policyRate = Math.min(3.50, 0.50 + (idx - 43) * 0.18) + cycB * 0.04; // 2021~2023 인상
+                else                policyRate = Math.max(2.50, 3.50 - (idx - 60) * 0.10) + cycB * 0.03; // 2023~ 인하
+                policyRate = Math.max(0.50, Math.min(3.75, policyRate));
+
+                // ── 환율 (USD/KRW) ─────────────────────────────────────────
+                // 2018.01: ~1080, 완만한 장기 약세 + 충격 반영
+                const fx = 1080 + idx * 2.8 + cycA * 22 + cycB * 10
+                           + covidShock * 75     // 2020.03 환율 급등 1,280
+                           + warShock * 90;      // 2022.04 환율 급등 1,360
+
+                // ── 유가 (WTI) ─────────────────────────────────────────────
+                // 2018.01: ~62, COVID 급락, 전쟁 급등
+                const oil = Math.max(20, 62 + idx * 0.22 + cycB * 5 + cycA * 2
+                            + covidOilCrash * 42    // 2020.04 $20 수준
+                            + warShock * 45);        // 2022.04 $107 수준
+
+                // ── PPI (2015=100) ──────────────────────────────────────────
+                const ppi = 103 + idx * 0.24 + cycA * 0.8 + cycB * 0.42
+                            + covidShock * 1.5 + warShock * 3.5;
+
+                // ── 수입물가지수 ────────────────────────────────────────────
+                const importPrice = 100 + idx * 0.32 + (fx - 1080) * 0.012 + (oil - 62) * 0.20
+                                    + cycA * 0.9 + covidShock * 5 + warShock * 8;
+
+                // ── 철강·시멘트 지수 ────────────────────────────────────────
+                const steel = 100 + idx * 0.38 + (importPrice - 100) * 0.33 + cycB * 0.7
+                             + covidShock * 2 + warShock * 12;
+                const cement = 100 + idx * 0.22 + (ppi - 103) * 0.18 + cycC * 0.45 + warShock * 2;
+
+                // ── 노무비 지수 ─────────────────────────────────────────────
+                // 건설 노무비는 2022년 이후 급등, 2023년 추가 상승
+                const labor = 100 + idx * 0.22
+                             + (idx >= 50 ? Math.min((idx - 50) * 0.12, 1.8) : 0)  // 2022.03~ 급등
+                             + (idx >= 68 ? 0.8 : 0)                                 // 2023.09~ 추가
+                             + cycC * 0.3;
+
+                // ── VIX ────────────────────────────────────────────────────
+                const vix = 14 + cycA * 3 + cycB * 2
+                           + covidShock * 50    // 2020.03 VIX 82
+                           + warShock * 12
+                           + (idx > 72 ? (idx - 72) * 0.25 : 0); // 2024~ 지정학 불안
+
+                // ── US 10Y ──────────────────────────────────────────────────
+                const us10y = 2.5
+                             - (idx > 6 ? Math.min((idx - 6) * 0.07, 1.4) : 0)     // 2018→2020 하락
+                             + (idx > 42 ? Math.min((idx - 42) * 0.09, 3.2) : 0)   // 2021.07~ 급등
+                             - (idx > 81 ? (idx - 81) * 0.06 : 0)                   // 2024.10~ 하락
+                             + cycB * 0.15;
+
                 const shares = normalizeShares({
-                    residential: 37 - (policyRate - 1.25) * 2.7 + cycA * 1.6,
-                    logistics: 11 + idx * 0.04 + cycB * 0.9,
-                    office: 18 + cycA * 0.8 - (policyRate - 1.25) * 0.8,
+                    residential: 37 - (policyRate - 1.5) * 2.5 + cycA * 1.6,
+                    logistics: 11 + idx * 0.025 + cycB * 0.9,
+                    office: 18 + cycA * 0.8 - (policyRate - 1.5) * 0.7,
                     hospitality: 8 + cycC * 0.5,
-                    advanced: 10 + Math.max(0, idx - 20) * 0.08 + cycB * 0.6,
+                    advanced: 10 + Math.max(0, idx - 30) * 0.055 + cycB * 0.6,
                     infra: 16 + cycC * 0.9
                 });
-                // 한국부동산원 2026.03 기준 보정 (2025 단가 +3.5% 반영)
-                const residentialUnit = 550 + (labor - 100) * 4.0 + (cement - 100) * 2.0 + (policyRate - 1.25) * 5;
-                const logisticsUnit = 310 + (steel - 100) * 2.0 + (labor - 100) * 1.5 + (policyRate - 1.25) * 3;
-                const officeUnit = 590 + (steel - 100) * 2.0 + (labor - 100) * 2.5 + (importPrice - 100) * 2.0;
-                const hospitalityUnit = 580 + (labor - 100) * 3.5 + (importPrice - 100) * 2.0 + (cement - 100) * 1.0;
-                const advancedUnit = 415 + (steel - 100) * 1.5 + (labor - 100) * 2.0 + (importPrice - 100) * 1.0;
-                const infraUnit = 487 + (steel - 100) * 2.0 + (cement - 100) * 1.5 + (labor - 100) * 2.0;
+
+                // ── 유형별 건설 단가 (만원/평) ──────────────────────────────
+                // 2018 기준 단가에서 시작하여 비용지수 연동
+                const residentialUnit = 520 + (labor - 100) * 4.0 + (cement - 100) * 2.0 + (policyRate - 1.5) * 5;
+                const logisticsUnit   = 295 + (steel - 100) * 2.0 + (labor - 100) * 1.5 + (policyRate - 1.5) * 3;
+                const officeUnit      = 560 + (steel - 100) * 2.0 + (labor - 100) * 2.5 + (importPrice - 100) * 2.0;
+                const hospitalityUnit = 550 + (labor - 100) * 3.5 + (importPrice - 100) * 2.0 + (cement - 100) * 1.0;
+                const advancedUnit    = 400 + (steel - 100) * 1.5 + (labor - 100) * 2.0 + (importPrice - 100) * 1.0;
+                const infraUnit       = 460 + (steel - 100) * 2.0 + (cement - 100) * 1.5 + (labor - 100) * 2.0;
+
                 const weightedPy = residentialUnit * (shares.residential / 100) + logisticsUnit * (shares.logistics / 100)
                     + officeUnit * (shares.office / 100) + hospitalityUnit * (shares.hospitality / 100)
                     + advancedUnit * (shares.advanced / 100) + infraUnit * (shares.infra / 100);
-                const constructionCost = 100 + idx * 0.22 + (importPrice - 100) * 0.18 + (steel - 100) * 0.15
-                    + (cement - 100) * 0.08 + (labor - 100) * 0.17 + (policyRate - 1.25) * 0.95 + (weightedPy - 550) * 0.013;
+
+                // ── 건설공사비 지수 (2015=100) ──────────────────────────────
+                const constructionCost = 100 + idx * 0.14
+                    + (importPrice - 100) * 0.18 + (steel - 100) * 0.15
+                    + (cement - 100) * 0.08 + (labor - 100) * 0.17
+                    + (policyRate - 1.5) * 0.8
+                    + (weightedPy - 520) * 0.01
+                    + covidShock * 1.2 + warShock * 2.5;
+
                 return { month, idx, fx: macroRound(fx), oil: macroRound(oil), ppi: macroRound(ppi),
                     importPrice: macroRound(importPrice), steel: macroRound(steel), cement: macroRound(cement),
                     labor: macroRound(labor), policyRate: macroRound(policyRate, 2),
@@ -3137,7 +3428,7 @@
                 const raw = window.localStorage.getItem(MACRO_SIM_STORAGE_KEY);
                 if (!raw) return generateBaseSeries();
                 const parsed = JSON.parse(raw);
-                if (Array.isArray(parsed) && parsed.length >= 63
+                if (Array.isArray(parsed) && parsed.length >= 96
                     && parsed[0].vix !== undefined && parsed[0].us10y !== undefined) return parsed;
             } catch (e) { console.error('failed to load stored history', e); }
             return generateBaseSeries();
@@ -3223,12 +3514,15 @@
         function matInvert(M) {
             const n = M.length;
             const aug = M.map((row, i) => [...row, ...Array(n).fill(0).map((_, j) => i === j ? 1 : 0)]);
+            let maxPiv = 0;
             for (let c = 0; c < n; c++) {
                 let maxR = c;
                 for (let r = c + 1; r < n; r++) if (Math.abs(aug[r][c]) > Math.abs(aug[maxR][c])) maxR = r;
                 [aug[c], aug[maxR]] = [aug[maxR], aug[c]];
                 const piv = aug[c][c];
-                if (Math.abs(piv) < 1e-12) return null;
+                if (c === 0) maxPiv = Math.abs(piv);
+                // Stricter threshold + condition number guard (ill-conditioned if min/max pivot ratio < 1e-8)
+                if (Math.abs(piv) < 1e-8 || (maxPiv > 0 && Math.abs(piv) / maxPiv < 1e-8)) return null;
                 for (let j = 0; j < 2 * n; j++) aug[c][j] /= piv;
                 for (let r = 0; r < n; r++) {
                     if (r === c) continue;
@@ -3284,6 +3578,10 @@
             }
             const result = olsEstimate(X, y);
             if (!result) return null;
+            // Sanity check: reject numerically unstable estimates
+            // (multicollinear synthetic data can give near-singular XtX leading to huge intercepts)
+            if (isNaN(result.r2) || !isFinite(result.r2) || result.r2 < -0.5
+                || isNaN(result.beta[0]) || !isFinite(result.beta[0]) || Math.abs(result.beta[0]) > 5) return null;
             // Parse coefficients into {driver: {lag: coeff}}
             const coeffs = {};
             let idx = 1;
@@ -3301,8 +3599,15 @@
             return (h <= ardlModel.maxLag && c[h] !== undefined) ? c[h] : 0;
         }
 
+        // Cost-push drivers: positive shock must not reduce construction costs (economic constraint)
+        const COST_PUSH_KEYS = ['oil', 'fx', 'ppi', 'labor', 'importPrice', 'steel', 'cement'];
+
         function buildForecastARDL(series, shocks, ardlModel, periodKey) {
             if (!ardlModel) return buildForecastGaussian(series, shocks, periodKey);
+            // Guard: reject models with implausible intercept (numerical instability signal)
+            if (!isFinite(ardlModel.intercept) || isNaN(ardlModel.intercept) || Math.abs(ardlModel.intercept) > 3) {
+                return buildForecastGaussian(series, shocks, periodKey);
+            }
             periodKey = periodKey || currentAnalysisPeriod || 'full';
             const pt = getPassThrough(periodKey);
             const scale = pt._scale || 0.35;
@@ -3319,8 +3624,9 @@
                 const meanReversion = Math.max(0.3, 1 - h * 0.04);
                 Object.entries(shocks).forEach(([key, val]) => {
                     const irfAtH = ardlIRF(ardlModel, key, h);
-                    // Clamp OLS coefficients to prevent explosive forecasts
-                    const clamped = Math.max(-2, Math.min(2, irfAtH));
+                    let clamped = Math.max(-2, Math.min(2, irfAtH));
+                    // Economic constraint: cost-push driver with positive shock cannot reduce costs
+                    if (COST_PUSH_KEYS.includes(key) && val > 0) clamped = Math.max(0, clamped);
                     shockGr += val * clamped * scale * meanReversion;
                 });
                 baseIdx *= 1 + baseGr / 100;
@@ -3367,6 +3673,8 @@
                 }
                 const result = olsEstimate(X, y);
                 if (!result) continue;
+                // Reject numerically unstable LP horizon estimates
+                if (isNaN(result.r2) || !isFinite(result.r2) || !isFinite(result.beta[0]) || Math.abs(result.beta[0]) > 10) continue;
                 const hCoeffs = { intercept: result.beta[0], r2: result.r2 };
                 DRIVER_KEYS.forEach((k, i) => hCoeffs[k] = result.beta[i + 1]);
                 lpCoeffs[h] = hCoeffs;
@@ -3390,8 +3698,9 @@
                 let shockCumGr = 0;
                 Object.entries(shocks).forEach(([key, val]) => {
                     if (lp[key] !== undefined) {
-                        // Clamp LP coefficients and apply period scale
-                        const clamped = Math.max(-3, Math.min(3, lp[key]));
+                        let clamped = Math.max(-3, Math.min(3, lp[key]));
+                        // Economic constraint: cost-push driver with positive shock cannot reduce costs
+                        if (COST_PUSH_KEYS.includes(key) && val > 0) clamped = Math.max(0, clamped);
                         shockCumGr += val * clamped * scale;
                     }
                 });
@@ -3481,7 +3790,7 @@
             if (!el) return;
             try {
                 const d = new Date(isoString);
-                if (isNaN(d.getTime())) { el.textContent = '기준: --'; return; }
+                if (isNaN(d.getTime())) { el.textContent = ''; return; }
                 const formatted = d.toLocaleString('ko-KR', {
                     timeZone: 'Asia/Seoul',
                     month: '2-digit', day: '2-digit',
@@ -3489,7 +3798,17 @@
                     hour12: false
                 });
                 el.textContent = '기준 ' + formatted;
-            } catch { el.textContent = '기준: --'; }
+                // Update associated status badge to LIVE
+                setStatusBadge(elementId + 'Badge', 'live');
+            } catch { el.textContent = ''; }
+        }
+
+        function setStatusBadge(badgeId, state) {
+            const el = document.getElementById(badgeId);
+            if (!el) return;
+            const LABELS = { live: 'LIVE', syncing: 'SYNCING', delayed: 'DELAYED', error: 'ERROR' };
+            el.className = 'status-badge ' + state;
+            el.textContent = LABELS[state] || state.toUpperCase();
         }
 
         const MAP_BBOX = Object.freeze({
@@ -3543,17 +3862,84 @@
             { id: 'gnd-marines', label: '24th MEU', icon: '⚔', type: 'ground', lat: 26.3, lon: 50.7, dLat: 0, dLon: 0, minLat: 26.2, maxLat: 26.4, minLon: 50.6, maxLon: 50.8 }
         ];
         // No mock news pool — all news comes from /api/news RSS feeds
-        
+
+        /* ── Loading State Management ── */
+        const widgetState = {
+            indicators: null,   // null=init-loading | 'success' | 'empty' | 'error'
+            military:   null,
+            news:       null,
+            history:    null
+        };
+
+        async function fetchWithTimeout(url, options, timeoutMs) {
+            timeoutMs = timeoutMs || 10000;
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                const resp = await fetch(url, Object.assign({ cache: 'no-store', signal: controller.signal }, options || {}));
+                clearTimeout(timer);
+                return resp;
+            } catch (err) {
+                clearTimeout(timer);
+                throw err;
+            }
+        }
+
+        function showNewsSkeletons() {
+            const feed = document.getElementById('liveNewsFeed');
+            if (!feed || feed.querySelector('.live-news-item')) return;
+            const WIDTHS = ['72%', '88%', '58%', '80%', '65%'];
+            feed.innerHTML = WIDTHS.map(w =>
+                '<div class="skeleton-news-item">' +
+                '<div class="skeleton" style="width:28px;height:10px;border-radius:2px"></div>' +
+                '<div class="skeleton" style="width:' + w + ';height:10px;border-radius:2px"></div>' +
+                '<div class="skeleton" style="width:30px;height:10px;border-radius:2px"></div>' +
+                '</div>'
+            ).join('');
+        }
+
+        // Stock change% reset at 08:00 KST (before market open)
+        function resetStockChangePct() {
+            const stockKeys = ['kospi', 'kosdaq', 'nasdaq', 'dow', 'sp500'];
+            stockKeys.forEach(key => {
+                const el = document.getElementById(key + '-change');
+                if (el) { el.textContent = '+0.00%'; el.className = 'header-stock-change'; }
+                externalIndicatorState[key + 'ChangePct'] = 0;
+            });
+            const kpiMeta = document.getElementById('kpiKospiMeta');
+            if (kpiMeta) { kpiMeta.textContent = '장전 기준 초기화'; kpiMeta.style.color = '#5a7090'; }
+            // Refresh war bars (finance contagion) after kospiChangePct reset
+            updateWarBarsFromData();
+        }
+        function scheduleStockReset() {
+            const nowKst = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+            const resetKst = new Date(nowKst);
+            resetKst.setHours(8, 0, 0, 0);
+            if (nowKst >= resetKst) resetKst.setDate(resetKst.getDate() + 1);
+            const msUntil = resetKst - nowKst;
+            setTimeout(() => {
+                resetStockChangePct();
+                scheduleStockReset(); // reschedule for next day
+            }, msUntil);
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             updateTimestamp();
             initLiveNews();
             initMapAssets();
+            scheduleStockReset(); // daily 08:00 KST reset
+            updateWarBarsFromData(); // initialize bars immediately with floor values
             setInterval(updateTimestamp, 1000);
             setInterval(updateMarketData, 5000);
             if (window.location.protocol === 'file:') {
                 apiWarningMessage = '실데이터 API: 로컬 서버 실행 필요';
                 newsWarningMessage = '뉴스 API: 로컬 서버 실행 필요';
+                // Show error badges when running locally without server
+                ['tsFinanceBadge','tsConstructionBadge','tsEnergyBadge','tsMapBadge','tsCrisisBadge'].forEach(id => setStatusBadge(id, 'delayed'));
+                setStatusBadge('globalStatusBadge', 'delayed');
+                const gstLocal = document.getElementById('globalStatusText');
+                if (gstLocal) gstLocal.textContent = '로컬 파일 모드 — 서버 연결 필요';
                 scheduleLocalNewsFallback();
                 renderHeaderWarnings();
             } else {
@@ -3593,19 +3979,38 @@
         }
 
         async function refreshExternalIndicators() {
+            // Show SYNCING on first call
+            if (widgetState.indicators === null) {
+                setStatusBadge('tsFinanceBadge', 'syncing');
+                setStatusBadge('tsConstructionBadge', 'syncing');
+                setStatusBadge('tsEnergyBadge', 'syncing');
+            }
             try {
-                const response = await fetch(DASHBOARD_API_URL, { cache: 'no-store' });
+                const response = await fetchWithTimeout(DASHBOARD_API_URL, {}, 12000);
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`);
                 }
-
                 const payload = await response.json();
                 applyExternalIndicators(payload);
+                widgetState.indicators = 'success';
+                // Ensure badges are LIVE even if timestamp is missing
+                ['tsFinanceBadge','tsConstructionBadge','tsEnergyBadge'].forEach(id => setStatusBadge(id, 'live'));
+                // Update global header status
+                setStatusBadge('globalStatusBadge', 'live');
+                const gst = document.getElementById('globalStatusText');
+                if (gst) gst.textContent = '외부 시장 데이터가 순차 반영됩니다';
                 apiWarningMessage = Array.isArray(payload.warnings) && payload.warnings.length > 0
                     ? 'API 경고: ' + payload.warnings.join(', ')
                     : '';
                 renderHeaderWarnings();
             } catch (error) {
+                widgetState.indicators = 'error';
+                setStatusBadge('tsFinanceBadge', 'error');
+                setStatusBadge('tsConstructionBadge', 'error');
+                setStatusBadge('tsEnergyBadge', 'error');
+                setStatusBadge('globalStatusBadge', 'error');
+                const gstErr = document.getElementById('globalStatusText');
+                if (gstErr) gstErr.textContent = '수신 실패 — 서버 연결 확인 필요';
                 apiWarningMessage = 'API 연동 실패(서버 확인 필요)';
                 renderHeaderWarnings();
             }
@@ -3695,6 +4100,9 @@
 
             // Update war status bars from real market data
             updateWarBarsFromData();
+            // Update KPI top bar + construction interpretation
+            updateKpiBar(payload);
+            updateConstInterpret(payload);
         }
 
         function applyValueWithPct(id, value, changeId, changePct, useGrouping) {
@@ -3768,6 +4176,7 @@
                 const point = commodities[key];
                 if (!point || !Number.isFinite(point.value)) return;
                 applyValueWithPct(key, point.value, key + '-change', point.changePct);
+                externalIndicatorState[key] = point.value;          // absolute level
                 externalIndicatorState[key + 'ChangePct'] = point.changePct || 0;
             });
 
@@ -3790,33 +4199,37 @@
             }
         }
 
+        // Baseline for Gold % change normalization (set from sparkline first value)
+        let _financeGoldBase = null;
+
         function applyFinanceChartData(payload) {
             if (!charts.finance) return;
             const usdkrw = payload.usdkrw;
             const gold = payload.gold;
-            const silver = payload.commodities?.silver?.value ?? null;
             if (!Number.isFinite(usdkrw) && !Number.isFinite(gold)) return;
 
             const fxData = charts.finance.data.datasets[0].data;
             const goldData = charts.finance.data.datasets[1].data;
-            const silverData = charts.finance.data.datasets[2].data;
             const labels = charts.finance.data.labels;
 
+            // Gold: % change from sparkline base (set in applySparklineData)
+            if (Number.isFinite(gold)) {
+                if (_financeGoldBase === null) _financeGoldBase = gold;
+                goldData.push(parseFloat(((gold - _financeGoldBase) / _financeGoldBase * 100).toFixed(3)));
+            }
             if (Number.isFinite(usdkrw)) fxData.push(usdkrw);
-            if (Number.isFinite(gold)) goldData.push(gold);
-            if (Number.isFinite(silver)) silverData.push(silver);
 
-            // Append current date+time label — do NOT regenerate all labels
+            // Append label — keep both series in sync
             const now = new Date();
             const liveLabel = `${now.getMonth()+1}/${now.getDate()} ` +
                 String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
             labels.push(liveLabel);
 
-            const maxLen = Math.max(fxData.length, goldData.length, silverData.length);
+            // Keep buffer ≤ 48 points
+            const maxLen = Math.max(fxData.length, goldData.length);
             if (maxLen > 48) {
                 fxData.length > 48 && fxData.shift();
                 goldData.length > 48 && goldData.shift();
-                silverData.length > 48 && silverData.shift();
                 labels.length > 48 && labels.shift();
             }
             charts.finance.update('none');
@@ -3848,51 +4261,87 @@
                 charts.energy.data.datasets[1].data = brent.slice(0, len).map(p => p.value);
                 charts.energy.update('none');
             }
-            // Finance chart: USD/KRW, Gold, Silver
+            // Finance chart: USD/KRW (left, absolute) | Gold % change (right)
+            // Silver excluded per user request. Both series aligned to same time labels.
             if (charts.finance) {
                 const fx = downsample(sparklines.usdkrw || [], STEP);
                 const gold = downsample(sparklines.gold || [], STEP);
-                const silver = downsample(sparklines.silver || [], STEP);
-                const longest = [fx, gold, silver].reduce((a, b) => a.length >= b.length ? a : b);
-                if (longest.length > 0) {
-                    charts.finance.data.labels = longest.map(p => sparkLabel(p.label));
-                    charts.finance.data.datasets[0].data = fx.map(p => p.value);
-                    charts.finance.data.datasets[1].data = gold.map(p => p.value);
-                    charts.finance.data.datasets[2].data = silver.map(p => p.value);
+                // Align to shorter of the two to keep time scale in sync
+                const len = Math.min(fx.length, gold.length);
+                if (len > 0) {
+                    const fxSlice = fx.slice(0, len);
+                    const goldSlice = gold.slice(0, len);
+                    charts.finance.data.labels = fxSlice.map(p => sparkLabel(p.label));
+                    charts.finance.data.datasets[0].data = fxSlice.map(p => p.value);
+                    // Normalize Gold to % change from sparkline first value
+                    const goldBase = goldSlice[0].value;
+                    if (goldBase) {
+                        _financeGoldBase = goldBase; // anchor for live ticks
+                        charts.finance.data.datasets[1].data = goldSlice.map(p =>
+                            parseFloat(((p.value - goldBase) / goldBase * 100).toFixed(3))
+                        );
+                    }
                     charts.finance.update('none');
                 }
             }
         }
 
+        // Regional baseline floors — Hormuz / Middle East has chronic structural tension
+        // Structural baseline floors — reflect chronic Middle East tension even on calm days
+        const CRISIS_FLOOR = { blockade: 22, energy: 18, finance: 12, construction: 16 };
+
         function updateWarBarsFromData() {
             const s = externalIndicatorState;
             const c = crisisCounts;
 
-            // Blockade risk: prefer LLM hormuz_threat_level, fallback to formula
-            const blockade = (c.llmHormuz != null)
-                ? c.llmHormuz
-                : Math.min(100, Math.round(c.hormuz * 10 + c.conflicts * 3 + Math.min(20, c.aircraft * 2)));
-            setWarBar('warBarBlockade', 'warBarBlockadeVal', blockade);
-
-            // Energy supply shock: prefer LLM energy_disruption_risk, fallback to formula
             const wtiChange = Math.abs(s.wtiChangePct || 0);
             const brentChange = Math.abs(s.brentChangePct || 0);
-            const energyShock = (c.llmEnergy != null)
-                ? c.llmEnergy
-                : Math.min(100, Math.round((wtiChange + brentChange) * 8 + c.aircraft * 3 + c.hormuz * 5));
-            setWarBar('warBarEnergy', 'warBarEnergyVal', energyShock);
-
-            // Financial contagion: FX + stock volatility + conflicts/fatalities
             const fxChange = Math.abs(s.usdkrwChangePct || 0);
             const kospiChange = Math.abs(s.kospiChangePct || 0);
-            const finContagion = Math.min(100, Math.round((fxChange + kospiChange) * 10 + c.fatalities * 0.5 + c.conflicts * 2 + c.aircraft * 1));
+            const nasdaqChange = Math.abs(s.nasdaqChangePct || 0);
+
+            // Absolute-level bonuses: sustained elevated prices → persistent pressure signal
+            // WTI: each $1 above $75 = 1.2 pts (oil at $85 → +12pts, at $100 → +30pts)
+            const wti = s.wti || 75;
+            const oilLevelBonus = Math.max(0, Math.round((wti - 75) * 1.2));
+            // USD/KRW: each 10W above 1350 = 1.5 pts (1400 → +7.5pts, 1450 → +15pts)
+            const usdkrw = s.usdkrw || 1350;
+            const fxLevelBonus = Math.max(0, Math.round((usdkrw - 1350) * 0.15));
+
+            // 1. 해협 봉쇄 위험도: military activity + LLM + oil level
+            const blockadeFormula = Math.min(100, Math.round(
+                c.hormuz * 15 + c.conflicts * 4 + Math.min(25, c.aircraft * 2.5) + oilLevelBonus * 0.4
+            ));
+            const blockadeLlm = c.llmHormuz ?? 0;
+            const blockade = Math.max(CRISIS_FLOOR.blockade, blockadeLlm, blockadeFormula);
+            setWarBar('warBarBlockade', 'warBarBlockadeVal', blockade);
+
+            // 2. 에너지 공급 충격: daily oil change + absolute level + military
+            const energyFormula = Math.min(100, Math.round(
+                (wtiChange + brentChange) * 10 + c.aircraft * 4 + c.hormuz * 6 + oilLevelBonus
+            ));
+            const energyLlm = c.llmEnergy ?? 0;
+            const energyShock = Math.max(CRISIS_FLOOR.energy, energyLlm, energyFormula);
+            setWarBar('warBarEnergy', 'warBarEnergyVal', energyShock);
+
+            // 3. 금융시장 전염도: FX daily + level + equity indices + military
+            const finFormula = Math.min(100, Math.round(
+                fxChange * 18 + kospiChange * 10 + nasdaqChange * 6 +
+                fxLevelBonus + c.fatalities * 0.5 + c.conflicts * 2 + c.aircraft * 1.5
+            ));
+            const finContagion = Math.max(CRISIS_FLOOR.finance, finFormula);
             setWarBar('warBarFinance', 'warBarFinanceVal', finContagion);
 
-            // Construction cost impact: LLM preferred; fallback uses military activity
-            const constImpact = (c.llmConstruction != null)
-                ? Math.round(c.llmConstruction * 10)
-                : Math.min(100, Math.round((c.aircraft * 0.5 + c.conflicts * 0.3 + c.fatalities * 0.1) * 10));
+            // 4. 건설비 영향도: oil level + daily change + FX level + LLM
+            const constFormula = Math.min(100, Math.round(
+                (wtiChange + brentChange) * 6 + oilLevelBonus * 0.7 + fxLevelBonus * 0.4 +
+                (c.aircraft * 0.5 + c.conflicts * 0.3 + c.fatalities * 0.1) * 10
+            ));
+            const constLlm = c.llmConstruction != null ? Math.round(c.llmConstruction * 10) : 0;
+            const constImpact = Math.max(CRISIS_FLOOR.construction, constLlm, constFormula);
             setWarBar('warBarConstruction', 'warBarConstructionVal', constImpact);
+
+            updateKpiCrisisScore();
         }
 
         function setWarBar(fillId, valId, pct) {
@@ -3900,6 +4349,154 @@
             const val = document.getElementById(valId);
             if (fill) fill.style.width = pct + '%';
             if (val) val.textContent = pct + '%';
+        }
+
+        /* ── KPI Top Bar updates ── */
+        function updateKpiBar(payload) {
+            // USD/KRW
+            if (Number.isFinite(payload.usdkrw)) {
+                const el = document.getElementById('kpiUsdVal');
+                const meta = document.getElementById('kpiUsdMeta');
+                if (el) {
+                    el.textContent = Math.round(payload.usdkrw).toLocaleString('ko-KR');
+                    const chg = payload.usdkrwChangePct || 0;
+                    el.style.color = chg > 0.3 ? '#ff4d6d' : chg < -0.3 ? '#00d084' : '#f0f6ff';
+                }
+                if (meta) {
+                    const chg = payload.usdkrwChangePct || 0;
+                    meta.textContent = `전일 대비 ${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%`;
+                    meta.style.color = chg > 0 ? '#ff4d6d' : chg < 0 ? '#00d084' : '#5a7090';
+                }
+            }
+            // WTI / Brent
+            if (payload.commodities) {
+                const pairs = [['kpiWtiVal','kpiWtiMeta', payload.commodities.wti, 1],
+                               ['kpiBrentVal','kpiBrentMeta', payload.commodities.brent, 1]];
+                pairs.forEach(([vid, mid, src]) => {
+                    if (!src || !Number.isFinite(src.value)) return;
+                    const el = document.getElementById(vid);
+                    const meta = document.getElementById(mid);
+                    const chg = src.changePct || 0;
+                    if (el) {
+                        el.textContent = src.value.toFixed(1);
+                        el.style.color = chg > 1 ? '#ff4d6d' : chg < -1 ? '#00d084' : '#f0f6ff';
+                    }
+                    if (meta) {
+                        meta.textContent = `전일 대비 ${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%`;
+                        meta.style.color = chg > 0 ? '#ff4d6d' : chg < 0 ? '#00d084' : '#5a7090';
+                    }
+                });
+            }
+            // KOSPI
+            if (payload.stockIndices && payload.stockIndices.kospi) {
+                const k = payload.stockIndices.kospi;
+                if (Number.isFinite(k.value)) {
+                    const el = document.getElementById('kpiKospiVal');
+                    const meta = document.getElementById('kpiKospiMeta');
+                    const chg = k.changePct || 0;
+                    if (el) {
+                        el.textContent = k.value.toLocaleString('ko-KR', { maximumFractionDigits: 0 });
+                        el.style.color = chg >= 0 ? '#00d084' : '#ff4d6d';
+                    }
+                    if (meta) {
+                        meta.textContent = `전일 대비 ${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%`;
+                        meta.style.color = chg >= 0 ? '#00d084' : '#ff4d6d';
+                    }
+                }
+            }
+            // Situation banner
+            updateSituationBanner(payload);
+        }
+
+        function updateKpiCrisisScore() {
+            const readBar = id => parseFloat((document.getElementById(id) || {}).textContent) || 0;
+            const blockade    = readBar('warBarBlockadeVal');
+            const energy      = readBar('warBarEnergyVal');
+            const finance     = readBar('warBarFinanceVal');
+            const construction = readBar('warBarConstructionVal');
+            const score = Math.round((blockade + energy + finance + construction) / 4);
+
+            const el    = document.getElementById('kpiCrisisScore');
+            const meta  = document.getElementById('kpiCrisisMeta');
+            const badge = document.getElementById('kpiCrisisBadge');
+            if (el) {
+                el.textContent = score + '%';
+                el.style.color = score >= 70 ? '#ff4d6d' : score >= 40 ? '#ffb347' : '#00d084';
+            }
+            if (meta) {
+                const level = score >= 70 ? 'HIGH ALERT' : score >= 40 ? 'MODERATE' : 'LOW';
+                meta.textContent = level + ' — 4개 리스크 지표 평균';
+            }
+            if (badge) {
+                badge.className = 'status-badge ' + (score >= 70 ? 'error' : score >= 40 ? 'delayed' : 'live');
+                badge.textContent = score >= 70 ? 'HIGH' : score >= 40 ? 'MOD' : 'LOW';
+            }
+            // Construction Impact KPI
+            const cEl   = document.getElementById('kpiConstVal');
+            const cMeta = document.getElementById('kpiConstMeta');
+            if (cEl) {
+                cEl.textContent = Math.round(construction) + '%';
+                cEl.style.color = construction >= 50 ? '#ff4d6d' : construction >= 25 ? '#ffb347' : '#00d084';
+            }
+            if (cMeta) {
+                cMeta.textContent = construction >= 50 ? '건설원가 영향 HIGH'
+                                  : construction >= 25 ? '건설원가 영향 MODERATE'
+                                  : '건설원가 영향 LOW';
+            }
+        }
+
+        function updateConstInterpret(payload) {
+            const lines = [];
+            const usdChg = payload.usdkrwChangePct || 0;
+            if (Math.abs(usdChg) >= 0.2) {
+                const dir = usdChg > 0 ? '상승' : '하락';
+                lines.push(`환율 ${dir} (${usdChg > 0 ? '+' : ''}${usdChg.toFixed(1)}%) — 수입 자재비 ${usdChg > 0 ? '압박' : '완화'} 신호`);
+            } else {
+                lines.push('환율 변동 안정 — 수입 자재비 압력 낮음');
+            }
+            if (payload.commodities) {
+                const wtiChg = payload.commodities.wti ? (payload.commodities.wti.changePct || 0) : 0;
+                if (Math.abs(wtiChg) >= 0.5) {
+                    lines.push(`유가 ${wtiChg > 0 ? '상승' : '하락'} (${wtiChg > 0 ? '+' : ''}${wtiChg.toFixed(1)}%) — 물류·에너지비 ${wtiChg > 0 ? '확대' : '완화'}`);
+                }
+            }
+            const vix = payload.macroIndicators && payload.macroIndicators.vix;
+            if (vix && Number.isFinite(vix.value)) {
+                if (vix.value >= 25) {
+                    lines.push(`VIX ${vix.value.toFixed(1)} — 금융 변동성 高, 단기 원가 불확실성 확대`);
+                } else if (vix.value < 15) {
+                    lines.push(`VIX ${vix.value.toFixed(1)} — 금융시장 안정, 원가 전망 리스크 낮음`);
+                }
+            }
+            ['constInterpret1','constInterpret2','constInterpret3'].forEach((id, i) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.textContent = lines[i] || '';
+                el.style.color = lines[i] ? '#8ea9cc' : 'transparent';
+            });
+        }
+
+        function updateSituationBanner(payload) {
+            const text = document.getElementById('situationBannerText');
+            if (!text) return;
+            const parts = [];
+            const usdChg = payload.usdkrwChangePct || 0;
+            if (Math.abs(usdChg) >= 0.3) {
+                parts.push(`원화 ${usdChg > 0 ? '약세' : '강세'} (${usdChg > 0 ? '+' : ''}${usdChg.toFixed(1)}%) → 수입 자재비 ${usdChg > 0 ? '상승' : '하락'} 압력`);
+            }
+            if (payload.commodities && payload.commodities.wti) {
+                const wtiChg = payload.commodities.wti.changePct || 0;
+                if (Math.abs(wtiChg) >= 1) {
+                    parts.push(`유가 ${wtiChg > 0 ? '상승' : '하락'} (${wtiChg > 0 ? '+' : ''}${wtiChg.toFixed(1)}%) → 에너지·물류비 ${wtiChg > 0 ? '확대' : '완화'}`);
+                }
+            }
+            if (payload.stockIndices && payload.stockIndices.kospi) {
+                const kChg = payload.stockIndices.kospi.changePct || 0;
+                if (Math.abs(kChg) >= 1) {
+                    parts.push(`KOSPI ${kChg >= 0 ? '강세' : '약세'} (${kChg >= 0 ? '+' : ''}${kChg.toFixed(1)}%)`);
+                }
+            }
+            text.textContent = parts.length > 0 ? parts.join('  |  ') : '주요 지표 정상 수신 — 갱신 중';
         }
 
         function applyStockIndexPayload(stockIndices) {
@@ -4329,9 +4926,17 @@
         let militaryDataActive = false;
 
         async function refreshMilitaryData() {
+            if (widgetState.military === null) {
+                setStatusBadge('tsMapBadge', 'syncing');
+                setStatusBadge('tsCrisisBadge', 'syncing');
+            }
             try {
-                const resp = await fetch('/api/military');
-                if (!resp.ok) return;
+                const resp = await fetchWithTimeout('/api/military', {}, 12000);
+                if (!resp.ok) {
+                    setStatusBadge('tsMapBadge', 'delayed');
+                    setStatusBadge('tsCrisisBadge', 'delayed');
+                    return;
+                }
                 const data = await resp.json();
 
                 if (geoMap) {
@@ -4363,9 +4968,16 @@
 
                 // Update threat indicators with real counts (works without map)
                 updateThreatFromMilitary(data);
+                widgetState.military = 'success';
+                // tsCrisis/tsMap badges are set to LIVE inside setCardTimestamp above
 
             } catch (err) {
                 // Keep mock data if API fails
+                if (widgetState.military === null) {
+                    widgetState.military = 'error';
+                    setStatusBadge('tsMapBadge', 'error');
+                    setStatusBadge('tsCrisisBadge', 'error');
+                }
             }
         }
 
@@ -4619,9 +5231,9 @@
         }
 
         function initLiveNews() {
-            // Start empty — real news arrives from /api/news
+            // Show skeleton rows while real news is fetched from /api/news
             liveNewsItems = [];
-            renderLiveNewsFeed();
+            showNewsSkeletons();
         }
 
         function inferNewsTag(source, headline) {
@@ -4667,7 +5279,7 @@
 
         async function refreshLiveNews() {
             try {
-                const response = await fetch(DASHBOARD_NEWS_API_URL, { cache: 'no-store' });
+                const response = await fetchWithTimeout(DASHBOARD_NEWS_API_URL, {}, 12000);
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`);
                 }
@@ -4686,11 +5298,18 @@
                 newsWarningMessage = Array.isArray(payload.warnings) && payload.warnings.length > 0
                     ? 'NEWS 경고: ' + payload.warnings.slice(0, 2).join(', ')
                     : '';
+                widgetState.news = 'success';
                 stopLocalNewsFallback();
                 renderLiveNewsFeed();
                 renderNewsTicker();
             } catch (error) {
+                widgetState.news = 'error';
                 newsWarningMessage = `NEWS 연동 실패(기본 피드 사용): ${NEWS_SOURCES.length}개 소스`;
+                // Show error state in feed if still showing skeletons
+                const feed = document.getElementById('liveNewsFeed');
+                if (feed && !feed.querySelector('.live-news-item')) {
+                    feed.innerHTML = '<div style="padding:12px 8px;font-size:11px;color:#64748b;text-align:center">뉴스 소스 연결 실패</div>';
+                }
                 scheduleLocalNewsFallback();
             }
             renderHeaderWarnings();
@@ -4734,45 +5353,60 @@
             });
         }
 
+        function buildNewsRow(item) {
+            const row = document.createElement('div');
+            row.className = 'live-news-item';
+            row.title = `${item.source} | ${formatNewsDateTime(item.time)} KST`;
+            row.tabIndex = 0;
+            row.setAttribute('role', 'button');
+            row.setAttribute('aria-label', `뉴스 상세 보기: ${item.headline}`);
+            row.addEventListener('click', () => showNewsDetail(item));
+            row.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    showNewsDetail(item);
+                }
+            });
+            const badge = document.createElement('span');
+            badge.className = getNewsBadgeClass(item.tag);
+            badge.textContent = item.tag;
+            const headline = document.createElement('span');
+            headline.className = 'news-headline';
+            headline.textContent = `[${item.source}] ${item.headline}`;
+            const time = document.createElement('span');
+            time.className = 'news-time';
+            time.textContent = formatNewsTime(item.time);
+            row.appendChild(badge);
+            row.appendChild(headline);
+            row.appendChild(time);
+            return row;
+        }
+
         function renderLiveNewsFeed() {
             const feed = document.getElementById('liveNewsFeed');
-            if (!feed) {
+            if (!feed) return;
+
+            const INITIAL = 5;
+            feed.innerHTML = '';
+
+            if (liveNewsItems.length === 0) {
+                feed.innerHTML = '<div style="padding:12px 8px;font-size:11px;color:#64748b;text-align:center">현재 수신된 주요 뉴스가 없습니다</div>';
                 return;
             }
 
-            feed.innerHTML = '';
-            liveNewsItems.slice(0, 8).forEach(item => {
-                const row = document.createElement('div');
-                row.className = 'live-news-item';
-                row.title = `${item.source} | ${formatNewsDateTime(item.time)} KST`;
-                row.tabIndex = 0;
-                row.setAttribute('role', 'button');
-                row.setAttribute('aria-label', `뉴스 상세 보기: ${item.headline}`);
-                row.addEventListener('click', () => showNewsDetail(item));
-                row.addEventListener('keydown', (event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        showNewsDetail(item);
-                    }
-                });
+            liveNewsItems.slice(0, INITIAL).forEach(item => feed.appendChild(buildNewsRow(item)));
 
-                const badge = document.createElement('span');
-                badge.className = getNewsBadgeClass(item.tag);
-                badge.textContent = item.tag;
-
-                const headline = document.createElement('span');
-                headline.className = 'news-headline';
-                headline.textContent = `[${item.source}] ${item.headline}`;
-
-                const time = document.createElement('span');
-                time.className = 'news-time';
-                time.textContent = formatNewsTime(item.time);
-
-                row.appendChild(badge);
-                row.appendChild(headline);
-                row.appendChild(time);
-                feed.appendChild(row);
-            });
+            const rest = liveNewsItems.slice(INITIAL, 20);
+            if (rest.length > 0) {
+                const btn = document.createElement('button');
+                btn.className = 'news-more-btn';
+                btn.textContent = `더 보기 (${rest.length}개)`;
+                btn.onclick = () => {
+                    rest.forEach(item => feed.insertBefore(buildNewsRow(item), btn));
+                    feed.removeChild(btn);
+                };
+                feed.appendChild(btn);
+            }
         }
 
         function renderNewsTicker() {
@@ -4951,7 +5585,7 @@
                             fill: true,
                             yAxisID: 'y'
                         }, {
-                            label: 'Gold',
+                            label: 'Gold %',
                             data: [],
                             borderColor: '#ffca28',
                             backgroundColor: 'rgba(255, 202, 40, 0.06)',
@@ -4959,19 +5593,8 @@
                             borderWidth: 1.5,
                             pointRadius: 0,
                             pointHitRadius: 6,
-                            fill: true,
+                            fill: false,
                             yAxisID: 'y1'
-                        }, {
-                            label: 'Silver',
-                            data: [],
-                            borderColor: '#b0bec5',
-                            backgroundColor: 'rgba(176, 190, 197, 0.06)',
-                            tension: 0.35,
-                            borderWidth: 1.2,
-                            pointRadius: 0,
-                            pointHitRadius: 6,
-                            fill: true,
-                            yAxisID: 'y2'
                         }]
                     },
                     options: {
@@ -4988,14 +5611,14 @@
                                 type: 'linear',
                                 display: true,
                                 position: 'right',
-                                ticks: { color: '#95a8c6', font: { size: 9 }, maxTicksLimit: 4 },
-                                grid: { display: false }
-                            },
-                            y2: {
-                                type: 'linear',
-                                display: false,
-                                position: 'right',
-                                grid: { display: false }
+                                ticks: {
+                                    color: '#95a8c6',
+                                    font: { size: 9 },
+                                    maxTicksLimit: 4,
+                                    callback: v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%'
+                                },
+                                grid: { display: false },
+                                grace: '10%'
                             },
                             x: {
                                 ticks: { color: '#95a8c6', font: { size: 9 }, maxTicksLimit: 5 },
@@ -5183,7 +5806,7 @@
                 return;
             }
             try {
-                const resp = await fetch('/api/correlation', { cache: 'no-store' });
+                const resp = await fetchWithTimeout('/api/correlation', {}, 15000);
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 correlationPayload = await resp.json();
                 saveCachedCorrelation(correlationPayload);
@@ -5247,7 +5870,7 @@
             } catch {}
 
             try {
-                const resp = await fetch('/api/history', { cache: 'no-store' });
+                const resp = await fetchWithTimeout('/api/history', {}, 15000);
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 historyPayload = await resp.json();
                 historyPayload._savedAt = Date.now();
@@ -5663,7 +6286,7 @@
             try {
                 const shocks = getSimShocks();
                 simCtx.shocks = shocks;
-                simCtx.periodLabel = ANALYSIS_PERIODS[currentAnalysisPeriod]?.label || '전체 63개월';
+                simCtx.periodLabel = ANALYSIS_PERIODS[currentAnalysisPeriod]?.label || '전체 96개월';
                 simCtx.methodLabel = { all:'All (3방법 비교)', gaussian:'Gaussian IRF', ardl:'ARDL-OLS', lp:'Local Projections' }[currentSimMethod] || currentSimMethod;
 
                 if (macroSimData && macroSimData.length > 0) {
@@ -5951,16 +6574,53 @@
             });
         }
 
+        // Auto-set simulation sliders from current live market state
+        function initSimParamsFromMarket() {
+            const s = externalIndicatorState;
+            const wti    = s.wti    || 75;
+            const usdkrw = s.usdkrw || 1350;
+
+            // FX shock: deviation of USD/KRW from structural baseline 1,350W
+            const fxShock = Math.max(-15, Math.min(15, parseFloat(((usdkrw - 1350) / 1350 * 100).toFixed(1))));
+            // Oil shock: deviation of WTI from structural baseline $75
+            const oilShock = Math.max(-30, Math.min(50, parseFloat(((wti - 75) / 75 * 100).toFixed(1))));
+            // PPI: approximate from oil + FX pass-through (rough empirical weights)
+            const ppiShock = Math.max(-5, Math.min(15, parseFloat((oilShock * 0.15 + fxShock * 0.25).toFixed(1))));
+            // Labor: chronic Korean construction labor cost increase baseline (no live data)
+            const laborShock = 2.5;
+            // Rate: policy change is deliberate, not derived from daily prices — default 0
+            const rateShock = 0;
+
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+            set('shockFx',    fxShock);
+            set('shockOil',   oilShock);
+            set('shockPpi',   ppiShock);
+            set('shockLabor', laborShock);
+            set('shockRate',  rateShock);
+            // Update displayed labels
+            ['Fx', 'Oil', 'Ppi', 'Labor', 'Rate'].forEach(n => {
+                const el = document.getElementById('shock' + n);
+                const lbl = document.getElementById('sliderVal' + n);
+                if (!el || !lbl) return;
+                const v = parseFloat(el.value);
+                lbl.textContent = (v >= 0 ? '+' : '') + v.toFixed(1) + (n === 'Rate' ? '%p' : '%');
+            });
+        }
+
         function openSimulationPopup() {
             const popup = document.getElementById('simulationPopup');
+            popup.style.removeProperty('display');
             popup.classList.add('active');
-            // Force 3-column layout via JS (CSS alone doesn't work reliably)
             forceSimLayout();
+            initSimParamsFromMarket(); // set sliders to current market conditions
             renderMechanism();
             renderReImpact(); renderPfImpact();
-            setTimeout(() => {
-                try { runSimulation(); } catch(e) { console.error('Auto-run sim failed:', e); }
-            }, 300);
+            // Double-rAF: fires after layout is fully computed — more reliable than setTimeout for canvas
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    runSimulation();
+                });
+            });
         }
 
         function forceSimLayout() {
@@ -5994,7 +6654,7 @@
         function closeSimulationPopup() {
             const popup = document.getElementById('simulationPopup');
             popup.classList.remove('active');
-            popup.style.display = 'none';
+            popup.style.removeProperty('display'); // let CSS handle display:none via :not(.active)
         }
 
         /* Scenario Presets — macro driver shocks */
@@ -6022,22 +6682,39 @@
         }
 
         let _activePresetKey = 'oilSpike';
-        function loadPreset(key) {
+        function loadPreset(key, btn) {
             const p = SIM_PRESETS[key];
+            if (!p) return;
             _activePresetKey = key;
             document.getElementById('shockFx').value = p.fx;
             document.getElementById('shockOil').value = p.oil;
             document.getElementById('shockPpi').value = p.ppi;
             document.getElementById('shockLabor').value = p.labor;
             document.getElementById('shockRate').value = p.rate;
-            ['Fx', 'Oil', 'Ppi', 'Labor', 'Rate'].forEach(n => updateSliderLabel(n));
+            // Update labels directly (no debounce — we'll call runSimulation below)
+            ['Fx', 'Oil', 'Ppi', 'Labor', 'Rate'].forEach(n => {
+                const el = document.getElementById('shock' + n);
+                const lbl = document.getElementById('sliderVal' + n);
+                if (!el || !lbl) return;
+                const v = parseFloat(el.value);
+                lbl.textContent = (v >= 0 ? '+' : '') + v.toFixed(1) + (n === 'Rate' ? '%p' : '%');
+            });
             document.querySelectorAll('.sim-preset-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
-            // §18.3 Auto-recommend method per scenario preset
+            if (btn) btn.classList.add('active');
+            // §18.3 Apply recommended method for this scenario
             if (p.recMethod) {
                 const methodSel = document.getElementById('simMethod');
-                if (methodSel) { methodSel.value = p.recMethod; onMethodChange(); }
+                if (methodSel) methodSel.value = p.recMethod;
+                currentSimMethod = p.recMethod;
+                delete _modelCache[currentAnalysisPeriod];
+                const p2 = ANALYSIS_PERIODS[currentAnalysisPeriod];
+                const mLabel = { all: '3가지 방법론 비교', gaussian: 'Gaussian IRF', ardl: 'ARDL-OLS', lp: 'Local Projections' }[p.recMethod];
+                const el = document.getElementById('periodMethodDesc');
+                if (el) el.innerHTML = '<strong>' + p2.label + '</strong>: ' + p2.desc + ' &nbsp;|&nbsp; 방법론: ' + mLabel;
             }
+            // Immediate run — no debounce needed for preset click
+            clearTimeout(_simDebounceTimer);
+            runSimulation();
         }
 
         function openMechPopup() {
@@ -6463,10 +7140,12 @@ ${pfRows}
 
 | 기간 | 범위 | 특성 |
 |------|------|------|
-| 우크라 전쟁기 | 22.02~23.08 | 에너지·원자재 급등기 (idx 13~31, 19개월) |
-| 전쟁 후 안정기 | 23.09~24.06 | 공급망 정상화, 금리 고점 (idx 32~41, 10개월) |
-| 최근 12개월 | 직전 12개월 | 현재 추세 반영 (idx 48~59) |
-| 전체 | 21.01~25.12 | 60개월 전구간 — 평균 장기구조 파악에 상대적으로 적합; 극단 충격은 평균에 희석 가능 |
+| 전체 | 18.01~25.12 | 96개월 전구간 — COVID+전쟁 두 충격 포함; ARDL·LP 가장 안정적 (idx 0~95) |
+| 2021~2024 | 21.01~24.12 | 코로나 회복~금리 정상화 48개월 — ARDL·LP 추정 가능 (idx 36~83) |
+| 최근 3년 | 23.01~25.12 | 전쟁 후 안정~현재 36개월 (idx 60~95) |
+| 우크라 전쟁기 | 22.02~23.08 | 에너지·원자재 급등기 (idx 49~67, 19개월) |
+| COVID 충격기 | 20.01~21.12 | 유가급락·저금리 팽창 24개월 (idx 24~47) |
+| 최근 12개월 | 25.01~25.12 | 현재 추세 반영 (idx 84~95) |
 
 **같은 방법론이라도 어떤 기간의 데이터로 추정했느냐에 따라 결과가 완전히 달라집니다.**
 전쟁기 추정 → 유가·환율 계수 크게, 안정기 추정 → 노무비·금리가 지배적.
@@ -7257,10 +7936,10 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
             if (body) body.classList.toggle('collapsed');
         }
 
-        function switchSimTab(tab) {
+        function switchSimTab(tab, btn) {
             document.querySelectorAll('.sim-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.sim-tab-content').forEach(c => c.classList.remove('active'));
-            event.target.classList.add('active');
+            if (btn) btn.classList.add('active');
             const ids = { params: 'simTabParams', sensitivity: 'simTabSensitivity', montecarlo: 'simTabMonteCarlo' };
             const el = ids[tab] ? document.getElementById(ids[tab]) : null;
             if (el) el.classList.add('active');
@@ -7328,8 +8007,11 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
             if (method === 'lp' || method === 'all') {
                 if (n < 30 + 12) return { level: 'warn', msg: `⚠ LP: 표본(${n}M) < 권장(42M). 12M horizon 신뢰구간이 넓습니다. 방향성 중심 해석 권장.` };
             }
-            if (periodKey === 'full' && (method === 'lp' || method === 'all')) {
-                return { level: 'info', msg: `ℹ 전체 구간: 전쟁기 극단 충격이 평균에 희석될 수 있습니다. 전쟁 시나리오라면 전쟁기 구간을 검토하세요.` };
+            if (periodKey === 'full') {
+                return { level: 'info', msg: `ℹ 전체 96M: COVID·전쟁 두 충격 포함 — ARDL/LP 가장 안정적 추정 가능. 특정 충격 시나리오는 전쟁기·COVID 구간 별도 검토 권장.` };
+            }
+            if (periodKey === 'post2020') {
+                return { level: 'info', msg: `ℹ 2021~2024 48M: 금리인상·전쟁·공급망 정상화 구간 — ARDL/LP 추정 가능 (n/k 비율 주의).` };
             }
             return { level: 'ok', msg: '' };
         }
@@ -7390,7 +8072,43 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
             el.style.borderLeftColor = d12 >= 0.5 ? '#fb7185' : d12 <= -0.5 ? '#22c55e' : '#38bdf8';
         }
 
+        // Module-level storage so renderReImpact/renderPfImpact always get latest computed values
+        // even when _runSimulationCore crashes partway through
+        let _simLastD3 = 0, _simLastD6 = 0, _simLastD12 = 0, _simLastShocks = null;
+
         function runSimulation() {
+            if (!macroSimData || macroSimData.length < 13) {
+                renderReImpact(); renderPfImpact();
+                return;
+            }
+            // Reset stored values so Gaussian fallback kicks in if core crashes before storing
+            _simLastD3 = 0; _simLastD6 = 0; _simLastD12 = 0; _simLastShocks = null;
+            try { _runSimulationCore(); } catch(e) {
+                const statsBox = document.getElementById('modelStatsBox');
+                if (statsBox) statsBox.innerHTML = '<span style="color:#ff4d6d;">⚠ 오류: ' + e.message + '</span>';
+                console.error('[runSimulation] crash:', e);
+            }
+            // ALWAYS render right panels regardless of any crash in _runSimulationCore
+            const shocks = _simLastShocks || getSimShocks();
+            let d3 = _simLastD3, d6 = _simLastD6, d12 = _simLastD12;
+            if (d3 === 0 && d6 === 0 && d12 === 0) {
+                // Core crashed before storing values — use Gaussian fallback
+                try {
+                    const gfc = buildForecastGaussian(macroSimData, shocks, currentAnalysisPeriod);
+                    d3 = gfc[2]?.deltaPct || 0;
+                    d6 = gfc[5]?.deltaPct || 0;
+                    d12 = gfc[11]?.deltaPct || 0;
+                } catch(_) {}
+            }
+            try { renderReImpact({ d3, d6, d12 }, shocks); } catch(e) { console.error('[renderReImpact]', e); }
+            try { renderPfImpact({ d3, d6, d12 }, shocks); } catch(e) { console.error('[renderPfImpact]', e); }
+        }
+        function _runSimulationCore() {
+            // Show running state
+            const statsBox = document.getElementById('modelStatsBox');
+            if (statsBox) statsBox.textContent = '시나리오 계산 중…';
+            const pressureSummary = document.getElementById('simPressureSummary');
+            if (pressureSummary) pressureSummary.textContent = '시나리오 계산 중…';
             const shocks = getSimShocks();
             const method = currentSimMethod;
             const periodKey = currentAnalysisPeriod;
@@ -7417,24 +8135,33 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
             // Key metrics — always show single averaged value per period
             const fmtKpi = (v) => (v >= 0 ? '+' : '') + macroFmt(v, 2) + '%';
             const kpiColor = (v) => v > 0 ? '#ff6b00' : v < 0 ? '#22c55e' : '#8cb4d8';
+            // Hoist d3/d6/d12 so showInterpretBox and render functions always access consistent values
+            let d3 = 0, d6 = 0, d12 = 0;
             if (method === 'all' && multi) {
                 const avgAt = (idx) => {
+                    // Filter out NaN/Infinity from numerically unstable ARDL/LP estimates
                     const vals = [multi.gaussian, multi.ardl, multi.lp]
-                        .map(fc => fc && fc[idx] ? fc[idx].deltaPct : null).filter(v => v !== null);
+                        .map(fc => fc && fc[idx] ? fc[idx].deltaPct : null)
+                        .filter(v => v !== null && isFinite(v) && !isNaN(v));
                     return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
                 };
-                const a3 = avgAt(2), a6 = avgAt(5), a12 = avgAt(11);
-                document.getElementById('simDelta3M').innerHTML = '<span style="color:' + kpiColor(a3) + '">' + fmtKpi(a3) + '</span>';
-                document.getElementById('simDelta6M').innerHTML = '<span style="color:' + kpiColor(a6) + '">' + fmtKpi(a6) + '</span>';
-                document.getElementById('simDelta12M').innerHTML = '<span style="color:' + kpiColor(a12) + '">' + fmtKpi(a12) + '</span>';
-                document.getElementById('simAvgImpact').innerHTML = '<span style="color:' + kpiColor(a12) + '">' + fmtKpi(a12) + '</span>';
+                d3 = avgAt(2); d6 = avgAt(5); d12 = avgAt(11);
             } else {
-                const d3 = primaryFC[2].deltaPct, d6 = primaryFC[5].deltaPct, d12 = primaryFC[11].deltaPct;
-                document.getElementById('simDelta3M').innerHTML = '<span style="color:' + kpiColor(d3) + '">' + fmtKpi(d3) + '</span>';
-                document.getElementById('simDelta6M').innerHTML = '<span style="color:' + kpiColor(d6) + '">' + fmtKpi(d6) + '</span>';
-                document.getElementById('simDelta12M').innerHTML = '<span style="color:' + kpiColor(d12) + '">' + fmtKpi(d12) + '</span>';
-                document.getElementById('simAvgImpact').innerHTML = '<span style="color:' + kpiColor(d12) + '">' + fmtKpi(d12) + '</span>';
+                // Sanitize: if primaryFC gives NaN/Infinity, fall back to Gaussian
+                const safeD = (v) => (isFinite(v) && !isNaN(v)) ? v : 0;
+                d3 = safeD(primaryFC[2]?.deltaPct ?? 0);
+                d6 = safeD(primaryFC[5]?.deltaPct ?? 0);
+                d12 = safeD(primaryFC[11]?.deltaPct ?? 0);
+                if (d3 === 0 && d6 === 0 && d12 === 0 && method !== 'gaussian') {
+                    // ARDL/LP gave all-zero (numerical failure) — fall back to Gaussian
+                    const gfc = buildForecastGaussian(macroSimData, shocks, periodKey);
+                    d3 = gfc[2].deltaPct; d6 = gfc[5].deltaPct; d12 = gfc[11].deltaPct;
+                }
             }
+            document.getElementById('simDelta3M').innerHTML = '<span style="color:' + kpiColor(d3) + '">' + fmtKpi(d3) + '</span>';
+            document.getElementById('simDelta6M').innerHTML = '<span style="color:' + kpiColor(d6) + '">' + fmtKpi(d6) + '</span>';
+            document.getElementById('simDelta12M').innerHTML = '<span style="color:' + kpiColor(d12) + '">' + fmtKpi(d12) + '</span>';
+            document.getElementById('simAvgImpact').innerHTML = '<span style="color:' + kpiColor(d12) + '">' + fmtKpi(d12) + '</span>';
 
             // Attribution table
             const tbody = document.getElementById('simAttributionBody');
@@ -7477,8 +8204,12 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
 
             document.getElementById('simResults').classList.add('active');
 
-            renderMechanism();
-            renderReImpact(); renderPfImpact();
+            // Store computed values for runSimulation's unconditional render pass
+            _simLastD3 = d3; _simLastD6 = d6; _simLastD12 = d12; _simLastShocks = shocks;
+
+            // Isolate renderMechanism so a crash there doesn't block chart rendering below
+            try { renderMechanism(); } catch(e) { console.error('[renderMechanism]', e); }
+            // NOTE: renderReImpact / renderPfImpact are called by runSimulation AFTER this function returns
 
             if (!chartLibraryAvailable) {
                 drawChartPlaceholder('simulationChart', '차트 로딩 실패');
@@ -7555,6 +8286,8 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
                     }
                 });
             }
+            // Mark complete
+            if (statsBox) statsBox.textContent = '시뮬레이션 완료 — ' + new Date().toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
         }
 
         /* Comparison: run all presets across current method/period */
@@ -7565,10 +8298,13 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
             if (simulationChart2Obj) simulationChart2Obj.destroy();
 
             const presetKeys = Object.keys(SIM_PRESETS);
-            const colors = ['#64748b', '#38bdf8', '#22c55e', '#f59e0b', '#fb7185', '#a78bfa'];
+            const colors = ['#64748b', '#38bdf8', '#22c55e', '#f59e0b', '#fb7185', '#a78bfa', '#34d399'];
             const method = currentSimMethod === 'all' ? 'gaussian' : currentSimMethod;
+            // Abbreviated labels so x-axis doesn't crowd with 7 groups
+            const shortLabels = { baseline:'기준', fxShock:'환율', oilSpike:'유가', laborCrunch:'노무비', rateHike:'금리', allShock:'복합', severeWar:'전쟁' };
 
-            const ctx1 = document.getElementById('simulationChart').getContext('2d');
+            // LEFT (simulationChart2, wider 1.2fr): 시나리오별 추가 상승 압력 bar chart
+            const ctx1 = document.getElementById('simulationChart2').getContext('2d');
             const deltaData = presetKeys.map(k => {
                 const p = SIM_PRESETS[k];
                 const shocks = { fx: p.fx, oil: p.oil, ppi: p.ppi, labor: p.labor, policyRate: p.rate };
@@ -7577,21 +8313,30 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
             });
             simulationChartObj = new Chart(ctx1, {
                 type: 'bar',
-                data: { labels: presetKeys.map(k => SIM_PRESETS[k].label),
+                data: { labels: presetKeys.map(k => shortLabels[k] || SIM_PRESETS[k].label),
                     datasets: [
                         { label: '3M', data: deltaData.map(d => d.d3), backgroundColor: 'rgba(56,189,248,0.7)' },
                         { label: '6M', data: deltaData.map(d => d.d6), backgroundColor: 'rgba(167,139,250,0.7)' },
                         { label: '12M', data: deltaData.map(d => d.d12), backgroundColor: 'rgba(251,113,133,0.7)' }
                     ] },
-                options: { ...getChartOptions(''), plugins: { ...getChartOptions('').plugins, title: { display: true, text: '시나리오별 추가 상승 압력 (%)', color: '#8ea9cc', font: { size: 10 } } } }
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#8ea9cc', font: { size: 8 }, boxWidth: 10 } },
+                        title: { display: true, text: '시나리오별 추가 상승 압력 (%)', color: '#8ea9cc', font: { size: 10 } } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#8ea9cc', font: { size: 9 }, autoSkip: false, maxRotation: 30, minRotation: 30 } },
+                        y: { grid: { color: 'rgba(100,140,190,0.1)' }, ticks: { color: '#5a7a9e', font: { size: 8 } } }
+                    }
+                }
             });
 
-            const ctx2 = document.getElementById('simulationChart2').getContext('2d');
+            // RIGHT (simulationChart, narrower 0.8fr): 시나리오별 건설공사비 전망 line chart
+            const ctx2 = document.getElementById('simulationChart').getContext('2d');
             const lineDS = presetKeys.map((k, i) => {
                 const p = SIM_PRESETS[k];
                 const shocks = { fx: p.fx, oil: p.oil, ppi: p.ppi, labor: p.labor, policyRate: p.rate };
                 const fc = buildScenarioForecast(macroSimData, shocks, method, currentAnalysisPeriod);
-                return { label: p.label, data: fc.map(r => r.scenario), borderColor: colors[i], borderWidth: 1.5, pointRadius: 0, tension: 0.4 };
+                return { label: shortLabels[k] || p.label, data: fc.map(r => r.scenario),
+                    borderColor: colors[i % colors.length], borderWidth: 1.5, pointRadius: 0, tension: 0.4 };
             });
             simulationChart2Obj = new Chart(ctx2, {
                 type: 'line',
@@ -7618,7 +8363,7 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
 
             let html = '<table class="sensitivity-table"><thead><tr>';
             html += '<th>' + varLabels[varName] + '</th>';
-            html += '<th>3M 압력</th><th>6M 압력</th><th>12M 압력</th><th>Signal</th>';
+            html += '<th>3M</th><th>6M</th><th>12M</th>';
             html += '</tr></thead><tbody>';
 
             steps.forEach(delta => {
@@ -7627,18 +8372,14 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
                 shocks[shockKey] = delta;
                 const fc = buildScenarioForecast(macroSimData, shocks);
                 const d3 = fc[2].deltaPct, d6 = fc[5].deltaPct, d12 = fc[11].deltaPct;
-                const latest = macroSimData[macroSimData.length - 1];
-                const attr = buildAttribution(macroSimData);
-                const pr = buildPressureState(latest, fc, attr);
                 const cellColor = v => v > 0 ? 'color: var(--down)' : v < 0 ? 'color: var(--up)' : '';
-                const signalColor = { 'HIGH PRESSURE': 'var(--down)', 'WATCH': 'var(--accent)', 'STABLE': 'var(--up)' };
+                const rowBg = delta === 0 ? 'background:rgba(56,189,248,0.06);' : '';
 
-                html += '<tr>';
+                html += '<tr style="' + rowBg + '">';
                 html += '<td>' + (delta >= 0 ? '+' : '') + delta + '</td>';
                 html += '<td style="' + cellColor(d3) + '">' + (d3 >= 0 ? '+' : '') + macroFmt(d3, 2) + '%</td>';
                 html += '<td style="' + cellColor(d6) + '">' + (d6 >= 0 ? '+' : '') + macroFmt(d6, 2) + '%</td>';
                 html += '<td style="' + cellColor(d12) + '; font-weight: 600;">' + (d12 >= 0 ? '+' : '') + macroFmt(d12, 2) + '%</td>';
-                html += '<td style="color: ' + (signalColor[pr.label] || '#8ea3c1') + '; font-size: 9px;">' + pr.label + '</td>';
                 html += '</tr>';
             });
             html += '</tbody></table>';
@@ -7941,15 +8682,21 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
             document.getElementById('detailModal').classList.add('active');
         }
 
-        function renderReImpact() {
+        function renderReImpact(deltas, shocks) {
+            // deltas: { d3, d6, d12 } pre-computed by runSimulation, or null to compute fresh
             const container = document.getElementById('simReImpact');
             if (!container) return;
             if (!macroSimData || macroSimData.length < 13) { container.innerHTML = '<div style="color:#5a7a9a;font-size:10px;text-align:center;padding:20px;">시뮬레이션 실행 후 표시됩니다</div>'; return; }
-            const shocks = getSimShocks();
-            const forecast = buildScenarioForecast(macroSimData, shocks);
-            const d3 = forecast[2] ? forecast[2].deltaPct : 0;
-            const d6 = forecast[5] ? forecast[5].deltaPct : 0;
-            const d12 = forecast[11] ? forecast[11].deltaPct : 0;
+            let d3, d6, d12;
+            if (deltas && deltas.d3 !== undefined) {
+                ({ d3, d6, d12 } = deltas);
+            } else {
+                if (!shocks) shocks = getSimShocks();
+                const forecast = buildScenarioForecast(macroSimData, shocks, currentSimMethod, currentAnalysisPeriod);
+                d3 = forecast[2] ? forecast[2].deltaPct : 0;
+                d6 = forecast[5] ? forecast[5].deltaPct : 0;
+                d12 = forecast[11] ? forecast[11].deltaPct : 0;
+            }
             const latest = macroSimData[macroSimData.length - 1];
             const icons = { apt: '🏢', officetel: '🏨', commercial: '🏬', office: '🏛️', knowledge: '🏭', logistics: '📦' };
             const colors = { apt: '#4ec9ff', officetel: '#a78bfa', commercial: '#f59e0b', office: '#22c55e', knowledge: '#fb7185', logistics: '#38bdf8' };
@@ -7963,12 +8710,33 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
             html += '<th style="text-align:right;padding:5px 3px;color:#fb7185;font-size:10px;">12M</th>';
             html += '</tr></thead><tbody>';
 
+            // ── 충격 구성 × 패스스루 × 유형별 자재 노출도 → 유형별 민감도 ──
+            // 모델(기간/방법론)이 바뀌면 pt 가중치와 d3/d6/d12가 함께 바뀌어 유형별 영향도 달라짐
+            const pt = getPassThrough(currentAnalysisPeriod);
+            // 시스템 평균 자재 구성 (6개 유형 평균)
+            const AVG_STEEL = 19.3, AVG_CONCRETE = 14.3, AVG_LABOR_PCT = 30.5;
+            // 현재 충격 조합에서 각 채널(철강/시멘트/노무비/금융)의 절대 기여도
+            const sm = k => Math.abs(shocks[k] || 0) * (pt[k]?.weight || 0);
+            const steelShock    = sm('oil') + sm('fx') + sm('steel') + sm('importPrice');
+            const cementShock   = sm('ppi') + sm('cement');
+            const laborShock    = sm('labor');
+            const financialShock = sm('policyRate') + sm('vix') + sm('us10y');
+            const totalShock    = steelShock + cementShock + laborShock + financialShock || 1;
+
             const recent12 = macroSimData.slice(-12);
             Object.entries(PYEONG_TYPES).forEach(([key, cfg]) => {
                 const vals = recent12.map(r => r[cfg.simKey] || cfg.baseline);
                 const val = Math.round(vals.reduce((s, v) => s + v, 0) / vals.length);
-                const matW = cfg.materialPct / 100, labW = cfg.laborPct / 100;
-                const sens = matW * 0.8 + labW * cfg.laborSensitivity;
+
+                // 유형별 채널 노출도 (평균 대비 상대값)
+                const steelRel    = cfg.materials.steel / AVG_STEEL;
+                const concreteRel = (cfg.materials.concrete || 0) / AVG_CONCRETE;
+                const laborRel    = (cfg.laborPct / AVG_LABOR_PCT) * cfg.laborSensitivity;
+                // 충격 조합 가중 평균 → 유형별 상대 민감도 배율
+                const typeRelMult = (steelShock * steelRel + cementShock * concreteRel
+                                   + laborShock * laborRel + financialShock) / totalShock;
+                // 재료비+노무비 비중 × 유형 상대 민감도 = 최종 sens
+                const sens = (cfg.materialPct + cfg.laborPct) / 100 * typeRelMult;
                 const imp3 = d3 * sens, imp6 = d6 * sens, imp12 = d12 * sens;
                 const won3 = Math.round(val * imp3 / 100);
                 const won6 = Math.round(val * imp6 / 100);
@@ -7987,10 +8755,14 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
             html += '</tbody></table>';
 
             const avgImpact = d12;
+            const mLabel = { all:'3M평균', gaussian:'Gaussian', ardl:'ARDL', lp:'LP' }[currentSimMethod] || currentSimMethod;
             html += `<div style="margin-top:6px;padding:6px 8px;background:rgba(255,179,71,0.06);border:1px solid rgba(255,179,71,0.2);border-radius:5px;text-align:center;">
                 <div style="font-size:8px;color:#ffb347;text-transform:uppercase;letter-spacing:0.5px;">건설공사비 평균 영향 (12M)</div>
                 <div style="font-size:16px;font-weight:700;font-family:'IBM Plex Mono',Consolas,monospace;color:${avgImpact > 0 ? '#ff6b00' : '#22c55e'};">${avgImpact >= 0 ? '+' : ''}${avgImpact.toFixed(2)}%</div>
-                <div style="font-size:8px;color:#5a7a9a;">재료비·노무비 민감도 반영</div>
+                <div style="font-size:8px;color:#5a7a9a;">${mLabel} · ${ANALYSIS_PERIODS[currentAnalysisPeriod]?.label || currentAnalysisPeriod}</div>
+            </div>
+            <div style="margin-top:4px;padding:3px 6px;background:rgba(14,30,50,0.7);border:1px solid #1a2d48;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:8px;color:#3d5570;text-align:right;">
+                d3=${d3.toFixed(2)}% d6=${d6.toFixed(2)}% d12=${d12.toFixed(2)}% · oil=${(shocks.oil||0).toFixed(1)} fx=${(shocks.fx||0).toFixed(1)} · ${new Date().toLocaleTimeString()}
             </div>`;
             container.innerHTML = html;
         }
@@ -8023,16 +8795,22 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
               source: 'High Yield + 사업위험 가산', ltv: '75~80%', dscr: '<1.0' }
         ];
 
-        function renderPfImpact() {
+        function renderPfImpact(deltas, shocks) {
+            // deltas: { d3, d6, d12 } pre-computed by runSimulation, or null to compute fresh
             const container = document.getElementById('simPfImpact');
             if (!container) return;
             if (!macroSimData || macroSimData.length < 13) {
                 container.innerHTML = '<div style="color:#5a7a9a;font-size:10px;text-align:center;padding:20px;">시뮬레이션 실행 후 표시됩니다</div>';
                 return;
             }
-            const shocks = getSimShocks();
-            const forecast = buildScenarioForecast(macroSimData, shocks);
-            const delta12 = forecast[11] ? forecast[11].deltaPct : 0;
+            let delta12;
+            if (deltas && deltas.d12 !== undefined) {
+                delta12 = deltas.d12;
+            } else {
+                if (!shocks) shocks = getSimShocks();
+                const forecast = buildScenarioForecast(macroSimData, shocks, currentSimMethod, currentAnalysisPeriod);
+                delta12 = forecast[11] ? forecast[11].deltaPct : 0;
+            }
             const latest = macroSimData[macroSimData.length - 1];
             const baseRate = latest.policyRate || 2.5;
             const rateShock = shocks.policyRate || 0;
