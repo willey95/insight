@@ -1248,6 +1248,287 @@ flowchart LR
 </div>
 
 <!-- ═══════════════════════════════════════════════
+     11. 통합 계획
+     ═══════════════════════════════════════════════ -->
+<div class="section">
+    <h2><span class="dot" style="background:#fb923c;"></span> 11. 시뮬레이션 엔진 × System Dynamics — 통합 계획</h2>
+
+    <p style="font-size:13px;margin-bottom:16px;">
+        계량경제 엔진(Gaussian·ARDL·LP)과 SD 모델을 연결하는 <strong>4단계 통합 로드맵</strong>입니다.
+        각 단계는 독립적으로 배포 가능하며, 선행 단계 없이도 가치를 제공합니다.
+    </p>
+
+    <!-- 전체 아키텍처 -->
+    <pre class="mermaid">
+%%{init: {'theme': 'dark'}}%%
+flowchart TB
+    subgraph INPUT["사용자 입력"]
+        U1["충격 파라미터\n(환율·유가·금리 등)"]
+        U2["분석 기간\n(전쟁기·최근·전체)"]
+    end
+    subgraph ECON["✅ 계량경제 엔진 (현재 구현)"]
+        direction LR
+        G["Gaussian\n고정 파라미터"]
+        A["ARDL-OLS\nβ 추정"]
+        L["LP\n12개 회귀"]
+    end
+    subgraph BRIDGE["Phase 1 — 파라미터 브릿지"]
+        B1F["sdParameterBridge()\nARDL β → SD 가중치"]
+    end
+    subgraph SDENG["Phase 2–3 — SD 엔진"]
+        direction TB
+        S1["Stock-Flow 방정식\n누적 비용 압력 ACC(t)"]
+        S2["피드백 루프\nR1·R2·B1·B2"]
+        S3["runSDSimulation()\n24개월 시뮬레이션"]
+        S1 --> S2 --> S3
+    end
+    subgraph HYBRID["Phase 4 — 하이브리드 출력"]
+        H1["buildForecastHybrid()\n계량경제 + SD 보정"]
+        H2["피드백 루프 패널\n루프 활성화 강도 표시"]
+    end
+    INPUT --> ECON
+    ECON --> BRIDGE
+    BRIDGE --> SDENG
+    ECON --> HYBRID
+    SDENG --> HYBRID
+    style ECON fill:#0f2742,stroke:#38bdf8
+    style BRIDGE fill:#1a0f2e,stroke:#fb923c,stroke-dasharray:4 2
+    style SDENG fill:#1a0f2e,stroke:#fb923c,stroke-dasharray:4 2
+    style HYBRID fill:#0a2b1a,stroke:#34d399,stroke-dasharray:4 2
+    </pre>
+
+    <!-- Phase 1 -->
+    <div class="method-card m6" style="margin-top:20px;">
+        <div class="tag">Phase 1 — 파라미터 브릿지</div>
+        <div class="method-title">ARDL 추정 계수 → SD 스톡 파라미터 변환</div>
+        <div class="method-subtitle">계량 엔진이 추정한 β 계수를 SD 스톡의 유입 가중치와 감쇠율로 변환합니다.</div>
+
+        <h3>핵심 매핑 로직</h3>
+        <div class="formula-box" style="text-align:left;font-size:12px;">
+            <strong>ARDL → SD 가중치:</strong><br>
+            $w_k^{SD} = \sum_{l=0}^{L} \beta_{k,l}$ (누적 시차 계수 합계 = 총 전달 탄력성)<br><br>
+            <strong>ARDL → SD peakLag:</strong><br>
+            $\mu_k^{SD} = \arg\max_l |\beta_{k,l}|$ (절댓값 최대 시차 = 최대 반응 시점)<br><br>
+            <strong>LP → SD 감쇠율:</strong><br>
+            $\tau_k = -\ln(\beta_{k,12} / \beta_{k,1}) / 11$ (1M~12M IRF 감쇠 속도)
+        </div>
+
+        <h3>구현 함수 명세</h3>
+        <div class="formula-box" style="text-align:left;font-size:12px;">
+<code>function sdParameterBridge(ardlModel, lpModel) {
+  // ardlModel.coeffs[driver][lag] → cumulative weight per driver
+  // lpModel.coeffs[h][driver]    → decay rate extraction
+  const sdParams = {};
+  DRIVER_KEYS.forEach(k => {
+    const lags = ardlModel.coeffs[k] || {};
+    const w    = Object.values(lags).reduce((s, v) => s + v, 0);
+    const peak = Object.entries(lags).reduce((m, [l, v]) =>
+                   Math.abs(v) > Math.abs(m.v) ? {l, v} : m, {l:0, v:0}).l;
+    const b1   = lpModel.coeffs[1]?.[k]  || 0;
+    const b12  = lpModel.coeffs[12]?.[k] || 0;
+    const tau  = b1 !== 0 ? -Math.log(Math.abs(b12/b1)+1e-9) / 11 : 0.4;
+    sdParams[k] = { weight: w, peakLag: Number(peak), decayRate: tau };
+  });
+  return sdParams;   // { fx: {weight, peakLag, decayRate}, oil: {...}, ... }
+}</code>
+        </div>
+
+        <div class="when-box">
+            <strong>산출물:</strong> 분석 기간별로 데이터가 결정한 SD 파라미터 세트.
+            현재 수기 조율값(<code>PASS_THROUGH_BY_PERIOD</code>)을 자동 추정값으로 교체하거나 보정값으로 활용.
+        </div>
+    </div>
+
+    <!-- Phase 2 -->
+    <div class="method-card m4" style="margin-top:16px;">
+        <div class="tag">Phase 2 — 피드백 루프 정량화</div>
+        <div class="method-title">4개 피드백 루프의 강도를 계량 데이터로 보정</div>
+
+        <table class="cmp">
+            <thead><tr><th>루프</th><th>유형</th><th>메커니즘</th><th>정량화 소스</th><th>강도 추정식</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><strong style="color:#fb7185;">R1</strong></td>
+                    <td>강화</td>
+                    <td>비용↑ → 착공↓ → 저단가 프로젝트 감소 → 평균비용↑↑</td>
+                    <td>Attribution labor 기여도 + 착공 통계</td>
+                    <td style="font-size:11px;font-family:monospace;">α_R1 = corr(CC, -starts) × σ_CC</td>
+                </tr>
+                <tr>
+                    <td><strong style="color:#fb7185;">R2</strong></td>
+                    <td>강화</td>
+                    <td>환율↑ → 수입비↑ → 비용↑ → 인플레 기대↑ → 환율↑↑</td>
+                    <td>ARDL β_{fx,0..4} 누적값 + 한국은행 통화정책 반응 시차</td>
+                    <td style="font-size:11px;font-family:monospace;">α_R2 = Σβ_{fx,l} × fxPassThrough</td>
+                </tr>
+                <tr>
+                    <td><strong style="color:#34d399;">B1</strong></td>
+                    <td>균형</td>
+                    <td>금리↑ → 수요↓ → 노무비 안정 → 비용 상승 억제</td>
+                    <td>ARDL β_{policyRate,3..5} (3~5개월 시차)</td>
+                    <td style="font-size:11px;font-family:monospace;">α_B1 = |Σβ_{rate,l}| × demandElasticity</td>
+                </tr>
+                <tr>
+                    <td><strong style="color:#34d399;">B2</strong></td>
+                    <td>균형</td>
+                    <td>비용↑ → 정책 긴축 → 투자↓ → 수요↓</td>
+                    <td>Taylor-rule proxy: 정책금리 반응 함수 필요 (현재 미구현)</td>
+                    <td style="font-size:11px;font-family:monospace;">α_B2 = policyReactionCoeff × laggedCC</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="info-box amber">
+            <strong>현실적 범위:</strong> R1·B1은 기존 계량 데이터로 바로 추정 가능.
+            R2·B2는 외부 거시 반응 함수가 필요해 1차 통합에서는 0으로 초기화 후 수동 조정합니다.
+        </div>
+    </div>
+
+    <!-- Phase 3 -->
+    <div class="method-card m3" style="margin-top:16px;">
+        <div class="tag">Phase 3 — SD 시뮬레이션 엔진</div>
+        <div class="method-title">Stock-Flow 방정식으로 누적 비용 압력 시뮬레이션</div>
+
+        <h3>핵심 방정식</h3>
+        <div class="formula-box">
+            $$\frac{dACC}{dt} = \underbrace{\sum_k \text{shock}_k \cdot w_k^{SD} \cdot \text{IRF}_k(t)}_{\text{유입: 충격 누적}} - \underbrace{\tau \cdot ACC(t)}_{\text{유출: 감쇠}} + \underbrace{f_R(ACC) - f_B(ACC)}_{\text{피드백 보정}}$$
+        </div>
+        <div class="formula-box">
+            $$CC(t) = CC(0) \cdot \left(1 + \frac{ACC(t)}{\sigma_0}\right)$$
+        </div>
+        <p style="font-size:13px;">
+            피드백 함수: $f_R(ACC) = \alpha_{R1} \cdot ACC^{1.2}$ (비선형 강화),
+            $f_B(ACC) = \alpha_{B1} \cdot \text{policyRate}(t)$ (선형 균형)
+        </p>
+
+        <h3>구현 함수 명세</h3>
+        <div class="formula-box" style="text-align:left;font-size:12px;">
+<code>function runSDSimulation(shocks, sdParams, feedbackParams, horizon=24) {
+  // Euler integration: dt = 1 month
+  let ACC = 0;
+  const path = [];
+  for (let t = 1; t <= horizon; t++) {
+    const inflow  = DRIVER_KEYS.reduce((s, k) => {
+      const irf = sdParams[k].weight * gaussianEffect(t, sdParams[k].peakLag, sdParams[k].width);
+      return s + (shocks[k] || 0) * irf;
+    }, 0);
+    const outflow   = sdParams._tau * ACC;
+    const feedback_R = feedbackParams.alpha_R1 * Math.pow(Math.max(0, ACC), 1.2);
+    const feedback_B = feedbackParams.alpha_B1 * (shocks.policyRate || 0) * Math.max(0, t - 3);
+    ACC = ACC + inflow - outflow + feedback_R - feedback_B;
+    path.push({ t, ACC, CC: baseCC * (1 + ACC / 100) });
+  }
+  return path; // Same 12M slice compatible with existing forecast array format
+}</code>
+        </div>
+
+        <div class="when-box">
+            <strong>기존 엔진과의 호환성:</strong> 반환 배열을 <code>buildForecastGaussian</code>과 동일한 형태로 슬라이싱하면
+            기존 <code>buildMultiMethodForecast()</code>에 4번째 방법으로 즉시 추가 가능합니다.
+        </div>
+    </div>
+
+    <!-- Phase 4 -->
+    <div class="method-card m5" style="margin-top:16px;">
+        <div class="tag">Phase 4 — UI 통합 및 하이브리드 출력</div>
+        <div class="method-title">시뮬레이션 팝업에 SD 방법론 추가 + 피드백 루프 패널</div>
+
+        <h3>변경 범위</h3>
+        <table class="cmp">
+            <thead><tr><th>항목</th><th>변경 내용</th><th>영향 범위</th></tr></thead>
+            <tbody>
+                <tr><td>방법론 드롭다운</td><td>SD-Hybrid 옵션 추가</td><td><code>currentSimMethod</code> 분기 1개 추가</td></tr>
+                <tr><td>buildMultiMethodForecast()</td><td>SD 경로를 4번째 라인으로 추가</td><td>차트에 4번째 계열 렌더링</td></tr>
+                <tr><td>시뮬레이션 팝업 우측 패널</td><td>피드백 루프 활성화 강도 미니 게이지 추가</td><td>R1·R2·B1·B2 강도 바 표시</td></tr>
+                <tr><td>AI분석 컨텍스트</td><td>SD 피드백 루프 상태를 보고서 컨텍스트에 포함</td><td><code>generateLLMReport()</code> 입력 확장</td></tr>
+                <tr><td>도움말</td><td>SD 방법론 섹션 업데이트 (이 문서)</td><td>현재 페이지</td></tr>
+            </tbody>
+        </table>
+
+        <h3>피드백 루프 패널 설계</h3>
+        <div style="background:rgba(6,14,26,0.8);border:1px solid rgba(26,40,64,0.9);border-radius:12px;padding:16px;margin:12px 0;font-size:11px;">
+            <div style="color:#fb923c;font-weight:700;font-size:10px;letter-spacing:0.1em;margin-bottom:10px;">FEEDBACK LOOP STATUS</div>
+            <div style="display:grid;gap:8px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="color:#fb7185;width:28px;font-weight:700;font-size:10px;">R1</span>
+                    <div style="flex:1;background:rgba(251,113,133,0.1);border-radius:4px;height:6px;">
+                        <div style="width:62%;background:#fb7185;border-radius:4px;height:6px;"></div>
+                    </div>
+                    <span style="color:#fb7185;font-size:10px;width:36px;">62%</span>
+                    <span style="color:#5c7290;font-size:10px;">비용↑→착공↓→비용↑↑</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="color:#fb7185;width:28px;font-weight:700;font-size:10px;">R2</span>
+                    <div style="flex:1;background:rgba(251,113,133,0.1);border-radius:4px;height:6px;">
+                        <div style="width:38%;background:#fb7185;border-radius:4px;height:6px;"></div>
+                    </div>
+                    <span style="color:#fb7185;font-size:10px;width:36px;">38%</span>
+                    <span style="color:#5c7290;font-size:10px;">환율↑→수입↑→환율↑↑</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="color:#34d399;width:28px;font-weight:700;font-size:10px;">B1</span>
+                    <div style="flex:1;background:rgba(52,211,153,0.1);border-radius:4px;height:6px;">
+                        <div style="width:45%;background:#34d399;border-radius:4px;height:6px;"></div>
+                    </div>
+                    <span style="color:#34d399;font-size:10px;width:36px;">45%</span>
+                    <span style="color:#5c7290;font-size:10px;">금리↑→수요↓→비용 억제</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="color:#34d399;width:28px;font-weight:700;font-size:10px;">B2</span>
+                    <div style="flex:1;background:rgba(52,211,153,0.1);border-radius:4px;height:6px;">
+                        <div style="width:15%;background:#34d399;border-radius:4px;height:6px;"></div>
+                    </div>
+                    <span style="color:#34d399;font-size:10px;width:36px;">15%</span>
+                    <span style="color:#5c7290;font-size:10px;">비용↑→정책긴축→수요↓</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 로드맵 타임라인 -->
+    <h3 style="margin-top:24px;">구현 로드맵</h3>
+    <table class="cmp">
+        <thead><tr><th>단계</th><th>작업</th><th>규모</th><th>전제 조건</th><th>산출물</th></tr></thead>
+        <tbody>
+            <tr>
+                <td><strong style="color:#fb923c;">Phase 1</strong><br>파라미터 브릿지</td>
+                <td><code>sdParameterBridge(ardlModel, lpModel)</code> 구현</td>
+                <td>함수 1개 (~60줄)</td>
+                <td>없음 (ARDL/LP 이미 구현됨)</td>
+                <td>기간별 SD 파라미터 세트 자동 추출</td>
+            </tr>
+            <tr>
+                <td><strong style="color:#f59e0b;">Phase 2</strong><br>피드백 정량화</td>
+                <td>R1·B1 강도 계산 함수 구현. R2·B2는 고정값(0.1) 초기화</td>
+                <td>함수 2개 (~80줄)</td>
+                <td>Phase 1 완료 + 착공 시계열 데이터</td>
+                <td>피드백 루프 강도 벡터 {α_R1, α_R2, α_B1, α_B2}</td>
+            </tr>
+            <tr>
+                <td><strong style="color:#a78bfa;">Phase 3</strong><br>SD 엔진</td>
+                <td><code>runSDSimulation()</code> Euler 적분 구현. 24개월 경로 계산</td>
+                <td>함수 1개 (~100줄)</td>
+                <td>Phase 1·2 완료</td>
+                <td>SD 24개월 비용지수 경로 배열</td>
+            </tr>
+            <tr>
+                <td><strong style="color:#34d399;">Phase 4</strong><br>UI 통합</td>
+                <td>드롭다운 추가, 차트 4번째 계열, 피드백 루프 패널</td>
+                <td>~200줄 (UI + 렌더링)</td>
+                <td>Phase 3 완료</td>
+                <td>SD-Hybrid 방법 선택 가능한 시뮬레이션 팝업</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="info-box violet" style="margin-top:16px;">
+        <strong>검증 전략:</strong> Phase 3 완료 후 2022년 전쟁기 데이터로 백테스트.
+        Gaussian·ARDL·LP·SD-Hybrid 4개 방법을 동시 실행하여 실제 건설공사비 지수 경로와 RMSE 비교.
+        SD가 피드백 루프로 장기(12M+) 구간에서 ARDL보다 낮은 오차를 보이면 통합 타당성 확인.
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
      References
      ═══════════════════════════════════════════════ -->
 <div class="section">
