@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>분석 방법론 가이드 — Construction Cost Simulation Engine v2</title>
+<title>분석 방법론 가이드 — CCC Crisis Monitoring Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -26,11 +26,11 @@
     --green: #34d399;
     --pink: #fb7185;
     --violet: #a78bfa;
+    --orange: #fb923c;
     --shadow: 0 24px 70px rgba(2, 8, 23, 0.46);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-
 html { scroll-behavior: smooth; }
 
 body {
@@ -40,6 +40,7 @@ body {
         linear-gradient(180deg, #071321 0%, #06111f 54%, #040c16 100%);
     color: var(--text);
     font-family: 'IBM Plex Sans KR', 'Noto Sans KR', 'Segoe UI', sans-serif;
+    font-size: 15px;
     line-height: 1.78;
     overflow-x: hidden;
 }
@@ -65,8 +66,6 @@ body::before {
     background: rgba(6,17,31,0.72);
     backdrop-filter: blur(14px);
     border-bottom: 1px solid rgba(19,48,77,0.86);
-}
-.top-nav {
     display: flex;
     align-items: center;
     gap: 18px;
@@ -80,8 +79,7 @@ body::before {
     text-transform: uppercase;
     transition: color 0.2s ease;
 }
-.top-nav a:hover,
-.top-nav a.active { color: var(--cyan); }
+.top-nav a:hover, .top-nav a.active { color: var(--cyan); }
 .top-nav .brand {
     color: var(--cyan);
     font-weight: 800;
@@ -97,6 +95,7 @@ body::before {
     margin: 0 auto;
     padding: 28px 22px 84px;
 }
+
 .hero-panel {
     position: relative;
     overflow: hidden;
@@ -172,8 +171,7 @@ h1 span { color: var(--cyan); }
 
 /* ── Section ── */
 .section {
-    background:
-        linear-gradient(180deg, rgba(8, 23, 40, 0.92), rgba(8, 23, 40, 0.84));
+    background: linear-gradient(180deg, rgba(8, 23, 40, 0.92), rgba(8, 23, 40, 0.84));
     border: 1px solid rgba(19, 48, 77, 0.96);
     border-radius: 24px;
     padding: 30px;
@@ -195,8 +193,7 @@ h1 span { color: var(--cyan); }
 
 /* ── Method Card ── */
 .method-card {
-    background:
-        linear-gradient(180deg, rgba(10, 27, 47, 0.95), rgba(8, 23, 40, 0.92));
+    background: linear-gradient(180deg, rgba(10, 27, 47, 0.95), rgba(8, 23, 40, 0.92));
     border: 1px solid rgba(19, 48, 77, 0.98);
     border-radius: 18px;
     padding: 24px 24px 22px;
@@ -215,6 +212,9 @@ h1 span { color: var(--cyan); }
 .method-card.m1::before { background: var(--cyan); }
 .method-card.m2::before { background: var(--amber); }
 .method-card.m3::before { background: var(--violet); }
+.method-card.m4::before { background: var(--pink); }
+.method-card.m5::before { background: var(--green); }
+.method-card.m6::before { background: var(--orange); }
 
 .method-card .tag {
     display: inline-block;
@@ -229,6 +229,9 @@ h1 span { color: var(--cyan); }
 .method-card.m1 .tag { background: rgba(56,189,248,0.12); color: var(--cyan); border: 1px solid rgba(56,189,248,0.3); }
 .method-card.m2 .tag { background: rgba(245,158,11,0.12); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
 .method-card.m3 .tag { background: rgba(167,139,250,0.12); color: var(--violet); border: 1px solid rgba(167,139,250,0.3); }
+.method-card.m4 .tag { background: rgba(251,113,133,0.12); color: var(--pink); border: 1px solid rgba(251,113,133,0.3); }
+.method-card.m5 .tag { background: rgba(52,211,153,0.12); color: var(--green); border: 1px solid rgba(52,211,153,0.3); }
+.method-card.m6 .tag { background: rgba(251,146,60,0.12); color: var(--orange); border: 1px solid rgba(251,146,60,0.3); }
 
 .method-title { font-size: 21px; font-weight: 700; color: #edf5fb; margin-bottom: 6px; }
 .method-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
@@ -256,7 +259,7 @@ h1 span { color: var(--cyan); }
 .pros, .cons {
     padding: 16px;
     border-radius: 14px;
-    font-size: 13px;
+    font-size: 14px;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
 }
 .pros { background: rgba(52,211,153,0.06); border: 1px solid rgba(52,211,153,0.18); }
@@ -272,15 +275,31 @@ h1 span { color: var(--cyan); }
     border-radius: 14px;
     padding: 14px 18px;
     margin: 10px 0;
-    font-size: 13px;
+    font-size: 14px;
 }
 .when-box strong { color: var(--cyan); }
+
+/* ── Info box ── */
+.info-box {
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin: 10px 0;
+    font-size: 14px;
+}
+.info-box.amber { background: rgba(245,158,11,0.05); border: 1px solid rgba(245,158,11,0.2); }
+.info-box.amber strong { color: var(--amber); }
+.info-box.pink { background: rgba(251,113,133,0.05); border: 1px solid rgba(251,113,133,0.2); }
+.info-box.pink strong { color: var(--pink); }
+.info-box.green { background: rgba(52,211,153,0.05); border: 1px solid rgba(52,211,153,0.2); }
+.info-box.green strong { color: var(--green); }
+.info-box.violet { background: rgba(167,139,250,0.05); border: 1px solid rgba(167,139,250,0.2); }
+.info-box.violet strong { color: var(--violet); }
 
 /* ── Comparison Table ── */
 table.cmp, table.comp-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 13px;
     margin: 16px 0;
 }
 table.cmp th, table.comp-table th {
@@ -299,15 +318,13 @@ table.cmp td, table.comp-table td {
     vertical-align: top;
 }
 table.cmp tr:hover td, table.comp-table tr:hover td { background: rgba(56,189,248,0.03); }
-.star { color: var(--amber); }
 
 /* ── Period Section ── */
 .period-card {
     display: grid;
     grid-template-columns: 150px 1fr;
     gap: 16px;
-    background:
-        linear-gradient(180deg, rgba(10, 27, 47, 0.95), rgba(8, 23, 40, 0.92));
+    background: linear-gradient(180deg, rgba(10, 27, 47, 0.95), rgba(8, 23, 40, 0.92));
     border: 1px solid rgba(19, 48, 77, 0.98);
     border-radius: 16px;
     padding: 18px;
@@ -329,14 +346,44 @@ table.cmp tr:hover td, table.comp-table tr:hover td { background: rgba(56,189,24
 .period-badge.recent { background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.3); color: var(--cyan); }
 .period-badge.full { background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3); color: var(--green); }
 
+/* ── Panel grid (dashboard layout) ── */
+.panel-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin: 16px 0;
+}
+.panel-cell {
+    background: rgba(10, 27, 47, 0.9);
+    border: 1px solid rgba(56, 189, 248, 0.15);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 12px;
+}
+.panel-cell .panel-name { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; }
+.panel-cell .panel-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.panel-cell.span2 { grid-column: span 2; }
+.panel-cell.row2 { grid-row: span 2; }
+
 /* ── Mermaid ── */
 .mermaid {
     display: flex;
     justify-content: center;
+    align-items: center;
+    min-height: 140px;
     margin: 18px 0;
-    padding: 6px 0;
+    padding: 12px 4px 6px;
+    overflow-x: auto;
 }
-.mermaid svg { max-width: 100%; height: auto; }
+.mermaid svg {
+    min-width: 600px;
+    max-width: 100%;
+    height: auto;
+    font-size: 14px;
+}
+/* Feedback loop mini-diagrams (inside 2-col grid) */
+.sd-loop-grid .mermaid { min-height: 80px; padding: 6px 0 0; }
+.sd-loop-grid .mermaid svg { min-width: auto; max-width: 100%; }
 
 /* ── Step list ── */
 .steps { counter-reset: step; list-style: none; padding: 0; }
@@ -346,7 +393,7 @@ table.cmp tr:hover td, table.comp-table tr:hover td { background: rgba(56,189,24
     position: relative;
     border-left: 2px solid rgba(26, 40, 64, 0.95);
     margin-left: 14px;
-    font-size: 13px;
+    font-size: 14px;
 }
 .steps li::before {
     content: counter(step);
@@ -382,73 +429,338 @@ a:hover { text-decoration: underline; }
 .badge-sm.blue { background: rgba(56,189,248,0.12); color: var(--cyan); }
 .badge-sm.amber { background: rgba(245,158,11,0.12); color: var(--amber); }
 .badge-sm.violet { background: rgba(167,139,250,0.12); color: var(--violet); }
+.badge-sm.pink { background: rgba(251,113,133,0.12); color: var(--pink); }
+.badge-sm.green { background: rgba(52,211,153,0.12); color: var(--green); }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+.info-card {
+    background: #0a1f35;
+    border: 1px solid #13304d;
+    border-radius: 12px;
+    padding: 18px;
+    font-size: 13px;
+    line-height: 1.8;
+}
+.info-card .ic-title { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
 
 @media (max-width: 860px) {
     .page { padding: 20px 14px 60px; }
     .hero-panel { padding: 26px 22px 24px; border-radius: 24px; }
     .section { padding: 20px; border-radius: 20px; }
-    .pros-cons { grid-template-columns: 1fr; }
+    .pros-cons, .two-col { grid-template-columns: 1fr; }
     .period-card { grid-template-columns: 1fr; }
+    .panel-grid { grid-template-columns: 1fr 1fr; }
 }
-
 @media (max-width: 680px) {
-    .top-nav {
-        flex-wrap: wrap;
-        gap: 10px 14px;
-        padding: 12px 16px;
-    }
-    .top-nav .brand {
-        width: 100%;
-        margin-right: 0;
-    }
+    .top-nav { flex-wrap: wrap; gap: 10px 14px; padding: 12px 16px; }
+    .top-nav .brand { width: 100%; margin-right: 0; }
     h1 { font-size: 28px; }
     .lead { font-size: 14px; }
-    table.cmp, table.comp-table {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
-    }
+    table.cmp, table.comp-table { display: block; overflow-x: auto; white-space: nowrap; }
+    .panel-grid { grid-template-columns: 1fr; }
 }
 
+/* ══ Typography Scale (통일 기준) ══
+   15px → body 기본 (상속)
+   14px → 카드 본문, info-box, when-box, pros/cons
+   13px → table, info-card, 보조 설명
+   12px → panel-cell, 뱃지, 메타
+   11px → uppercase 레이블, 섹션 h2
+*/
+.section p, .section li { font-size: 15px; }
+.method-subtitle { font-size: 14px; }
+.pros li, .cons li { font-size: 14px; }
+.info-box, .when-box { font-size: 14px; }
+.info-card { font-size: 13px; }
+table.cmp td, table.comp-table td { font-size: 13px; }
+.hero-meta .chip { font-size: 12px; }
+.text-muted { font-size: 12px; }
+.panel-cell, .panel-cell .panel-desc { font-size: 12px; }
 </style>
 </head>
 <body>
 
-
 <nav class="top-nav">
-    <span class="brand">INSIGHT</span>
+    <span class="brand">CCC · INSIGHT</span>
     <a href="crisis-monitoring-dashboard.html">Dashboard</a>
-    <a href="macro-cost-system-dynamics.html">System Dynamics</a>
     <a href="methodology-guide.html" class="active">Methodology</a>
 </nav>
 
 <div class="page">
 
+<!-- ═══ HERO ═══ -->
 <section class="hero-panel">
-    <span class="hero-kicker">Methodology Guide</span>
-    <h1>분석 방법론 <span>가이드</span></h1>
+    <span class="hero-kicker">도움말 · Methodology Guide</span>
+    <h1>CCC 위기 모니터링 <span>방법론 가이드</span></h1>
     <p class="lead">
-        건설공사비 시뮬레이션 엔진 v2가 지원하는 3가지 계량경제 방법론을 하나의 문서 흐름 안에서 비교·이해할 수 있도록 재정리했습니다.<br>
-        기존 색감은 유지하면서도 섹션의 위계, 카드 밀도, 수식/표/도식의 집중도를 더 세련되게 다듬었습니다.
+        COST CRISIS CENTER(CCC) 대시보드의 전체 패널 구성, 위기강도 산출 방식, 건설공사비 시뮬레이션 엔진(3종 방법론),
+        PF 금리 영향 계산, AI 분석 기능까지 한 문서에서 이해할 수 있도록 정리했습니다.
     </p>
     <div class="hero-meta">
-        <span class="chip">3 Methods</span>
+        <span class="chip">대시보드 패널 구성</span>
+        <span class="chip">CRISIS INTENSITY 수식</span>
         <span class="chip">Gaussian · ARDL · LP</span>
-        <span class="chip">Math + Use Cases</span>
-        <span class="chip">Period Selection Guide</span>
+        <span class="chip">PF 금리 영향</span>
+        <span class="chip">Moonshot AI 분석</span>
     </div>
 </section>
+
 <!-- ═══════════════════════════════════════════════
-     Overview
+     1. 대시보드 패널 구성
      ═══════════════════════════════════════════════ -->
 <div class="section">
-    <h2><span class="dot" style="background: #38bdf8;"></span> 전체 구조 — 왜 3가지 방법이 필요한가</h2>
+    <h2><span class="dot" style="background:#38bdf8;"></span> 1. 대시보드 패널 구성</h2>
+
+    <p style="margin-bottom:16px;">
+        대시보드는 <strong>4열 × 3행 그리드</strong>로 구성되며, 각 패널은 실시간 시장 데이터를 자동 갱신합니다.
+    </p>
+
+    <div style="background:rgba(6,14,26,0.8);border:1px solid rgba(26,40,64,0.9);border-radius:14px;padding:20px;margin:14px 0;font-size:12px;">
+        <div style="display:grid;grid-template-columns:1fr 1.3fr 1.3fr 1fr;gap:6px;font-family:'IBM Plex Mono',monospace;">
+            <!-- Row 1 -->
+            <div style="background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.25);border-radius:8px;padding:10px;grid-row:1;">
+                <div style="color:#fb7185;font-weight:700;font-size:10px;letter-spacing:0.1em;">ROW 1 · COL 1</div>
+                <div style="color:#dbe7f3;margin-top:4px;">CRISIS INTENSITY RISK</div>
+                <div style="color:#8aa0bb;font-size:10px;margin-top:2px;">전쟁상황모니터링 · 위기강도 게이지</div>
+            </div>
+            <div style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.18);border-radius:8px;padding:10px;grid-column:2/span 2;grid-row:1/span 2;">
+                <div style="color:#38bdf8;font-weight:700;font-size:10px;letter-spacing:0.1em;">ROW 1-2 · COL 2-3 (SPAN)</div>
+                <div style="color:#dbe7f3;margin-top:4px;">지정학 리스크 지도</div>
+                <div style="color:#8aa0bb;font-size:10px;margin-top:2px;">분쟁지역 · 석유인프라 · 파이프라인 · 항공경로</div>
+            </div>
+            <div style="background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.18);border-radius:8px;padding:10px;grid-row:1;">
+                <div style="color:#34d399;font-weight:700;font-size:10px;letter-spacing:0.1em;">ROW 1 · COL 4</div>
+                <div style="color:#dbe7f3;margin-top:4px;">FX &amp; MACRO PRESSURE</div>
+                <div style="color:#8aa0bb;font-size:10px;margin-top:2px;">환율 · KOSPI · NASDAQ 인덱스</div>
+            </div>
+            <!-- Row 2 -->
+            <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.18);border-radius:8px;padding:10px;grid-row:2;">
+                <div style="color:#f59e0b;font-weight:700;font-size:10px;letter-spacing:0.1em;">ROW 2 · COL 1</div>
+                <div style="color:#dbe7f3;margin-top:4px;">REAL-TIME NEWS</div>
+                <div style="color:#8aa0bb;font-size:10px;margin-top:2px;">실시간 뉴스 피드 (4건 표시)</div>
+            </div>
+            <div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.18);border-radius:8px;padding:10px;grid-row:2;">
+                <div style="color:#a78bfa;font-weight:700;font-size:10px;letter-spacing:0.1em;">ROW 2 · COL 4</div>
+                <div style="color:#dbe7f3;margin-top:4px;">ENERGY SHOCK BETA</div>
+                <div style="color:#8aa0bb;font-size:10px;margin-top:2px;">WTI · Brent · 에너지 주가 동향</div>
+            </div>
+            <!-- Row 3 -->
+            <div style="background:rgba(56,189,248,0.04);border:1px solid rgba(19,48,77,0.8);border-radius:8px;padding:10px;grid-row:3;">
+                <div style="color:#38bdf8;font-weight:700;font-size:10px;letter-spacing:0.1em;">ROW 3 · COL 1</div>
+                <div style="color:#dbe7f3;margin-top:4px;">상관관계 분석</div>
+                <div style="color:#8aa0bb;font-size:10px;margin-top:2px;">건설비 ↔ 거시변수 상관계수</div>
+            </div>
+            <div style="background:rgba(56,189,248,0.04);border:1px solid rgba(19,48,77,0.8);border-radius:8px;padding:10px;grid-row:3;">
+                <div style="color:#38bdf8;font-weight:700;font-size:10px;letter-spacing:0.1em;">ROW 3 · COL 2</div>
+                <div style="color:#dbe7f3;margin-top:4px;">에너지 인덱스 추이</div>
+                <div style="color:#8aa0bb;font-size:10px;margin-top:2px;">유가 · 수입물가 · 철강 시계열</div>
+            </div>
+            <div style="background:rgba(56,189,248,0.04);border:1px solid rgba(19,48,77,0.8);border-radius:8px;padding:10px;grid-row:3;">
+                <div style="color:#38bdf8;font-weight:700;font-size:10px;letter-spacing:0.1em;">ROW 3 · COL 3</div>
+                <div style="color:#dbe7f3;margin-top:4px;">금융 트렌드</div>
+                <div style="color:#8aa0bb;font-size:10px;margin-top:2px;">환율 · 금리 · 노무비 추이</div>
+            </div>
+            <div style="background:rgba(56,189,248,0.04);border:1px solid rgba(19,48,77,0.8);border-radius:8px;padding:10px;grid-row:3;">
+                <div style="color:#38bdf8;font-weight:700;font-size:10px;letter-spacing:0.1em;">ROW 3 · COL 4</div>
+                <div style="color:#dbe7f3;margin-top:4px;">건설공사비 영향</div>
+                <div style="color:#8aa0bb;font-size:10px;margin-top:2px;">실시간 건설비 원가 압력 지수</div>
+            </div>
+        </div>
+    </div>
+
+    <p style="font-size:13px;color:var(--muted);">
+        헤더 하단에는 KOSPI · KOSDAQ · NASDAQ · DOW · S&amp;P500 및 주요 금융주 · 건설주 실시간 시세가 표시됩니다.
+        상단 티커바에는 주요 지표가 스크롤 형태로 실시간 제공됩니다.
+    </p>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     2. CRISIS INTENSITY RISK
+     ═══════════════════════════════════════════════ -->
+<div class="section">
+    <h2><span class="dot" style="background:#fb7185;"></span> 2. CRISIS INTENSITY RISK — 위기강도 산출 방법</h2>
+
+    <div class="method-card m4">
+        <div class="tag">Level-Based Crisis Score</div>
+        <div class="method-title">절대 가격 수준 기반 위기강도 지수</div>
+        <div class="method-subtitle">
+            WTI 유가와 USD/KRW 환율의 <strong>절대 수준(Level)</strong>을 주요 신호로 사용합니다.
+            일별 변화율에만 의존하면 가격이 장기간 고공행진해도 신호가 0에 수렴하는 문제를 해결합니다.
+        </div>
+
+        <h3>기본 수준 신호 (Level Signals)</h3>
+        <div class="formula-box">
+            $$\text{oilLevelScore} = \min\!\Big(80,\;\max\!\big(0,\; \lfloor(WTI - 65) \times 1.5\rfloor\big)\Big)$$
+            $$\text{fxLevelScore} = \min\!\Big(60,\;\max\!\big(0,\; \lfloor(USDKRW - 1280) \times 0.22\rfloor\big)\Big)$$
+        </div>
+        <p style="font-size:13px;">
+            WTI $65 이하 또는 환율 1,280원 이하이면 수준 신호 = 0. WTI $115이면 oilLevelScore = 75, 환율 1,450원이면 fxLevelScore = 37.
+        </p>
+
+        <h3>4개 위기 도메인 점수</h3>
+        <table class="cmp">
+            <thead><tr><th>도메인</th><th>수식 구성</th><th>Max</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><strong style="color:#f59e0b;">에너지 충격</strong></td>
+                    <td style="font-size:11px;"><code>oilLevelScore + (wtiΔ + brentΔ)×8 + aircraft×4 + hormuz×6</code></td>
+                    <td>100</td>
+                </tr>
+                <tr>
+                    <td><strong style="color:#34d399;">금융 압력</strong></td>
+                    <td style="font-size:11px;"><code>fxLevelScore + fxΔ×15 + kospiΔ×8 + nasdaqΔ×5 + ...</code></td>
+                    <td>100</td>
+                </tr>
+                <tr>
+                    <td><strong style="color:#fb7185;">해상봉쇄 리스크</strong></td>
+                    <td style="font-size:11px;"><code>hormuz×15 + conflicts×4 + aircraft×2.5 + oilLevelScore×0.4</code></td>
+                    <td>100</td>
+                </tr>
+                <tr>
+                    <td><strong style="color:#a78bfa;">건설비 압력</strong></td>
+                    <td style="font-size:11px;"><code>oilLevelScore×0.5 + fxLevelScore×0.4 + (wtiΔ+brentΔ)×5 + ...</code></td>
+                    <td>100</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>종합 위기강도 점수</h3>
+        <div class="formula-box">
+            $$\text{CrisisScore} = \frac{w_E \cdot E + w_F \cdot F + w_B \cdot B + w_C \cdot C}{100}$$
+        </div>
+        <p style="font-size:13px;">각 도메인에 가중치를 곱한 가중평균. 결과는 0~100 범위의 점수.</p>
+
+        <table class="cmp">
+            <thead><tr><th>점수 범위</th><th>등급</th><th>설명</th></tr></thead>
+            <tbody>
+                <tr><td>≥ 65</td><td><span style="color:#ff0033;font-weight:700;">CRITICAL</span></td><td>극단적 위기. 즉각적 리스크 대응 필요.</td></tr>
+                <tr><td>45 ~ 64</td><td><span style="color:#ff4d6d;font-weight:700;">HIGH</span></td><td>높은 위기강도. 비용 상승 압력 강함.</td></tr>
+                <tr><td>30 ~ 44</td><td><span style="color:#f59e0b;font-weight:700;">MODERATE</span></td><td>중간 위기. 주요 변수 모니터링 강화.</td></tr>
+                <tr><td>15 ~ 29</td><td><span style="color:#38bdf8;font-weight:700;">LOW</span></td><td>낮은 위기. 정상 범위 내 변동성.</td></tr>
+                <tr><td>&lt; 15</td><td><span style="color:#34d399;font-weight:700;">MINIMAL</span></td><td>안정. 뚜렷한 위기 신호 없음.</td></tr>
+            </tbody>
+        </table>
+
+        <div class="info-box amber">
+            <strong>설계 원칙:</strong> 군사 API(ACLED, ADS-B)는 CORS 제한으로 브라우저에서 직접 호출할 수 없어 <code>aircraft=0, conflicts=0</code>인 경우가 많습니다.
+            따라서 유가·환율 수준 신호를 1차 드라이버로 두어 외부 API 없이도 현실적인 위기강도를 반영합니다.
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     3. 시뮬레이션 팝업 사용 가이드
+     ═══════════════════════════════════════════════ -->
+<div class="section">
+    <h2><span class="dot" style="background:#34d399;"></span> 3. 건설비 시뮬레이션 팝업 — 사용 가이드</h2>
+
+    <p style="margin-bottom:16px;">
+        대시보드에서 <strong>[시뮬레이션 분석]</strong> 버튼을 누르면 3열 구조의 팝업이 열립니다.
+    </p>
+
+    <div style="background:rgba(6,14,26,0.8);border:1px solid rgba(26,40,64,0.9);border-radius:14px;padding:20px;margin:14px 0;">
+        <!-- Top bar -->
+        <div style="background:rgba(10,27,47,0.9);border:1px solid rgba(56,189,248,0.2);border-radius:10px;padding:12px 16px;margin-bottom:12px;display:flex;gap:12px;align-items:center;font-size:11px;flex-wrap:wrap;">
+            <div>
+                <span style="color:#8aa0bb;">분석기간:</span>
+                <span style="background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3);color:#38bdf8;padding:2px 10px;border-radius:6px;margin-left:6px;">전체(5Y) ▼</span>
+            </div>
+            <div>
+                <span style="color:#8aa0bb;">분석방법론:</span>
+                <span style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#f59e0b;padding:2px 10px;border-radius:6px;margin-left:6px;">ARDL-OLS ▼</span>
+            </div>
+            <div style="flex:1;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                <span style="background:rgba(10,27,47,0.9);border:1px solid #13304d;border-radius:8px;padding:6px 14px;text-align:center;">
+                    <div style="font-size:9px;color:#8aa0bb;">3M 추가압력</div>
+                    <div style="color:#38bdf8;font-weight:700;">+2.4%</div>
+                </span>
+                <span style="background:rgba(10,27,47,0.9);border:1px solid #13304d;border-radius:8px;padding:6px 14px;text-align:center;">
+                    <div style="font-size:9px;color:#8aa0bb;">6M 추가압력</div>
+                    <div style="color:#f59e0b;font-weight:700;">+3.8%</div>
+                </span>
+                <span style="background:rgba(10,27,47,0.9);border:1px solid #13304d;border-radius:8px;padding:6px 14px;text-align:center;">
+                    <div style="font-size:9px;color:#8aa0bb;">12M 추가압력</div>
+                    <div style="color:#fb7185;font-weight:700;">+5.1%</div>
+                </span>
+                <span style="background:rgba(10,27,47,0.9);border:1px solid #13304d;border-radius:8px;padding:6px 14px;text-align:center;">
+                    <div style="font-size:9px;color:#8aa0bb;">건설공사비 평균영향</div>
+                    <div style="color:#fb7185;font-weight:700;">+3.8%</div>
+                </span>
+            </div>
+            <div style="display:flex;gap:6px;">
+                <span style="background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2);color:#38bdf8;padding:4px 12px;border-radius:6px;font-size:10px;">도움말</span>
+                <span style="background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);color:#a78bfa;padding:4px 12px;border-radius:6px;font-size:10px;">AI분석</span>
+                <span style="background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.2);color:#fb7185;padding:4px 12px;border-radius:6px;font-size:10px;">✕ 닫기</span>
+            </div>
+        </div>
+
+        <!-- 3 columns -->
+        <div style="display:grid;grid-template-columns:1fr 1.6fr 1fr;gap:10px;font-size:11px;">
+            <div style="background:rgba(10,27,47,0.8);border:1px solid rgba(26,40,64,0.9);border-radius:10px;padding:14px;">
+                <div style="color:#38bdf8;font-weight:700;font-size:10px;letter-spacing:0.1em;margin-bottom:10px;">① 파라미터 설정</div>
+                <div style="color:#8aa0bb;line-height:2;">
+                    환율 충격 (%) ——<br>
+                    유가 충격 (%) ——<br>
+                    생산자물가 충격 ——<br>
+                    수입물가 충격 ——<br>
+                    노무비 충격 ——<br>
+                    철강 충격 ——<br>
+                    시멘트 충격 ——<br>
+                    기준금리 충격 ——
+                </div>
+                <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;">
+                    <span style="background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2);color:#38bdf8;padding:4px 10px;border-radius:6px;font-size:10px;">전파경로 기여도</span>
+                    <span style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);color:#f59e0b;padding:4px 10px;border-radius:6px;font-size:10px;">상세 팝업</span>
+                </div>
+            </div>
+            <div style="background:rgba(10,27,47,0.8);border:1px solid rgba(26,40,64,0.9);border-radius:10px;padding:14px;">
+                <div style="color:#f59e0b;font-weight:700;font-size:10px;letter-spacing:0.1em;margin-bottom:10px;">② 분석결과</div>
+                <div style="background:rgba(6,14,26,0.6);border:1px solid #13304d;border-radius:8px;height:80px;display:flex;align-items:center;justify-content:center;color:#5c7290;font-size:10px;margin-bottom:8px;">
+                    12개월 건설공사비 전망 차트
+                </div>
+                <div style="color:#8aa0bb;font-size:10px;line-height:1.8;">
+                    건설공사비 지수 현재값 · 월별 추가상승률 · 3방법론 비교 · Attribution 기여도표
+                </div>
+            </div>
+            <div style="background:rgba(10,27,47,0.8);border:1px solid rgba(26,40,64,0.9);border-radius:10px;padding:14px;">
+                <div style="color:#a78bfa;font-weight:700;font-size:10px;letter-spacing:0.1em;margin-bottom:10px;">③ 영향 분석</div>
+                <div style="background:rgba(56,189,248,0.04);border:1px solid #13304d;border-radius:8px;padding:8px;margin-bottom:6px;font-size:10px;color:#8aa0bb;">
+                    유형별 건설비 영향 ▾<br>
+                    <span style="font-size:9px;">아파트·상업·산업 유형별 공사비 상승폭</span>
+                </div>
+                <div style="background:rgba(56,189,248,0.04);border:1px solid #13304d;border-radius:8px;padding:8px;font-size:10px;color:#8aa0bb;">
+                    등급별 PF 금리 영향 ▾<br>
+                    <span style="font-size:9px;">BBB-~A+ 신용등급별 PF 금리 상승폭</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3>컨트롤 설명</h3>
+    <table class="cmp">
+        <thead><tr><th>컨트롤</th><th>위치</th><th>기능</th></tr></thead>
+        <tbody>
+            <tr><td><strong>분석기간 드롭다운</strong></td><td>상단 좌측</td><td>우크라전쟁기 · 전쟁후 안정기 · 최근12M · 전체5Y 중 선택. 선택 기간의 데이터로 ARDL·LP 계수를 재추정.</td></tr>
+            <tr><td><strong>분석방법론 드롭다운</strong></td><td>상단 좌측</td><td>Gaussian IRF · ARDL-OLS · Local Projections · 3방법 비교 중 선택.</td></tr>
+            <tr><td><strong>3M/6M/12M KPI</strong></td><td>상단 중앙</td><td>시뮬레이션 결과. 각 시점에서의 건설공사비 추가 상승 예상치 (현재 대비 %).</td></tr>
+            <tr><td><strong>건설공사비 평균영향</strong></td><td>상단 중앙</td><td>12개월 전망 경로의 단순 평균 상승압력.</td></tr>
+            <tr><td><strong>AI분석</strong></td><td>상단 우측</td><td>Moonshot Kimi AI가 시뮬레이션 결과를 바탕으로 자연어 보고서를 생성.</td></tr>
+            <tr><td><strong>전파경로 기여도</strong></td><td>파라미터 하단</td><td>각 드라이버(환율, 유가 등)의 건설비 변동 기여 비율을 막대 차트로 표시.</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     4. 3가지 분석 방법론
+     ═══════════════════════════════════════════════ -->
+<div class="section">
+    <h2><span class="dot" style="background:#38bdf8;"></span> 4. 건설비 시뮬레이션 — 3가지 분석 방법론</h2>
 
     <pre class="mermaid">
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#0a1b2f', 'primaryTextColor': '#e2e8f0', 'lineColor': '#38bdf8'}}}%%
 flowchart LR
-    SHOCK["거시경제 충격<br/>(환율, 유가, 금리 등)"]
-    subgraph ENGINE["Simulation Engine v2"]
+    SHOCK["거시경제 충격<br/>(환율·유가·금리 등)"]
+    subgraph ENGINE["Simulation Engine"]
         direction TB
         G["Method 1<br/>Gaussian IRF"]
         A["Method 2<br/>ARDL-OLS"]
@@ -463,340 +775,194 @@ flowchart LR
     style ENGINE fill:#081728,stroke:#13304d,stroke-width:1px
     </pre>
 
-    <p style="margin-top: 12px;">
-        하나의 충격에 대해 세 가지 방법론이 <strong>서로 다른 전망</strong>을 내놓습니다.
-        단일 방법론의 한계를 보완하기 위해 비교 분석을 지원합니다.
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+        핵심 질문은 하나입니다: <strong style="color:var(--text);">"충격이 발생하면 경제가 어떻게 반응하는가?"</strong>
+        세 방법론은 이 질문에 서로 다른 관점으로 답합니다.
     </p>
 
     <table class="cmp">
         <thead>
             <tr>
                 <th>기준</th>
-                <th><span class="badge-sm blue">Gaussian IRF</span></th>
+                <th><span class="badge-sm blue">Gaussian / VAR 기반</span></th>
                 <th><span class="badge-sm amber">ARDL-OLS</span></th>
                 <th><span class="badge-sm violet">Local Projections</span></th>
             </tr>
         </thead>
         <tbody>
+            <tr><td>모델 구조</td><td>연립방정식 (변수 간 상호작용)</td><td>단일 방정식 (시차 분산)</td><td>개별 회귀 (horizon별 직접)</td></tr>
+            <tr><td>가정 의존도</td><td style="color:#fb7185;">높음 (정규분포·파라미터 고정)</td><td style="color:#f59e0b;">중간 (선형 시차)</td><td style="color:#34d399;">낮음 (최소 가정)</td></tr>
+            <tr><td>비선형 대응</td><td>어려움</td><td>보통</td><td style="color:#34d399;">쉬움 (강점)</td></tr>
+            <tr><td>장기효과 분석</td><td>가능</td><td style="color:#34d399;">강점 (공적분)</td><td>가능</td></tr>
+            <tr><td>오차 누적</td><td>없음 (고정식)</td><td style="color:#fb7185;">재귀 누적</td><td>없음 (직접 추정)</td></tr>
+            <tr><td>최근 학계 트렌드</td><td>전통적</td><td>중간</td><td style="color:#34d399;">주류 (2020s~)</td></tr>
+            <tr><td>직관적 비유</td><td style="color:#38bdf8;font-size:11px;">⚙️ 맞물린 톱니바퀴 시계</td><td style="color:#f59e0b;font-size:11px;">🌤 오늘 날씨 = 어제+그제 기압</td><td style="color:#a78bfa;font-size:11px;">📷 1년/2년/3년 후를 각각 촬영</td></tr>
+            <tr><td>적합한 질문</td><td style="color:#8aa0bb;font-size:11px;">변수들이 서로 어떻게 영향?</td><td style="color:#8aa0bb;font-size:11px;">장단기 관계 · 공적분?</td><td style="color:#8aa0bb;font-size:11px;">h기 후 충격이 얼마나 남는가?</td></tr>
             <tr>
-                <td>계수 추정</td>
-                <td>수기 입력 (고정)</td>
-                <td>OLS 데이터 추정</td>
-                <td>OLS 데이터 추정</td>
-            </tr>
-            <tr>
-                <td>IRF 형태</td>
-                <td>Gaussian (가정)</td>
-                <td>시차별 계수 (자유)</td>
-                <td>horizon별 직접 추정</td>
-            </tr>
-            <tr>
-                <td>비선형 충격 대응</td>
-                <td>취약</td>
-                <td>보통</td>
-                <td>조건부 유연</td>
-            </tr>
-            <tr>
-                <td>소표본 안정성</td>
-                <td>가정 고정형 (표본 무관)</td>
-                <td>표본 증가 시 향상</td>
-                <td>표본 증가 시 향상; h↑ 시 급감</td>
-            </tr>
-            <tr>
-                <td>변수 상호작용</td>
-                <td>독립 가정</td>
-                <td>시차별 포착</td>
-                <td>동시점 포착</td>
-            </tr>
-            <tr>
-                <td>오차 누적</td>
-                <td>없음 (공식 기반)</td>
-                <td>재귀 누적</td>
-                <td>없음 (직접 추정)</td>
-            </tr>
-            <tr>
-                <td>대형충격 반응</td>
-                <td>Baseline (가정 기반)</td>
-                <td>표본 충분 시 적합</td>
-                <td>방향성 추정에 유연 (소표본 주의)</td>
-            </tr>
-            <tr>
-                <td>적합한 질문</td>
-                <td style="font-size:12px;color:#8aa0bb;">충격이 어떻게 퍼지는가?</td>
-                <td style="font-size:12px;color:#8aa0bb;">장기 평균 관계는?</td>
-                <td style="font-size:12px;color:#8aa0bb;">충격이 h기 후 얼마나 남는가?</td>
-            </tr>
-            <tr>
-                <td>표본 크기 제약</td>
-                <td>없음</td>
-                <td style="color:#f59e0b;">n ≥ 41 권장</td>
-                <td style="color:#f59e0b;">n ≥ 42 권장 (30+12M)</td>
+                <td><strong>대시보드 구현 현황</strong></td>
+                <td style="font-size:11px;"><span style="background:rgba(245,158,11,0.15);color:#f59e0b;padding:2px 6px;border-radius:4px;">고정 파라미터</span><br><span style="color:#5c7290;">VAR 추정 아님. 경제이론 기반 수기 조율값.</span></td>
+                <td style="font-size:11px;"><span style="background:rgba(52,211,153,0.15);color:#34d399;padding:2px 6px;border-radius:4px;">✅ 완전 구현</span><br><span style="color:#5c7290;">OLS 추정, 기간별 캐시, Gauss-Jordan 역행렬.</span></td>
+                <td style="font-size:11px;"><span style="background:rgba(52,211,153,0.15);color:#34d399;padding:2px 6px;border-radius:4px;">✅ 완전 구현</span><br><span style="color:#5c7290;">12개 독립 회귀, 누적 전방 변화량.</span></td>
             </tr>
         </tbody>
     </table>
-</div>
 
-<!-- ═══════════════════════════════════════════════
-     Method 1: Gaussian IRF
-     ═══════════════════════════════════════════════ -->
-<div class="section">
-    <h2><span class="dot" style="background: #38bdf8;"></span> Method 1 — Gaussian IRF</h2>
-
-    <div class="method-card m1">
-        <div class="tag">Gaussian Impulse Response Function</div>
-        <div class="method-title">고정 가중치 + Gaussian 형태 충격반응함수</div>
+    <!-- Method 1 -->
+    <div class="method-card m1" style="margin-top:20px;">
+        <div class="tag">Method 1 — Gaussian IRF</div>
+        <div class="method-title">⚙️ 모든 톱니바퀴가 맞물려 돌아간다 (VAR의 개념적 토대)</div>
         <div class="method-subtitle">
-            각 거시변수에 대해 사전 지정된 가중치(weight), 최대 반응 시점(peakLag), 확산폭(width)을 사용하여
-            충격의 시간별 전파를 모델링합니다.
+            이론적으로는 VAR(벡터자기회귀)에 Gaussian 가정을 얹은 방식이지만,
+            <strong>대시보드 구현에서는 경제이론으로 수기 조율한 고정 파라미터</strong>를 사용합니다.
+            VAR처럼 "모든 변수가 서로 영향을 주고받는다"는 세계관을 구현하되,
+            데이터 추정 대신 도메인 지식 기반 파라미터로 대체한 것입니다.
         </div>
-
-        <h3>수학적 정의</h3>
+        <div class="info-box amber" style="margin-bottom:14px;">
+            <strong>구현 방식:</strong> 분석 기간(전쟁기·안정기·최근·전체)마다 별도의 파라미터 세트(<code>PASS_THROUGH_BY_PERIOD</code>)를 보유합니다.
+            예: 전쟁기 <code>fx: &#123; weight: 0.24, peakLag: 2, width: 1.5 &#125;</code> — 데이터 추정값이 아니라 2022년 실증 데이터로 조율한 값.
+        </div>
         <div class="formula-box">
             $$\Delta CC_h = \sum_{k} \text{shock}_k \times w_k \times \exp\!\left(-\frac{(h - \mu_k)^2}{2\sigma_k^2}\right) \times 0.1$$
         </div>
-        <p>
-            여기서 $w_k$는 드라이버 $k$의 전달 가중치, $\mu_k$는 peak lag(최대 반응 시점),
-            $\sigma_k$는 확산폭입니다. 관성 감쇠는 별도로 적용됩니다:
+        <p style="font-size:13px;">
+            $w_k$: 드라이버 가중치 (고정), $\mu_k$: peak lag (고정), $\sigma_k$: 확산폭 (고정).<br>
+            관성 감쇠: $\max(0.1,\; \overline{\Delta CC} \cdot e^{-h/10})$
         </p>
-        <div class="formula-box">
-            $$\text{inertia}(h) = \max\!\big(0.1,\; \overline{\Delta CC}_{MoM} \cdot e^{-h/10}\big)$$
-        </div>
-
-        <h3>작동 원리</h3>
-        <ol class="steps">
-            <li>각 드라이버(환율, 유가 등)에 대해 <strong>고정된 3개 파라미터</strong>(weight, peakLag, width)를 사전 설정</li>
-            <li>사용자가 입력한 충격(shock %)에 가중치를 곱하고, Gaussian 커널로 시간별 반응 크기를 계산</li>
-            <li>12개월간 기준성장률 + 충격성장률을 누적하여 전망 경로를 생성</li>
-        </ol>
-
         <div class="pros-cons">
             <div class="pros">
                 <h4>장점</h4>
                 <ul>
-                    <li>데이터 없이도 작동 (파라미터만 설정)</li>
-                    <li>소표본에서도 안정적</li>
-                    <li>직관적이고 설명이 쉬움</li>
-                    <li>계산 즉시 완료</li>
+                    <li>데이터 없이도 작동 — 즉시 결과, 소표본 안정적</li>
+                    <li>분석 기간별 파라미터 세트로 시기 특성 반영</li>
+                    <li>ARDL/LP 추정 실패 시 자동 폴백(fallback)</li>
                 </ul>
             </div>
             <div class="cons">
                 <h4>한계</h4>
                 <ul>
-                    <li>가중치가 <strong>추정이 아닌 가정</strong> — 실제와 괴리 가능</li>
-                    <li>IRF 형태가 항상 Gaussian — 실제 반응은 비대칭일 수 있음</li>
-                    <li>변수 간 상호작용 미반영 (환율↑→수입물가↑ 연쇄 무시)</li>
-                    <li>구조 변화(전쟁, 정책 전환)에 적응 불가</li>
+                    <li>가중치가 <strong>추정이 아닌 가정</strong> — 실제 데이터와 괴리 가능</li>
+                    <li>진정한 VAR과 달리 변수 간 피드백을 공식적으로 추정하지 않음</li>
+                    <li>구조 변화에 수동 조정 필요</li>
                 </ul>
             </div>
         </div>
-
         <div class="when-box">
-            <strong>적합한 사용 시점:</strong>
-            데이터가 부족하거나, 빠른 직관적 판단이 필요할 때.
-            Baseline 기준선으로 활용하거나 데이터가 부족할 때 방향성 판단에 조건부로 적합합니다.
+            <strong>권장 사용 시점:</strong> 데이터가 부족하거나 빠른 방향성 판단이 필요할 때. Baseline 기준선 역할. ARDL/LP 결과와 교차 검증.
         </div>
     </div>
-</div>
 
-<!-- ═══════════════════════════════════════════════
-     Method 2: ARDL-OLS
-     ═══════════════════════════════════════════════ -->
-<div class="section">
-    <h2><span class="dot" style="background: #f59e0b;"></span> Method 2 — ARDL-OLS</h2>
-
+    <!-- Method 2 -->
     <div class="method-card m2">
-        <div class="tag">Autoregressive Distributed Lag</div>
-        <div class="method-title">데이터 기반 시차 계수 추정 (OLS)</div>
+        <div class="tag">Method 2 — ARDL-OLS</div>
+        <div class="method-title">🌤 오늘 날씨 = 어제 날씨 + 어제 기압 + 그제 기압</div>
         <div class="method-subtitle">
-            선택한 분석 기간의 실제 데이터로 각 드라이버의 시차별 영향 계수를 OLS로 추정합니다.
-            "이 기간에 환율 1% 상승이 2개월 후 건설공사비에 실제로 얼마나 영향을 미쳤는가"를 데이터가 답합니다.
+            AutoRegressive Distributed Lag — <strong>변수의 과거(lag)와 다른 변수의 과거를 함께 고려</strong>합니다.
+            단기·장기 효과를 분리하고 공적분(cointegration) 관계 분석에 적합합니다.
         </div>
-
-        <h3>수학적 정의</h3>
         <div class="formula-box">
             $$\Delta CC_t = \alpha + \sum_{k=1}^{K} \sum_{l=0}^{L} \beta_{k,l} \cdot \Delta X_{k,t-l} + \varepsilon_t$$
         </div>
-        <p>
-            여기서 $\Delta CC_t$는 건설공사비의 월별 변화율, $\Delta X_{k,t-l}$은 드라이버 $k$의 $l$개월 전 변화율입니다.
-            계수 $\beta_{k,l}$은 OLS로 추정됩니다:
+        <p style="font-size:13px;">
+            $K=8$ 드라이버, $L=4$ 최대 시차 → 총 41개 계수 OLS 추정.
+            단일 방정식 중심이므로 피드백 효과는 제한적입니다.<br>
+            IRF 계산 시 maxLag 초과 구간은 <strong>지수 감쇠</strong>로 연결:
         </p>
         <div class="formula-box">
-            $$\hat{\boldsymbol{\beta}} = (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'\mathbf{y}$$
+            $$\text{IRF}(h) = \begin{cases} \beta_{k,h} & h \leq L_{\max} \\ \beta_{k,L_{\max}} \cdot e^{-0.4(h - L_{\max})} & h > L_{\max} \end{cases}$$
         </div>
-        <p>
-            $R^2$로 모델의 설명력을 검증합니다. 현재 구현에서는 $K=8$ (8개 드라이버), $L=4$ (최대 4개월 시차)로
-            총 $8 \times 5 + 1 = 41$개 계수를 추정합니다.
-        </p>
-
-        <h3>작동 원리</h3>
-        <ol class="steps">
-            <li>선택된 분석 기간의 시계열을 <strong>월별 변화율(Δ%)</strong>로 변환</li>
-            <li>각 관측치에 대해 8개 드라이버 × (lag 0~4) = 40개 설명변수 + 상수항으로 X 행렬을 구성</li>
-            <li><strong>OLS 회귀</strong>: $\mathbf{X}$ 전치 → 곱셈 → 역행렬 → 계수 벡터 $\hat{\beta}$ 산출</li>
-            <li>추정된 시차별 계수로 IRF를 구성 — Gaussian 가정 없이 <strong>데이터가 결정한 형태</strong></li>
-            <li>충격 입력 시 추정 계수를 누적 적용하여 12개월 전망 생성</li>
-        </ol>
-
-        <h3>Gaussian IRF와의 핵심 차이</h3>
-        <pre class="mermaid">
-%%{init: {'theme': 'dark'}}%%
-flowchart LR
-    subgraph GAUSS["Gaussian IRF"]
-        G1["weight = 0.13<br/>(수기 입력)"] --> G2["Gaussian 커널<br/>(형태 가정)"]
-        G2 --> G3["IRF 출력"]
-    end
-    subgraph ARDL["ARDL-OLS"]
-        A1["과거 데이터<br/>(선택 기간)"] --> A2["OLS 추정<br/>β = (X'X)⁻¹X'y"]
-        A2 --> A3["시차별 β<br/>(데이터 결정)"]
-        A3 --> A4["IRF 출력"]
-    end
-    style GAUSS fill:#0f2742,stroke:#38bdf8
-    style ARDL fill:#2a1f0f,stroke:#f59e0b
-        </pre>
-
         <div class="pros-cons">
             <div class="pros">
                 <h4>장점</h4>
                 <ul>
-                    <li><strong>데이터 기반</strong> — 주관적 파라미터 제거</li>
-                    <li>시차별 비대칭 반응 포착 가능</li>
-                    <li>R² 제공 — 모델 적합도 정량 검증</li>
-                    <li>분석 기간 변경 시 계수가 자동 재추정</li>
-                    <li>변수 간 간접 상호작용을 시차 구조로 포착</li>
+                    <li>단기·장기 효과 분리 가능</li>
+                    <li>공적분 관계 분석에 적합</li>
+                    <li>R²로 모델 적합도 정량 검증</li>
+                    <li>분석 기간 변경 시 계수 자동 재추정</li>
                 </ul>
             </div>
             <div class="cons">
                 <h4>한계</h4>
                 <ul>
-                    <li>표본 크기가 작으면 계수 추정이 불안정 (과적합 위험)</li>
-                    <li>41개 계수 vs ~20개 관측치 → 전쟁기 단독 추정 시 주의</li>
-                    <li>재귀 전망 시 오차가 누적될 수 있음</li>
-                    <li>구조 변화를 추정 기간 내에서만 반영</li>
+                    <li>소표본(n &lt; 41)에서 과적합 위험</li>
+                    <li>재귀 전망 시 오차 누적</li>
+                    <li>단일 방정식 → 피드백 효과 제한적</li>
                 </ul>
             </div>
         </div>
-
+        <div class="info-box amber">
+            <strong>IRF 절벽(Cliff) 수정:</strong> h > maxLag에서 0으로 끊지 않고 지수 감쇠 처리 → 전망 경로의 급격한 단절 방지.
+        </div>
         <div class="when-box">
-            <strong>적합한 사용 시점:</strong>
-            충분한 관측치(30+)가 있는 기간에서 변수별 영향 크기를 정량적으로 파악하고 싶을 때.
-            "전체 기간"(n=60)에서 상대적으로 안정적이며, "최근 12개월"은 lag 수 강제 제한 필요(n=12).
+            <strong>권장 사용 시점:</strong> 전체 5년 기간(n=60)에서 장기 평균 구조 파악. <strong>n &lt; 40이면 Gaussian 폴백 권장.</strong>
         </div>
     </div>
-</div>
 
-<!-- ═══════════════════════════════════════════════
-     Method 3: Local Projections
-     ═══════════════════════════════════════════════ -->
-<div class="section">
-    <h2><span class="dot" style="background: #a78bfa;"></span> Method 3 — Local Projections (Jordà, 2005)</h2>
-
+    <!-- Method 3 -->
     <div class="method-card m3">
-        <div class="tag">Local Projections &mdash; Direct Impulse Response</div>
-        <div class="method-title">각 시점(horizon)에서 직접 추정하는 충격반응</div>
+        <div class="tag">Method 3 — Local Projections (Jordà, 2005)</div>
+        <div class="method-title">📷 1년 후, 2년 후, 3년 후를 각각 별도 카메라로 찍는다</div>
         <div class="method-subtitle">
-            Oscar Jordà(2005)가 제안한 방법론으로, VAR/ARDL의 재귀적 IRF 대신
-            <strong>각 예측 시점 h에서 별도의 회귀를 실행</strong>합니다.
-            전쟁 같은 대형·비선형 충격에 가장 강건한 방법론입니다.
+            Jordà(2005) 제안, 최근 가장 많이 쓰이는 방법론.
+            <strong>h시점 이후 반응을 h번 각각 별도 회귀분석으로 직접 추정</strong>합니다.
+            VAR/ARDL의 재귀 누적 오차를 원천 차단합니다.
         </div>
-
-        <h3>수학적 정의</h3>
-        <p>각 horizon $h = 1, 2, \ldots, 12$에 대해 독립적인 회귀를 실행합니다:</p>
         <div class="formula-box">
-            $$y_{t+h} - y_t = \alpha_h + \sum_{k=1}^{K} \beta_{h,k} \cdot \Delta X_{k,t} + \varepsilon_{t+h}$$
+            $$y_{t+h} - y_t = \alpha_h + \sum_{k=1}^{K} \beta_{h,k} \cdot \Delta X_{k,t} + \varepsilon_{t+h} \quad \forall\, h = 1,\ldots,12$$
         </div>
-        <p>
-            여기서 좌변은 시점 $t$부터 $t+h$까지의 <strong>누적 변화</strong>이고,
-            $\beta_{h,k}$는 "드라이버 $k$가 1단위 변화했을 때, $h$개월 후까지의 누적 영향"을 직접 추정합니다.
+        <p style="font-size:13px;">
+            12개의 독립 OLS 회귀. $\beta_{h,k}$: "드라이버 $k$가 1단위 변화할 때 $h$개월 후 누적 영향".<br>
+            모델 오류(misspecification)에 강건. 비선형·비대칭 효과 포착 용이.
         </p>
-        <p>
-            핵심은 <strong>12개의 별도 OLS 회귀</strong>를 실행한다는 점입니다.
-            ARDL은 1개 회귀의 계수를 재귀적으로 누적하지만, LP는 각 시점의 영향을 독립적으로 추정합니다.
-        </p>
-
-        <h3>왜 전쟁 시나리오에 더 적합한가</h3>
-
-        <pre class="mermaid">
-%%{init: {'theme': 'dark'}}%%
-flowchart TB
-    subgraph PROBLEM["VAR/ARDL의 문제"]
-        direction LR
-        P1["1개월 추정"] -->|"오차 포함"| P2["2개월 추정"]
-        P2 -->|"오차 누적"| P3["3개월 추정"]
-        P3 -->|"오차 폭발"| P4["12개월 추정<br/>❌ 신뢰구간 확대"]
-    end
-    subgraph SOLUTION["LP의 해결"]
-        direction LR
-        S1["h=1 OLS"] ~~~ S2["h=2 OLS"] ~~~ S3["h=3 OLS"] ~~~ S4["h=12 OLS"]
-    end
-    NOTE["각 h에서 독립 추정<br/>→ 오차 비누적<br/>→ 대형 충격에 강건"]
-    SOLUTION --> NOTE
-    style PROBLEM fill:#2a0f1a,stroke:#fb7185
-    style SOLUTION fill:#1a0f2e,stroke:#a78bfa
-    style NOTE fill:#0a1b2f,stroke:#34d399
-        </pre>
-
-        <p style="margin-top: 12px;">
-            전쟁·금융위기 같은 대형 충격은 기존 선형 관계를 깨뜨립니다.
-            VAR/ARDL은 "평상시 관계"를 가정하고 재귀 적용하므로 극단 시나리오에서 오차가 폭발합니다.
-            LP는 <strong>각 시점에서 독립적으로 추정</strong>하므로 비선형 반응도 포착하고 오차가 누적되지 않습니다.
-        </p>
-
         <div class="pros-cons">
             <div class="pros">
                 <h4>장점</h4>
                 <ul>
-                    <li><strong>오차 비누적</strong> — 장기 전망에서도 신뢰구간이 폭발하지 않음</li>
-                    <li><strong>비선형 반응 포착</strong> — 전쟁 충격의 비대칭적 전파 반영</li>
-                    <li>모델 misspecification에 강건 (VAR 차수 선택 오류 영향 없음)</li>
+                    <li><strong>오차 비누적</strong> — 장기 전망에서도 신뢰구간 안정</li>
+                    <li>비선형·비대칭 충격 반응 포착</li>
+                    <li>모델 misspecification에 강건</li>
                     <li>직관적 해석: "$\beta_{6,\text{oil}}$은 유가 1% 충격의 6개월 후 누적 영향"</li>
                 </ul>
             </div>
             <div class="cons">
                 <h4>한계</h4>
                 <ul>
-                    <li>h가 커질수록 유효 표본이 줄어 추정 정밀도 하락</li>
-                    <li>소표본(< 20)에서 불안정 — 전쟁기 단독 사용 시 주의</li>
-                    <li>Newey-West 표준오차 등 추가 보정이 이상적 (현재 미구현)</li>
-                    <li>단기(1~3M) 추정은 ARDL보다 효율성이 낮을 수 있음</li>
+                    <li>단기(1~3M) 추정치 분산이 ARDL보다 클 수 있음</li>
+                    <li>h↑ 시 유효 표본 감소 → 정밀도 하락</li>
+                    <li>소표본(&lt; 20)에서 불안정</li>
                 </ul>
             </div>
         </div>
-
         <div class="when-box">
-            <strong>적합한 사용 시점:</strong>
-            전쟁, 금융위기, 공급망 붕괴 등 <strong>대형 비선형 충격</strong>의 전파를 분석할 때.
-            특히 "전쟁기 데이터로 추정 + LP 방법론"이 가장 의미 있는 조합입니다.
+            <strong>권장 사용 시점:</strong> 전쟁·금융위기 등 비선형 대형 충격 분석. 최근 학계 주류 방법론. 방향성 중심 해석 권장.
         </div>
     </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════
-     Analysis Periods
+     5. 분석 기간 선택
      ═══════════════════════════════════════════════ -->
 <div class="section">
-    <h2><span class="dot" style="background: #34d399;"></span> 분석 기간 선택 — 왜 기간이 중요한가</h2>
+    <h2><span class="dot" style="background:#34d399;"></span> 5. 분석 기간 선택 가이드</h2>
 
-    <p style="margin-bottom: 16px;">
+    <p style="margin-bottom:16px;">
         <strong>같은 방법론이라도 어떤 기간의 데이터로 추정했느냐에 따라 결과가 완전히 달라집니다.</strong>
-        전쟁기에 추정하면 유가·환율 계수가 크게 나오고, 안정기에 추정하면 노무비·금리가 지배적입니다.
     </p>
 
     <div class="period-card">
         <div class="period-badge war">우크라 전쟁기<br/>22.02 ~ 23.08</div>
         <div>
-            <strong style="color: #fb7185;">구조적 충격 최대 구간</strong> (idx 13~31, 19개월)<br>
-            유가 $130 급등 → 수입물가 → 철강·자재 → 건설공사비로의 전파가 실시간 진행.
-            이 기간으로 추정하면 <code>oil</code>, <code>fx</code>, <code>importPrice</code> 계수가 비정상적으로 큼.<br>
-            <span class="text-muted">소표본 주의: ARDL 41개 계수 vs 19개 관측치 → LP 권장</span>
+            <strong style="color:#fb7185;">구조적 충격 최대 구간</strong> (19개월)<br>
+            유가 $130 급등 → 수입물가 → 철강·자재 → 건설공사비로의 전파 실시간 진행.
+            oil, fx, importPrice 계수가 비정상적으로 큼.<br>
+            <span class="text-muted">소표본 주의: ARDL 41개 계수 vs 19개 관측치 → LP 권장, 방향성 중심 해석</span>
         </div>
     </div>
 
     <div class="period-card">
         <div class="period-badge post">전쟁 후 안정기<br/>23.09 ~ 24.06</div>
         <div>
-            <strong style="color: #f59e0b;">충격 소화 + 금리 고점 구간</strong> (idx 32~41, 10개월)<br>
-            원자재 가격 안정화, 금리 고점 지속. 금리·노무비가 공사비 변동의 주요 축으로 전환.
-            구조 전환기 분석에 유용하지만 표본 크기가 작아 추정 불안정.<br>
+            <strong style="color:#f59e0b;">충격 소화 + 금리 고점 구간</strong> (10개월)<br>
+            원자재 가격 안정화, 금리 고점 지속. 금리·노무비가 주요 축으로 전환.<br>
             <span class="text-muted">소표본(10M) — Gaussian 기준선 + 탐색적 해석 권장</span>
         </div>
     </div>
@@ -804,87 +970,141 @@ flowchart TB
     <div class="period-card">
         <div class="period-badge recent">최근 12개월</div>
         <div>
-            <strong style="color: #38bdf8;">현재 추세 반영</strong> (idx 48~59, 12개월)<br>
-            현재 시점에서 가장 가까운 데이터로 추정. "지금 이 순간의 구조"를 반영하지만
-            특정 충격(전쟁 등)의 영향은 이미 소멸된 상태일 수 있음.<br>
-            <span class="text-muted">ARDL은 표본 부족 위험, LP는 단기 시점만 신뢰 가능</span>
+            <strong style="color:#38bdf8;">현재 추세 반영</strong> (12개월)<br>
+            "지금 이 순간의 구조"를 반영. 전쟁 충격은 이미 소멸된 상태일 수 있음.<br>
+            <span class="text-muted">ARDL 표본 부족 위험. LP는 단기 시점만 신뢰 가능</span>
         </div>
     </div>
 
     <div class="period-card">
         <div class="period-badge full">전체<br/>21.01 ~ 25.12</div>
         <div>
-            <strong style="color: #34d399;">평균 장기구조 파악에 상대적으로 적합</strong> (idx 0~59, 60개월)<br>
-            전쟁 전·중·후를 모두 포함. 평균적인 전파 구조를 추정하며 ARDL/LP 모두 상대적으로 안정적.
-            단, 전쟁기의 극단적 반응이 평균에 희석됨.<br>
-            <span class="text-muted">평균 구조 파악에 적합; 극단 충격 시나리오는 전쟁기 구간 검토</span>
+            <strong style="color:#34d399;">평균 장기구조 파악</strong> (60개월)<br>
+            전쟁 전·중·후를 모두 포함. ARDL·LP 모두 상대적으로 안정적.
+            단, 전쟁기 극단적 반응이 평균에 희석됨.<br>
+            <span class="text-muted">R² 확인 필수. 극단 충격 시나리오는 전쟁기 구간 병행 검토</span>
         </div>
     </div>
 
     <h3>권장 조합</h3>
     <table class="cmp">
-        <thead>
-            <tr><th>분석 목적</th><th>기간</th><th>방법론</th><th>이유</th></tr>
-        </thead>
+        <thead><tr><th>분석 목적</th><th>기간</th><th>방법론</th><th>이유</th></tr></thead>
         <tbody>
-            <tr>
-                <td>전쟁 재발 시나리오</td>
-                <td><span class="badge-sm" style="background:rgba(251,113,133,0.12);color:#fb7185;">전쟁기</span></td>
-                <td><span class="badge-sm violet">LP</span></td>
-                <td>구조충격 방향성 추정에 조건부로 유연; 소표본(19M) — 수치 과신 금지</td>
-            </tr>
-            <tr>
-                <td>현재 추세 기반 전망</td>
-                <td><span class="badge-sm" style="background:rgba(56,189,248,0.12);color:#38bdf8;">최근 12M</span></td>
-                <td><span class="badge-sm amber">ARDL</span> + <span class="badge-sm blue">Gaussian</span></td>
-                <td>현재 구조 반영, 두 방법 교차 검증</td>
-            </tr>
-            <tr>
-                <td>장기 구조 분석</td>
-                <td><span class="badge-sm" style="background:rgba(52,211,153,0.12);color:#34d399;">전체</span></td>
-                <td><span class="badge-sm amber">ARDL</span></td>
-                <td>평균 장기 관계 파악; 극단 충격 희석 가능. R² 확인 필수</td>
-            </tr>
-            <tr>
-                <td>전체 비교 (보고용)</td>
-                <td><span class="badge-sm" style="background:rgba(52,211,153,0.12);color:#34d399;">전체</span></td>
-                <td>3-Method 비교</td>
-                <td>방법론 간 편차 확인; 편차 큼 = 불확실성 높음으로 해석</td>
-            </tr>
+            <tr><td>전쟁 재발 시나리오</td><td><span class="badge-sm pink">전쟁기</span></td><td><span class="badge-sm violet">LP</span></td><td>대형 충격 방향성 추정. 수치보다 방향성 중심 해석</td></tr>
+            <tr><td>현재 추세 기반 전망</td><td><span class="badge-sm blue">최근 12M</span></td><td><span class="badge-sm amber">ARDL</span> + <span class="badge-sm blue">Gaussian</span></td><td>현재 구조 반영, 두 방법 교차 검증</td></tr>
+            <tr><td>장기 구조 분석</td><td><span class="badge-sm green">전체 5Y</span></td><td><span class="badge-sm amber">ARDL</span></td><td>평균 장기 관계 파악. R² 확인 필수</td></tr>
+            <tr><td>불확실성 구간 확인</td><td>상황에 맞게</td><td>3-Method 비교</td><td>방법 간 편차 큼 = 불확실성 높음으로 해석</td></tr>
         </tbody>
     </table>
 </div>
 
 <!-- ═══════════════════════════════════════════════
-     Implementation Details
+     6. PF 금리 영향 산출
      ═══════════════════════════════════════════════ -->
 <div class="section">
-    <h2><span class="dot" style="background: #f59e0b;"></span> 구현 세부사항</h2>
+    <h2><span class="dot" style="background:#a78bfa;"></span> 6. PF 금리 영향 산출 방법</h2>
+
+    <div class="method-card m3">
+        <div class="tag">Project Finance Rate Impact</div>
+        <div class="method-title">신용등급별 PF 금리 상승폭 추정</div>
+        <div class="method-subtitle">
+            기준금리 충격과 건설공사비 상승에 따른 리스크 프리미엄을 단일 공식으로 통합합니다.
+        </div>
+
+        <h3>수식</h3>
+        <div class="formula-box">
+            $$\Delta r_{\text{PF}} = \Delta r_{\text{policy}} + \Delta CC_{12} \times \text{baseSpread} \times \alpha$$
+        </div>
+        <p style="font-size:13px;">
+            여기서 $\Delta r_{\text{policy}}$는 기준금리 충격(단위: %p), $\Delta CC_{12}$는 12개월 건설비 변화율, $\text{baseSpread}$는 등급별 기초 스프레드입니다.
+        </p>
+
+        <table class="cmp">
+            <thead><tr><th>파라미터</th><th>상승 충격</th><th>하락 충격</th><th>의미</th></tr></thead>
+            <tbody>
+                <tr><td>$\alpha$ (리스크 계수)</td><td>0.023</td><td>0.012</td><td>건설비 상승 시 더 큰 PF 리스크 반영</td></tr>
+            </tbody>
+        </table>
+
+        <table class="cmp">
+            <thead><tr><th>신용등급</th><th>baseSpread (%)</th><th>건설비 +10% 시 PF 상승폭</th></tr></thead>
+            <tbody>
+                <tr><td>A+</td><td>1.5</td><td style="color:#34d399;">+0.35%p</td></tr>
+                <tr><td>A</td><td>2.0</td><td style="color:#38bdf8;">+0.46%p</td></tr>
+                <tr><td>BBB+</td><td>3.0</td><td style="color:#f59e0b;">+0.69%p</td></tr>
+                <tr><td>BBB</td><td>4.5</td><td style="color:#fb923c;">+1.04%p</td></tr>
+                <tr><td>BBB-</td><td>8.5</td><td style="color:#fb7185;">+1.96%p</td></tr>
+            </tbody>
+        </table>
+
+        <div class="info-box green">
+            <strong>수식 개선 배경:</strong> 이전 공식은 <code>costImpact = delta12 × 0.15</code> + <code>riskPremium = delta12 × baseSpread × 0.08</code>으로
+            같은 건설비 상승을 두 번 계상하는 이중산정 문제가 있었습니다. 2022년 실제 PF 금리 데이터(BBB- 약 +2%p)를 기준으로 단일 계수로 통합했습니다.
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     7. AI 분석 (Moonshot Kimi)
+     ═══════════════════════════════════════════════ -->
+<div class="section">
+    <h2><span class="dot" style="background:#34d399;"></span> 7. AI 분석 — Moonshot Kimi</h2>
+
+    <div class="method-card m5">
+        <div class="tag">AI Report Generation</div>
+        <div class="method-title">Moonshot Kimi 자연어 시뮬레이션 보고서</div>
+        <div class="method-subtitle">
+            시뮬레이션 팝업 우측 상단 [AI분석] 버튼을 클릭하면, 시뮬레이션 결과 전체를 컨텍스트로 전달하여
+            Moonshot Kimi AI가 구조화된 분석 보고서를 생성합니다.
+        </div>
+
+        <h3>작동 흐름</h3>
+        <ol class="steps">
+            <li>시뮬레이션 결과(충격값, 3M/6M/12M 전망, 기여도, 유형별·등급별 영향)를 JSON으로 패키징</li>
+            <li>Vercel 서버리스 API(<code>/api/report</code>)를 통해 <code>api.moonshot.ai/v1/chat/completions</code> 호출</li>
+            <li>모델 <code>moonshot-v1-32k</code>가 전문 분석 보고서(한국어) 생성</li>
+            <li>보고서를 팝업 내에 렌더링 (섹션별 구조화 출력)</li>
+        </ol>
+
+        <h3>Fallback 순서</h3>
+        <table class="cmp">
+            <thead><tr><th>순위</th><th>공급자</th><th>모델</th><th>조건</th></tr></thead>
+            <tbody>
+                <tr><td>1st</td><td style="color:#34d399;"><strong>Moonshot Kimi</strong></td><td>moonshot-v1-32k</td><td>MOONSHOT_API_KEY 설정 시</td></tr>
+                <tr><td>2nd</td><td style="color:#38bdf8;">Anthropic Claude</td><td>claude-sonnet-4-6</td><td>ANTHROPIC_API_KEY 설정 시</td></tr>
+                <tr><td>3rd</td><td style="color:#f59e0b;">OpenAI GPT-4o</td><td>gpt-4o</td><td>OPENAI_API_KEY 설정 시</td></tr>
+            </tbody>
+        </table>
+
+        <div class="info-box violet">
+            <strong>보고서 구성:</strong> ① 현재 시장 상황 요약 → ② 충격 시나리오 분석 → ③ 건설공사비 전망 → ④ PF 금리 영향 → ⑤ 유형별 리스크 → ⑥ 투자 전략 제언
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     8. 구현 세부사항
+     ═══════════════════════════════════════════════ -->
+<div class="section">
+    <h2><span class="dot" style="background:#f59e0b;"></span> 8. 구현 세부사항</h2>
 
     <h3>OLS 행렬 연산 (순수 JavaScript)</h3>
-    <p>외부 라이브러리 없이 행렬 전치, 곱셈, 역행렬(가우스-조르단 소거법)을 구현합니다:</p>
-    <div class="formula-box" style="text-align: left; font-size: 13px;">
+    <div class="formula-box" style="text-align:left;font-size:13px;">
         <code>matTranspose(A)</code> — $m \times n \to n \times m$<br>
         <code>matMul(A, B)</code> — $A_{m \times p} \cdot B_{p \times n} \to C_{m \times n}$<br>
         <code>matInvert(M)</code> — Gauss-Jordan elimination, partial pivoting<br>
         <code>olsEstimate(X, y)</code> — $\hat{\beta} = (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'\mathbf{y}$, $R^2$ 계산 포함
     </div>
 
-    <h3>모델 캐싱</h3>
-    <p>
-        ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 <code>_modelCache</code>에 저장됩니다.
-        기간을 변경하면 캐시가 초기화되고 재추정됩니다. 충격(shock) 값 변경 시에는 재추정 없이
-        기존 계수를 적용합니다.
-    </p>
-
     <h3>ARDL 파라미터</h3>
     <table class="cmp">
         <thead><tr><th>파라미터</th><th>값</th><th>설명</th></tr></thead>
         <tbody>
             <tr><td>K (드라이버 수)</td><td>8</td><td>fx, oil, ppi, importPrice, labor, steel, cement, policyRate</td></tr>
-            <tr><td>L (최대 시차)</td><td>4</td><td>0~4개월 시차 포함</td></tr>
-            <tr><td>계수 수</td><td>41</td><td>8 × 5 + 1 (상수항)</td></tr>
+            <tr><td>L (최대 시차)</td><td>4</td><td>lag 0~4 포함</td></tr>
+            <tr><td>계수 수</td><td>41</td><td>8 × 5 + 1(상수항)</td></tr>
             <tr><td>최소 관측치</td><td>10</td><td>이하이면 Gaussian 폴백</td></tr>
+            <tr><td>IRF 감쇠율</td><td>0.4</td><td>h &gt; maxLag 시 지수 감쇠 계수 (e⁻⁰·⁴ˢ)</td></tr>
         </tbody>
     </table>
 
@@ -898,90 +1118,644 @@ flowchart TB
             <tr><td>최소 유효 관측치</td><td>8</td><td>이하이면 해당 h 스킵</td></tr>
         </tbody>
     </table>
+
+    <h3>모델 캐싱</h3>
+    <p style="font-size:13px;">
+        ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 <code>_modelCache</code>에 저장됩니다.
+        기간을 변경하면 캐시가 초기화되고 재추정됩니다. 충격(shock) 값 변경 시에는 재추정 없이
+        기존 계수를 적용합니다.
+    </p>
 </div>
 
 <!-- ═══════════════════════════════════════════════
-     실전 활용 가이드
+     9. 분석 결과 해석
      ═══════════════════════════════════════════════ -->
 <div class="section">
-    <h2><span class="dot" style="background: #f59e0b;"></span> 실전 활용 가이드: 언제 어떤 방법론을 쓸 것인가</h2>
+    <h2><span class="dot" style="background:#38bdf8;"></span> 9. 분석 결과 해석 가이드</h2>
 
-    <h3 style="color:#38bdf8; font-size:15px; margin: 16px 0 10px;">시나리오별 권장 방법론</h3>
-    <table class="comp-table">
-        <thead><tr><th>분석 목적</th><th>추천 방법론</th><th>추천 기간</th><th>이유</th></tr></thead>
+    <div class="two-col">
+        <div class="info-card">
+            <div class="ic-title" style="color:#fb923c;">PRESSURE BADGE 해석</div>
+            <div>
+                <span style="background:#dc3545;color:#fff;padding:1px 8px;border-radius:3px;font-size:10px;">HIGH PRESSURE</span>
+                — 복합 점수 &gt; 3.0. 건설비 상승 압력이 강하게 작용 중.
+            </div>
+            <div style="margin-top:6px;">
+                <span style="background:#f59e0b;color:#000;padding:1px 8px;border-radius:3px;font-size:10px;">WATCH</span>
+                — 1.5~3.0. 일부 변수에서 압력 신호 감지.
+            </div>
+            <div style="margin-top:6px;">
+                <span style="background:#22c55e;color:#000;padding:1px 8px;border-radius:3px;font-size:10px;">STABLE</span>
+                — &lt; 1.5. 유의미한 상승 압력 없음.
+            </div>
+        </div>
+        <div class="info-card">
+            <div class="ic-title" style="color:#38bdf8;">3M/6M/12M 추가압력 해석</div>
+            <div><strong>+2.5% (3M)</strong> → 향후 3개월간 건설공사비 지수가 현재 대비 2.5% 추가 상승 예상</div>
+            <div style="margin-top:6px;"><strong>-0.3% (6M)</strong> → 6개월 시점에서 충격이 흡수되어 소폭 하락 전환 예상</div>
+            <div style="margin-top:6px;">3방법 결과가 동일 방향 → 확신↑, 서로 다르면 불확실성 구간</div>
+        </div>
+    </div>
+
+    <div class="two-col" style="margin-top:14px;">
+        <div class="info-card">
+            <div class="ic-title" style="color:#a78bfa;">ATTRIBUTION TABLE 해석</div>
+            <div><strong>기여도(%)</strong> — 해당 변수가 전체 공사비 변동의 몇 %를 설명하는지.</div>
+            <div style="margin-top:6px;"><strong>반영시차</strong> — 충격 후 최대 영향까지 걸리는 개월 수 (peakLag).</div>
+            <div style="margin-top:6px;"><strong>전달경로</strong> — 충격이 건설공사비까지 도달하는 중간 경로.</div>
+            <div style="margin-top:6px;">기여도가 가장 큰 변수 = <strong>핵심 관리 대상</strong>. 시차가 긴 변수는 선제 대응 가능.</div>
+        </div>
+        <div class="info-card">
+            <div class="ic-title" style="color:#22c55e;">상관관계 vs 인과관계 주의</div>
+            <div>상관계수(r)가 높다고 인과관계를 의미하지 않습니다.</div>
+            <div style="margin-top:6px;"><strong>r &gt; 0.7</strong> — 강한 양의 상관. 함께 움직이는 경향 강함.</div>
+            <div style="margin-top:6px;"><strong>r &lt; -0.7</strong> — 강한 음의 상관. 역방향으로 함께 움직임.</div>
+            <div style="margin-top:6px;">인과 방향 확인에는 <strong>Granger 인과검정</strong> 또는 구조 VAR이 필요합니다.</div>
+        </div>
+    </div>
+
+    <h3 style="margin-top:24px;">3가지 방법론 결과가 다를 때 의사결정 흐름</h3>
+    <div class="mermaid" style="background:#06111f;border-radius:12px;padding:16px;">
+flowchart TD
+    A["3방법 실행"] --> B{"결과 방향<br>일치?"}
+    B -->|"3개 모두 상승"| C["높은 확신<br>상승 대비 전략 수립"]
+    B -->|"2:1 분리"| D["중간 확신<br>다수 의견 참조 + 소수 원인 분석"]
+    B -->|"완전 불일치"| E["높은 불확실성<br>시나리오 분석 강화"]
+    C --> F["예산 상향 조정 검토"]
+    D --> G["주요 변수 모니터링 강화"]
+    E --> H["AI분석 보고서로<br>리스크 분포 확인"]
+    style A fill:#0a2540,stroke:#38bdf8,color:#e2e8f0
+    style C fill:#0a2540,stroke:#22c55e,color:#22c55e
+    style D fill:#0a2540,stroke:#f59e0b,color:#f59e0b
+    style E fill:#0a2540,stroke:#dc3545,color:#dc3545
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     10. System Dynamics 관계
+     ═══════════════════════════════════════════════ -->
+<div class="section">
+    <h2><span class="dot" style="background:#fb923c;"></span> 10. System Dynamics와의 관계</h2>
+
+    <p style="font-size:13px;margin-bottom:16px;">
+        <strong style="color:var(--text);">SD는 "구조"를 그리고, 계량경제는 "크기"를 잰다.</strong><br>
+        두 접근법은 경쟁 관계가 아니라 <strong>보완 관계</strong>입니다.
+    </p>
+
+    <div class="info-box pink" style="margin-bottom:16px;">
+        <strong>현재 구현 현황:</strong> System Dynamics는 <strong>별도 분석 페이지</strong>(<code>macro-cost-system-dynamics.html</code>)로 분리되어 있으며,
+        위기 모니터링 대시보드의 시뮬레이션 엔진(Gaussian·ARDL·LP)과 아직 코드 수준에서 통합되지 않았습니다.
+        현재 SD 페이지는 <strong>개념 모델 · 인과 루프 다이어그램</strong>을 제공하며, 파라미터 추정은 계량경제 엔진이 담당합니다.
+    </div>
+
+    <!-- ── 4 SD Diagrams from macro-cost-system-dynamics.html ── -->
+    <h3 style="margin-top:24px;">System Dynamics 다이어그램</h3>
+
+    <!-- Diagram 1: CLD -->
+    <div style="background:rgba(6,14,26,0.85);border:1px solid rgba(19,48,77,0.9);border-radius:14px;padding:20px;margin:14px 0;">
+        <div style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--cyan);margin-bottom:12px;">1. Causal Loop Diagram — 전체 인과구조</div>
+        <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#0a1b2f', 'primaryTextColor': '#e2e8f0', 'lineColor': '#38bdf8', 'secondaryColor': '#13304d', 'tertiaryColor': '#081728'}}}%%
+flowchart TB
+    subgraph EXOG["외생 충격 (Exogenous Shocks)"]
+        direction LR
+        FX["원/달러 환율<br/>w=0.13 | lag=3M"]
+        OIL["국제유가 WTI<br/>w=0.08 | lag=2M"]
+        RATE["기준금리<br/>w=0.09 | lag=4M"]
+    end
+
+    subgraph COST_PUSH["원가 압력 경로 (Cost-Push Channel)"]
+        direction TB
+        PPI["생산자물가 PPI<br/>w=0.14 | lag=2M"]
+        IMP["수입물가<br/>w=0.19 | lag=3M"]
+        STEEL["철강 가격<br/>w=0.15 | lag=2M"]
+        CEMENT["시멘트 가격<br/>w=0.06 | lag=1M"]
+        LABOR["건설 노임<br/>w=0.20 | lag=1M"]
+    end
+
+    subgraph MIX["공사유형 믹스 (Portfolio Mix)"]
+        direction LR
+        RES["주거"]
+        LOG["물류센터"]
+        OFF["오피스·상업"]
+        ADV["첨단산업"]
+        INFRA["토목·인프라"]
+    end
+
+    subgraph TARGET["목표 변수"]
+        CC["건설공사비 지수<br/>(Construction Cost Index)"]
+    end
+
+    subgraph FEEDBACK["피드백 루프"]
+        PROJ["착공 구성 변화"]
+        DEMAND["건설 수요"]
+    end
+
+    FX -->|"환율→수입물가<br/>β=0.014"| IMP
+    OIL -->|"유가→에너지비<br/>β=0.23"| IMP
+    OIL -->|"유가→물류비"| PPI
+    FX -->|"환율→원자재"| STEEL
+
+    PPI -->|"제조원가→자재"| CEMENT
+    IMP -->|"수입자재→철강"| STEEL
+    IMP -->|"수입자재→건설비"| CC
+
+    STEEL -->|"구조재→공사비"| CC
+    CEMENT -->|"기초자재→공사비"| CC
+    LABOR -->|"직접노무비"| CC
+    PPI -->|"자재단가"| CC
+
+    RATE -->|"금융비용"| CC
+    RATE -->|"사업성 변화"| PROJ
+    RATE -->|"수요 억제"| DEMAND
+
+    PROJ --> MIX
+    RES --> CC
+    LOG --> CC
+    OFF --> CC
+    ADV --> CC
+    INFRA --> CC
+
+    CC -.->|"R1: 원가상승→<br/>착공지연"| DEMAND
+    DEMAND -.->|"수요↓→<br/>유형전환"| PROJ
+    PROJ -.->|"고단가 유형↑"| CC
+    RATE -.->|"B1: 금리↑→<br/>주거비중↓"| RES
+
+    style EXOG fill:#0f2742,stroke:#38bdf8,stroke-width:2px,color:#e2e8f0
+    style COST_PUSH fill:#1a0f2e,stroke:#a78bfa,stroke-width:2px,color:#e2e8f0
+    style MIX fill:#0f2a1a,stroke:#34d399,stroke-width:2px,color:#e2e8f0
+    style TARGET fill:#2a0f1a,stroke:#fb7185,stroke-width:2px,color:#e2e8f0
+    style FEEDBACK fill:#2a1f0f,stroke:#f59e0b,stroke-width:2px,color:#e2e8f0
+    style CC fill:#4a0f1f,stroke:#fb7185,stroke-width:3px,color:#fff
+        </pre>
+    </div>
+
+    <!-- Diagram 2: Stock & Flow -->
+    <div style="background:rgba(6,14,26,0.85);border:1px solid rgba(19,48,77,0.9);border-radius:14px;padding:20px;margin:14px 0;">
+        <div style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--pink);margin-bottom:12px;">2. Stock &amp; Flow — 건설공사비 누적 메커니즘</div>
+        <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#0a1b2f', 'primaryTextColor': '#e2e8f0', 'lineColor': '#f59e0b'}}}%%
+flowchart LR
+    subgraph INFLOW["유입 (Inflow)"]
+        S1["수입물가 충격<br/>w=0.19"]
+        S2["노무비 상승<br/>w=0.20"]
+        S3["철강 가격 충격<br/>w=0.15"]
+        S4["PPI 상승<br/>w=0.14"]
+        S5["환율 충격<br/>w=0.13"]
+        S6["금리 변화<br/>w=0.09"]
+        S7["유가 충격<br/>w=0.08"]
+        S8["시멘트 충격<br/>w=0.06"]
+    end
+
+    subgraph STOCK["Stock: 건설공사비"]
+        direction TB
+        ACC["누적 원가 압력<br/>(Accumulated<br/>Cost Pressure)"]
+        IRF["Gaussian IRF<br/>e^(-(h-peakLag)²/2σ²)"]
+    end
+
+    subgraph OUTFLOW["감쇠 (Dampening)"]
+        D1["관성 감쇠<br/>e^(-h/10)"]
+        D2["수요 위축<br/>착공 감소"]
+        D3["유형 전환<br/>저단가 공종↑"]
+    end
+
+    S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 -->|"shock × weight<br/>× IRF(h)"| ACC
+    ACC --> IRF
+    IRF -->|"누적 성장률"| RESULT["건설공사비<br/>Index"]
+    ACC -.-> D1 & D2 & D3
+    D1 & D2 & D3 -.->|"감쇠 효과"| ACC
+
+    style INFLOW fill:#0f2742,stroke:#38bdf8,stroke-width:2px
+    style STOCK fill:#2a0f1a,stroke:#fb7185,stroke-width:2px
+    style OUTFLOW fill:#2a1f0f,stroke:#f59e0b,stroke-width:2px
+    style ACC fill:#4a0f1f,stroke:#fb7185,stroke-width:3px,color:#fff
+    style RESULT fill:#1a4a0f,stroke:#34d399,stroke-width:3px,color:#fff
+        </pre>
+    </div>
+
+    <!-- Diagram 3: Gantt Lag Structure -->
+    <div style="background:rgba(6,14,26,0.85);border:1px solid rgba(19,48,77,0.9);border-radius:14px;padding:20px;margin:14px 0;overflow-x:auto;">
+        <div style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--violet);margin-bottom:12px;">3. 시간 구조 — Lag &amp; Impulse Response (Peak Lag by Driver)</div>
+        <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#0a1b2f', 'primaryTextColor': '#e2e8f0', 'lineColor': '#a78bfa'}}}%%
+gantt
+    title 거시변수별 Peak Lag & IRF 확산폭 (월)
+    dateFormat X
+    axisFormat %s
+
+    section 노무비
+    peakLag 1M, width 1.1   :done, 0, 3
+
+    section 시멘트
+    peakLag 1M, width 1.2   :done, 0, 3
+
+    section 유가
+    peakLag 2M, width 1.2   :active, 0, 4
+
+    section PPI
+    peakLag 2M, width 1.5   :active, 0, 5
+
+    section 철강
+    peakLag 2M, width 1.3   :active, 0, 5
+
+    section 환율
+    peakLag 3M, width 1.5   :crit, 0, 6
+
+    section 수입물가
+    peakLag 3M, width 1.4   :crit, 0, 6
+
+    section 기준금리
+    peakLag 4M, width 1.8   :crit, 0, 8
+        </pre>
+    </div>
+
+    <!-- Diagram 4: Feedback Loops (unified single diagram — refined version) -->
+    <div style="background:rgba(6,14,26,0.85);border:1px solid rgba(19,48,77,0.9);border-radius:14px;padding:20px;margin:14px 0;">
+        <div style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--amber);margin-bottom:12px;">4. Feedback Loops — 강화/균형 루프 식별</div>
+        <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#0a1b2f', 'primaryTextColor': '#e2e8f0', 'lineColor': '#34d399'}}}%%
+flowchart TB
+    subgraph R1["R1: 원가-착공 강화루프 (Reinforcing)"]
+        direction TB
+        CC1["건설공사비 ↑"] -->|"사업성 악화"| START1["착공 감소"]
+        START1 -->|"저단가 공종 축소"| MIX1["고단가 비중 ↑"]
+        MIX1 -->|"가중평균 상승"| CC1
+    end
+
+    subgraph R2["R2: 환율-수입물가 강화루프"]
+        direction TB
+        FX2["환율 ↑"] -->|"수입단가 상승"| IMP2["수입물가 ↑"]
+        IMP2 -->|"자재비 상승"| CC2["건설공사비 ↑"]
+        CC2 -->|"인플레 기대"| FX2
+    end
+
+    subgraph B1["B1: 금리-수요 균형루프 (Balancing)"]
+        direction TB
+        RATE3["금리 ↑"] -->|"대출 비용 ↑"| DEM3["건설 수요 ↓"]
+        DEM3 -->|"발주 감소"| LAB3["노무비 안정"]
+        LAB3 -->|"직접비 억제"| CC3["공사비 상승 둔화"]
+    end
+
+    subgraph B2["B2: 공사비-정책 균형루프"]
+        direction TB
+        CC4["공사비 급등"] -->|"물가 압력"| POL4["긴축 정책"]
+        POL4 -->|"금리 인상"| RATE4["금리 ↑"]
+        RATE4 -->|"투자 위축"| CC4
+    end
+
+    style R1 fill:#2a0f1a,stroke:#fb7185,stroke-width:2px
+    style R2 fill:#2a0f1a,stroke:#fb7185,stroke-width:2px
+    style B1 fill:#0f2a1a,stroke:#34d399,stroke-width:2px
+    style B2 fill:#0f2a1a,stroke:#34d399,stroke-width:2px
+        </pre>
+    </div>
+
+    <table class="cmp">
+        <thead><tr><th></th><th>계량경제 3종 (Gaussian · ARDL · LP)</th><th>System Dynamics</th></tr></thead>
         <tbody>
-            <tr><td><strong>빠른 스크리닝</strong><br>프로젝트 초기 사업성 검토</td><td style="color:#22c55e;">Gaussian IRF</td><td>최근 12M</td>
-                <td>파라미터 추정 불필요, 고정 가중치로 즉시 결과 확인. 방향성 판단에 충분.</td></tr>
-            <tr><td><strong>정밀 비용 예측</strong><br>예산 편성, 입찰가 산정</td><td style="color:#8b5cf6;">ARDL-OLS</td><td>전체(5Y)</td>
-                <td>시차별 계수를 데이터로 추정하므로 장기 평균 구조 파악에 적합. <strong>n &gt; 40 필수</strong> — 전체 구간(60M)에서만 실질적으로 유효하며, 12M 이하 구간은 Gaussian으로 폴백 권장.</td></tr>
-            <tr><td><strong>위기 상황 분석</strong><br>전쟁, 팬데믹 등 비정상 충격</td><td style="color:#fb7185;">Local Projections</td><td>전체(5Y) 또는 전쟁기</td>
-                <td>구조 충격 방향성 추정에 조건부로 유연. 단, 전쟁기(19M) 단독 사용 시 소표본 경고 — 수치보다 <strong>방향성 중심 해석</strong> 권장. 표본이 충분한 전체 구간과 병행 확인 유용.</td></tr>
-            <tr><td><strong>교차 검증</strong><br>리스크 보고서, 의사결정 지원</td><td style="color:#38bdf8;">All (3방법 비교)</td><td>상황에 맞게</td>
-                <td>3개 방법의 결과가 수렴하면 강건성↑, 괴리가 크면 불확실성↑ 신호. 방법 간 편차 자체가 정보.</td></tr>
-            <tr><td><strong>과거 충격 회고</strong><br>코로나, 금리 인상기 복기</td><td style="color:#8b5cf6;">ARDL / LP</td><td>해당 시기 선택</td>
-                <td>실제 계수 추정으로 "그 당시 어떤 변수가 얼마나 영향을 줬는지" 분해 가능.</td></tr>
+            <tr><td><strong>목적</strong></td><td>과거 데이터로 관계 추정</td><td>인과 구조로 미래 시뮬레이션</td></tr>
+            <tr><td><strong>출발점</strong></td><td>데이터</td><td>이론 / 구조</td></tr>
+            <tr><td><strong>인과관계</strong></td><td>통계적 추론 (암묵적)</td><td>명시적 설계 (루프로 그림)</td></tr>
+            <tr><td><strong>피드백 루프</strong></td><td>암묵적 (선형 근사)</td><td>핵심 구조 (강화·균형 루프)</td></tr>
+            <tr><td><strong>비선형</strong></td><td>LP가 부분적으로 허용</td><td>완전 허용 (설계 그대로)</td></tr>
+            <tr><td><strong>비유</strong></td><td>사진 분석가 (데이터를 읽는다)</td><td>설계 엔지니어 (구조를 그린다)</td></tr>
+            <tr><td><strong>대시보드 구현</strong></td>
+                <td><span style="background:rgba(52,211,153,0.15);color:#34d399;padding:2px 6px;border-radius:4px;">✅ 시뮬레이션 엔진에 통합</span></td>
+                <td><span style="background:rgba(245,158,11,0.15);color:#f59e0b;padding:2px 6px;border-radius:4px;">별도 페이지 (개념 모델)</span></td>
+            </tr>
         </tbody>
     </table>
 
-    <h3 style="color:#38bdf8; font-size:15px; margin: 24px 0 10px;">분석 결과 해석 가이드</h3>
+    <h3>이론적 통합 구조 (개념)</h3>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
-        <div style="background: #0a1f35; border: 1px solid #13304d; border-radius: 12px; padding: 18px;">
-            <div style="font-size: 12px; font-weight: 700; color: #ff6b00; margin-bottom: 8px;">PRESSURE BADGE 해석</div>
-            <div style="font-size: 12px; line-height: 1.8;">
-                <div><span style="background:#dc3545; color:#fff; padding:1px 8px; border-radius:3px; font-size:10px;">HIGH PRESSURE</span>
-                    — 복합 점수 > 3.0. 건설비 상승 압력이 강하게 작용 중.</div>
-                <div style="margin-top:4px;"><span style="background:#f59e0b; color:#000; padding:1px 8px; border-radius:3px; font-size:10px;">WATCH</span>
-                    — 복합 점수 1.5~3.0. 일부 변수에서 압력 신호 감지.</div>
-                <div style="margin-top:4px;"><span style="background:#22c55e; color:#000; padding:1px 8px; border-radius:3px; font-size:10px;">STABLE</span>
-                    — 복합 점수 < 1.5. 현재 유의미한 상승 압력 없음.</div>
+    <pre class="mermaid">
+%%{init: {'theme': 'dark'}}%%
+flowchart LR
+    subgraph SD["System Dynamics (구조 설계)"]
+        direction TB
+        SD1["인과 루프 설계\nStock & Flow"]
+        SD2["피드백 메커니즘\n강화/균형 루프"]
+        SD1 --> SD2
+    end
+    subgraph ECON["계량경제 엔진 (크기 측정) ✅ 구현됨"]
+        direction TB
+        E1["실제 데이터로 추정\nARDL · LP · Gaussian"]
+        E2["충격반응함수 IRF\n파급경로 추정"]
+        E1 --> E2
+    end
+    SD2 -->|"왜 이런 루프인가?\n이론 제공"| ECON
+    ECON -->|"얼마나 크게, 얼마나 오래?\n파라미터 추정 → SD에 주입 (미구현)"| SD1
+    style SD fill:#1a0f2e,stroke:#fb923c,stroke-dasharray:5 3
+    style ECON fill:#0f2742,stroke:#38bdf8
+    </pre>
+
+    <div class="two-col" style="margin-top:16px;">
+        <div class="info-card">
+            <div class="ic-title" style="color:#fb923c;">충격 반응 관점에서 비교</div>
+            <div style="line-height:2;">
+                <div><span class="badge-sm violet">LP</span> — 데이터에서 충격반응 직접 추출 <span style="color:#34d399;font-size:10px;">✅ 구현</span></div>
+                <div><span class="badge-sm blue">Gaussian</span> — VAR 개념 · 고정 파라미터 구현 <span style="color:#f59e0b;font-size:10px;">⚠ 근사 구현</span></div>
+                <div><span class="badge-sm amber">ARDL</span> — 장단기 관계 추정 <span style="color:#34d399;font-size:10px;">✅ 구현</span></div>
+                <div style="margin-top:8px;color:var(--orange);font-weight:600;">SD — 왜 그런 반응 모양인지 피드백 루프로 설명 <span style="font-size:10px;color:#f59e0b;">별도 페이지</span></div>
             </div>
         </div>
-        <div style="background: #0a1f35; border: 1px solid #13304d; border-radius: 12px; padding: 18px;">
-            <div style="font-size: 12px; font-weight: 700; color: #4ec9ff; margin-bottom: 8px;">3M / 6M / 12M 추가압력 해석</div>
-            <div style="font-size: 12px; line-height: 1.8;">
-                <div><strong>+2.5% (3M)</strong> → 향후 3개월간 건설공사비 지수가 현재 대비 2.5% 추가 상승 예상</div>
-                <div style="margin-top:4px;"><strong>-0.3% (6M)</strong> → 6개월 시점에서 충격이 흡수되어 소폭 하락 전환 예상</div>
-                <div style="margin-top:4px;"><strong>3방법 비교 시</strong> — 결과가 동일 방향이면 확신↑, 서로 다르면 불확실성 구간에 해당</div>
+        <div class="info-card">
+            <div class="ic-title" style="color:#34d399;">이상적 통합 흐름 (로드맵)</div>
+            <div style="line-height:2;font-size:11px;">
+                <div>① <span style="color:#34d399;">✅</span> ARDL/LP로 <strong>충격 전파 크기·속도</strong> 추정</div>
+                <div>② <span style="color:#34d399;">✅</span> Gaussian으로 <strong>데이터 부족 구간 보완</strong></div>
+                <div>③ <span style="color:#f59e0b;">미구현</span> 추정된 파라미터를 SD 모델에 주입</div>
+                <div>④ <span style="color:#f59e0b;">미구현</span> SD로 정책 피드백 포함 장기 시나리오</div>
+                <div style="margin-top:6px;color:#5c7290;font-size:10px;">→ ③④는 향후 통합 개발 과제</div>
             </div>
         </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-        <div style="background: #0a1f35; border: 1px solid #13304d; border-radius: 12px; padding: 18px;">
-            <div style="font-size: 12px; font-weight: 700; color: #a78bfa; margin-bottom: 8px;">ATTRIBUTION TABLE 해석</div>
-            <div style="font-size: 12px; line-height: 1.8;">
-                <div><strong>기여도(%)</strong> — 해당 변수가 전체 공사비 변동의 몇 %를 설명하는지 (change × weight).</div>
-                <div style="margin-top:4px;"><strong>반영시차</strong> — 충격 후 최대 영향까지 걸리는 개월 수 (peakLag).</div>
-                <div style="margin-top:4px;"><strong>전달경로</strong> — 충격이 건설공사비까지 도달하는 중간 경로.</div>
-                <div style="margin-top:4px;">기여도가 가장 큰 변수 = <strong>핵심 관리 대상</strong>. 시차가 긴 변수는 선제 대응 가능.</div>
-            </div>
+    <div class="info-box green" style="margin-top:14px;">
+        <strong>한 줄 정리:</strong> SD는 "구조"를 그리고, 계량경제는 "크기"를 잰다.
+        현재 대시보드는 계량경제 엔진(ARDL·LP·Gaussian)이 완전 구현되어 있으며,
+        SD는 개념 모델로 별도 제공됩니다. 두 층위의 코드 통합은 로드맵 과제입니다.
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     11. 통합 계획
+     ═══════════════════════════════════════════════ -->
+<div class="section">
+    <h2><span class="dot" style="background:#fb923c;"></span> 11. 시뮬레이션 엔진 × System Dynamics — 통합 계획</h2>
+
+    <p style="font-size:13px;margin-bottom:16px;">
+        계량경제 엔진(Gaussian·ARDL·LP)과 SD 모델을 연결하는 <strong>4단계 통합 로드맵</strong>입니다.
+        각 단계는 독립적으로 배포 가능하며, 선행 단계 없이도 가치를 제공합니다.
+    </p>
+
+    <!-- 전체 아키텍처 -->
+    <pre class="mermaid">
+%%{init: {'theme': 'dark'}}%%
+flowchart TB
+    subgraph INPUT["사용자 입력"]
+        U1["충격 파라미터\n(환율·유가·금리 등)"]
+        U2["분석 기간\n(전쟁기·최근·전체)"]
+    end
+    subgraph ECON["✅ 계량경제 엔진 (현재 구현)"]
+        direction LR
+        G["Gaussian\n고정 파라미터"]
+        A["ARDL-OLS\nβ 추정"]
+        L["LP\n12개 회귀"]
+    end
+    subgraph BRIDGE["Phase 1 — 파라미터 브릿지"]
+        B1F["sdParameterBridge()\nARDL β → SD 가중치"]
+    end
+    subgraph SDENG["Phase 2–3 — SD 엔진"]
+        direction TB
+        S1["Stock-Flow 방정식\n누적 비용 압력 ACC(t)"]
+        S2["피드백 루프\nR1·R2·B1·B2"]
+        S3["runSDSimulation()\n24개월 시뮬레이션"]
+        S1 --> S2 --> S3
+    end
+    subgraph HYBRID["Phase 4 — 하이브리드 출력"]
+        H1["buildForecastHybrid()\n계량경제 + SD 보정"]
+        H2["피드백 루프 패널\n루프 활성화 강도 표시"]
+    end
+    INPUT --> ECON
+    ECON --> BRIDGE
+    BRIDGE --> SDENG
+    ECON --> HYBRID
+    SDENG --> HYBRID
+    style ECON fill:#0f2742,stroke:#38bdf8
+    style BRIDGE fill:#1a0f2e,stroke:#fb923c,stroke-dasharray:4 2
+    style SDENG fill:#1a0f2e,stroke:#fb923c,stroke-dasharray:4 2
+    style HYBRID fill:#0a2b1a,stroke:#34d399,stroke-dasharray:4 2
+    </pre>
+
+    <!-- Phase 1 -->
+    <div class="method-card m6" style="margin-top:20px;">
+        <div class="tag">Phase 1 — 파라미터 브릿지</div>
+        <div class="method-title">ARDL 추정 계수 → SD 스톡 파라미터 변환</div>
+        <div class="method-subtitle">계량 엔진이 추정한 β 계수를 SD 스톡의 유입 가중치와 감쇠율로 변환합니다.</div>
+
+        <h3>핵심 매핑 로직</h3>
+        <div class="formula-box" style="text-align:left;font-size:12px;">
+            <strong>ARDL → SD 가중치:</strong><br>
+            $w_k^{SD} = \sum_{l=0}^{L} \beta_{k,l}$ (누적 시차 계수 합계 = 총 전달 탄력성)<br><br>
+            <strong>ARDL → SD peakLag:</strong><br>
+            $\mu_k^{SD} = \arg\max_l |\beta_{k,l}|$ (절댓값 최대 시차 = 최대 반응 시점)<br><br>
+            <strong>LP → SD 감쇠율:</strong><br>
+            $\tau_k = -\ln(\beta_{k,12} / \beta_{k,1}) / 11$ (1M~12M IRF 감쇠 속도)
         </div>
-        <div style="background: #0a1f35; border: 1px solid #13304d; border-radius: 12px; padding: 18px;">
-            <div style="font-size: 12px; font-weight: 700; color: #22c55e; margin-bottom: 8px;">상관관계 vs 인과관계 주의</div>
-            <div style="font-size: 12px; line-height: 1.8;">
-                <div>상관계수(r)가 높다고 인과관계를 의미하지 않습니다.</div>
-                <div style="margin-top:4px;"><strong>r > 0.7</strong> — 강한 양의 상관. 함께 움직이는 경향 강함.</div>
-                <div style="margin-top:4px;"><strong>-0.7 < r < 0.7</strong> — 중간~약한 관계. 다른 요인 존재 가능.</div>
-                <div style="margin-top:4px;">인과 방향 확인에는 <strong>Granger 인과검정</strong> 또는 구조 VAR이 필요하며, 본 대시보드는 예측적 상관에 초점.</div>
+
+        <h3>구현 함수 명세</h3>
+        <div class="formula-box" style="text-align:left;font-size:12px;">
+<code>function sdParameterBridge(ardlModel, lpModel) {
+  // ardlModel.coeffs[driver][lag] → cumulative weight per driver
+  // lpModel.coeffs[h][driver]    → decay rate extraction
+  const sdParams = {};
+  DRIVER_KEYS.forEach(k => {
+    const lags = ardlModel.coeffs[k] || {};
+    const w    = Object.values(lags).reduce((s, v) => s + v, 0);
+    const peak = Object.entries(lags).reduce((m, [l, v]) =>
+                   Math.abs(v) > Math.abs(m.v) ? {l, v} : m, {l:0, v:0}).l;
+    const b1   = lpModel.coeffs[1]?.[k]  || 0;
+    const b12  = lpModel.coeffs[12]?.[k] || 0;
+    const tau  = b1 !== 0 ? -Math.log(Math.abs(b12/b1)+1e-9) / 11 : 0.4;
+    sdParams[k] = { weight: w, peakLag: Number(peak), decayRate: tau };
+  });
+  return sdParams;   // { fx: {weight, peakLag, decayRate}, oil: {...}, ... }
+}</code>
+        </div>
+
+        <div class="when-box">
+            <strong>산출물:</strong> 분석 기간별로 데이터가 결정한 SD 파라미터 세트.
+            현재 수기 조율값(<code>PASS_THROUGH_BY_PERIOD</code>)을 자동 추정값으로 교체하거나 보정값으로 활용.
+        </div>
+    </div>
+
+    <!-- Phase 2 -->
+    <div class="method-card m4" style="margin-top:16px;">
+        <div class="tag">Phase 2 — 피드백 루프 정량화</div>
+        <div class="method-title">4개 피드백 루프의 강도를 계량 데이터로 보정</div>
+
+        <table class="cmp">
+            <thead><tr><th>루프</th><th>유형</th><th>메커니즘</th><th>정량화 소스</th><th>강도 추정식</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><strong style="color:#fb7185;">R1</strong></td>
+                    <td>강화</td>
+                    <td>비용↑ → 착공↓ → 저단가 프로젝트 감소 → 평균비용↑↑</td>
+                    <td>Attribution labor 기여도 + 착공 통계</td>
+                    <td style="font-size:11px;font-family:monospace;">α_R1 = corr(CC, -starts) × σ_CC</td>
+                </tr>
+                <tr>
+                    <td><strong style="color:#fb7185;">R2</strong></td>
+                    <td>강화</td>
+                    <td>환율↑ → 수입비↑ → 비용↑ → 인플레 기대↑ → 환율↑↑</td>
+                    <td>ARDL β_{fx,0..4} 누적값 + 한국은행 통화정책 반응 시차</td>
+                    <td style="font-size:11px;font-family:monospace;">α_R2 = Σβ_{fx,l} × fxPassThrough</td>
+                </tr>
+                <tr>
+                    <td><strong style="color:#34d399;">B1</strong></td>
+                    <td>균형</td>
+                    <td>금리↑ → 수요↓ → 노무비 안정 → 비용 상승 억제</td>
+                    <td>ARDL β_{policyRate,3..5} (3~5개월 시차)</td>
+                    <td style="font-size:11px;font-family:monospace;">α_B1 = |Σβ_{rate,l}| × demandElasticity</td>
+                </tr>
+                <tr>
+                    <td><strong style="color:#34d399;">B2</strong></td>
+                    <td>균형</td>
+                    <td>비용↑ → 정책 긴축 → 투자↓ → 수요↓</td>
+                    <td>Taylor-rule proxy: 정책금리 반응 함수 필요 (현재 미구현)</td>
+                    <td style="font-size:11px;font-family:monospace;">α_B2 = policyReactionCoeff × laggedCC</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="info-box amber">
+            <strong>현실적 범위:</strong> R1·B1은 기존 계량 데이터로 바로 추정 가능.
+            R2·B2는 외부 거시 반응 함수가 필요해 1차 통합에서는 0으로 초기화 후 수동 조정합니다.
+        </div>
+    </div>
+
+    <!-- Phase 3 -->
+    <div class="method-card m3" style="margin-top:16px;">
+        <div class="tag">Phase 3 — SD 시뮬레이션 엔진</div>
+        <div class="method-title">Stock-Flow 방정식으로 누적 비용 압력 시뮬레이션</div>
+
+        <h3>핵심 방정식</h3>
+        <div class="formula-box">
+            $$\frac{dACC}{dt} = \underbrace{\sum_k \text{shock}_k \cdot w_k^{SD} \cdot \text{IRF}_k(t)}_{\text{유입: 충격 누적}} - \underbrace{\tau \cdot ACC(t)}_{\text{유출: 감쇠}} + \underbrace{f_R(ACC) - f_B(ACC)}_{\text{피드백 보정}}$$
+        </div>
+        <div class="formula-box">
+            $$CC(t) = CC(0) \cdot \left(1 + \frac{ACC(t)}{\sigma_0}\right)$$
+        </div>
+        <p style="font-size:13px;">
+            피드백 함수: $f_R(ACC) = \alpha_{R1} \cdot ACC^{1.2}$ (비선형 강화),
+            $f_B(ACC) = \alpha_{B1} \cdot \text{policyRate}(t)$ (선형 균형)
+        </p>
+
+        <h3>구현 함수 명세</h3>
+        <div class="formula-box" style="text-align:left;font-size:12px;">
+<code>function runSDSimulation(shocks, sdParams, feedbackParams, horizon=24) {
+  // Euler integration: dt = 1 month
+  let ACC = 0;
+  const path = [];
+  for (let t = 1; t <= horizon; t++) {
+    const inflow  = DRIVER_KEYS.reduce((s, k) => {
+      const irf = sdParams[k].weight * gaussianEffect(t, sdParams[k].peakLag, sdParams[k].width);
+      return s + (shocks[k] || 0) * irf;
+    }, 0);
+    const outflow   = sdParams._tau * ACC;
+    const feedback_R = feedbackParams.alpha_R1 * Math.pow(Math.max(0, ACC), 1.2);
+    const feedback_B = feedbackParams.alpha_B1 * (shocks.policyRate || 0) * Math.max(0, t - 3);
+    ACC = ACC + inflow - outflow + feedback_R - feedback_B;
+    path.push({ t, ACC, CC: baseCC * (1 + ACC / 100) });
+  }
+  return path; // Same 12M slice compatible with existing forecast array format
+}</code>
+        </div>
+
+        <div class="when-box">
+            <strong>기존 엔진과의 호환성:</strong> 반환 배열을 <code>buildForecastGaussian</code>과 동일한 형태로 슬라이싱하면
+            기존 <code>buildMultiMethodForecast()</code>에 4번째 방법으로 즉시 추가 가능합니다.
+        </div>
+    </div>
+
+    <!-- Phase 4 -->
+    <div class="method-card m5" style="margin-top:16px;">
+        <div class="tag">Phase 4 — UI 통합 및 하이브리드 출력</div>
+        <div class="method-title">시뮬레이션 팝업에 SD 방법론 추가 + 피드백 루프 패널</div>
+
+        <h3>변경 범위</h3>
+        <table class="cmp">
+            <thead><tr><th>항목</th><th>변경 내용</th><th>영향 범위</th></tr></thead>
+            <tbody>
+                <tr><td>방법론 드롭다운</td><td>SD-Hybrid 옵션 추가</td><td><code>currentSimMethod</code> 분기 1개 추가</td></tr>
+                <tr><td>buildMultiMethodForecast()</td><td>SD 경로를 4번째 라인으로 추가</td><td>차트에 4번째 계열 렌더링</td></tr>
+                <tr><td>시뮬레이션 팝업 우측 패널</td><td>피드백 루프 활성화 강도 미니 게이지 추가</td><td>R1·R2·B1·B2 강도 바 표시</td></tr>
+                <tr><td>AI분석 컨텍스트</td><td>SD 피드백 루프 상태를 보고서 컨텍스트에 포함</td><td><code>generateLLMReport()</code> 입력 확장</td></tr>
+                <tr><td>도움말</td><td>SD 방법론 섹션 업데이트 (이 문서)</td><td>현재 페이지</td></tr>
+            </tbody>
+        </table>
+
+        <h3>피드백 루프 패널 설계</h3>
+        <div style="background:rgba(6,14,26,0.8);border:1px solid rgba(26,40,64,0.9);border-radius:12px;padding:16px;margin:12px 0;font-size:11px;">
+            <div style="color:#fb923c;font-weight:700;font-size:10px;letter-spacing:0.1em;margin-bottom:10px;">FEEDBACK LOOP STATUS</div>
+            <div style="display:grid;gap:8px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="color:#fb7185;width:28px;font-weight:700;font-size:10px;">R1</span>
+                    <div style="flex:1;background:rgba(251,113,133,0.1);border-radius:4px;height:6px;">
+                        <div style="width:62%;background:#fb7185;border-radius:4px;height:6px;"></div>
+                    </div>
+                    <span style="color:#fb7185;font-size:10px;width:36px;">62%</span>
+                    <span style="color:#5c7290;font-size:10px;">비용↑→착공↓→비용↑↑</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="color:#fb7185;width:28px;font-weight:700;font-size:10px;">R2</span>
+                    <div style="flex:1;background:rgba(251,113,133,0.1);border-radius:4px;height:6px;">
+                        <div style="width:38%;background:#fb7185;border-radius:4px;height:6px;"></div>
+                    </div>
+                    <span style="color:#fb7185;font-size:10px;width:36px;">38%</span>
+                    <span style="color:#5c7290;font-size:10px;">환율↑→수입↑→환율↑↑</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="color:#34d399;width:28px;font-weight:700;font-size:10px;">B1</span>
+                    <div style="flex:1;background:rgba(52,211,153,0.1);border-radius:4px;height:6px;">
+                        <div style="width:45%;background:#34d399;border-radius:4px;height:6px;"></div>
+                    </div>
+                    <span style="color:#34d399;font-size:10px;width:36px;">45%</span>
+                    <span style="color:#5c7290;font-size:10px;">금리↑→수요↓→비용 억제</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="color:#34d399;width:28px;font-weight:700;font-size:10px;">B2</span>
+                    <div style="flex:1;background:rgba(52,211,153,0.1);border-radius:4px;height:6px;">
+                        <div style="width:15%;background:#34d399;border-radius:4px;height:6px;"></div>
+                    </div>
+                    <span style="color:#34d399;font-size:10px;width:36px;">15%</span>
+                    <span style="color:#5c7290;font-size:10px;">비용↑→정책긴축→수요↓</span>
+                </div>
             </div>
         </div>
     </div>
 
-    <h3 style="color:#38bdf8; font-size:15px; margin: 24px 0 10px;">3가지 방법론 결과가 다를 때 의사결정 흐름</h3>
-    <div class="mermaid" style="background: #06111f; border-radius: 12px; padding: 16px;">
-    flowchart TD
-        A["3방법 실행"] --> B{"결과 방향<br>일치?"}
-        B -->|"3개 모두 상승"| C["높은 확신<br>상승 대비 전략 수립"]
-        B -->|"2:1 분리"| D["중간 확신<br>다수 의견 참조 + 소수 원인 분석"]
-        B -->|"완전 불일치"| E["높은 불확실성<br>시나리오 분석 강화"]
-        C --> F["예산 상향 조정 검토"]
-        D --> G["주요 변수 모니터링 강화"]
-        E --> H["Monte Carlo 시뮬레이션으로<br>확률 분포 확인"]
-        style A fill:#0a2540,stroke:#38bdf8,color:#e2e8f0
-        style C fill:#0a2540,stroke:#22c55e,color:#22c55e
-        style D fill:#0a2540,stroke:#f59e0b,color:#f59e0b
-        style E fill:#0a2540,stroke:#dc3545,color:#dc3545
+    <!-- 로드맵 타임라인 -->
+    <h3 style="margin-top:24px;">구현 로드맵</h3>
+    <table class="cmp">
+        <thead><tr><th>단계</th><th>작업</th><th>규모</th><th>전제 조건</th><th>산출물</th></tr></thead>
+        <tbody>
+            <tr>
+                <td><strong style="color:#fb923c;">Phase 1</strong><br>파라미터 브릿지</td>
+                <td><code>sdParameterBridge(ardlModel, lpModel)</code> 구현</td>
+                <td>함수 1개 (~60줄)</td>
+                <td>없음 (ARDL/LP 이미 구현됨)</td>
+                <td>기간별 SD 파라미터 세트 자동 추출</td>
+            </tr>
+            <tr>
+                <td><strong style="color:#f59e0b;">Phase 2</strong><br>피드백 정량화</td>
+                <td>R1·B1 강도 계산 함수 구현. R2·B2는 고정값(0.1) 초기화</td>
+                <td>함수 2개 (~80줄)</td>
+                <td>Phase 1 완료 + 착공 시계열 데이터</td>
+                <td>피드백 루프 강도 벡터 {α_R1, α_R2, α_B1, α_B2}</td>
+            </tr>
+            <tr>
+                <td><strong style="color:#a78bfa;">Phase 3</strong><br>SD 엔진</td>
+                <td><code>runSDSimulation()</code> Euler 적분 구현. 24개월 경로 계산</td>
+                <td>함수 1개 (~100줄)</td>
+                <td>Phase 1·2 완료</td>
+                <td>SD 24개월 비용지수 경로 배열</td>
+            </tr>
+            <tr>
+                <td><strong style="color:#34d399;">Phase 4</strong><br>UI 통합</td>
+                <td>드롭다운 추가, 차트 4번째 계열, 피드백 루프 패널</td>
+                <td>~200줄 (UI + 렌더링)</td>
+                <td>Phase 3 완료</td>
+                <td>SD-Hybrid 방법 선택 가능한 시뮬레이션 팝업</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="info-box violet" style="margin-top:16px;">
+        <strong>검증 전략:</strong> Phase 3 완료 후 2022년 전쟁기 데이터로 백테스트.
+        Gaussian·ARDL·LP·SD-Hybrid 4개 방법을 동시 실행하여 실제 건설공사비 지수 경로와 RMSE 비교.
+        SD가 피드백 루프로 장기(12M+) 구간에서 ARDL보다 낮은 오차를 보이면 통합 타당성 확인.
     </div>
 </div>
 
@@ -989,42 +1763,48 @@ flowchart TB
      References
      ═══════════════════════════════════════════════ -->
 <div class="section">
-    <h2><span class="dot" style="background: #94a3b8;"></span> 참고 문헌</h2>
-    <ul style="font-size: 13px; list-style: none; padding: 0;">
-        <li style="padding: 6px 0; border-bottom: 1px solid #0f2742;">
+    <h2><span class="dot" style="background:#94a3b8;"></span> 참고 문헌</h2>
+    <ul style="font-size:13px;list-style:none;padding:0;">
+        <li style="padding:6px 0;border-bottom:1px solid #0f2742;">
             <strong>Jordà, Ò. (2005).</strong> "Estimation and Inference of Impulse Responses by Local Projections."
             <em>American Economic Review</em>, 95(1), 161–182.
             <span class="text-muted">— LP 방법론의 원논문</span>
         </li>
-        <li style="padding: 6px 0; border-bottom: 1px solid #0f2742;">
-            <strong>Pesaran, M. H. & Shin, Y. (1999).</strong> "An Autoregressive Distributed Lag Modelling Approach to Cointegration Analysis."
+        <li style="padding:6px 0;border-bottom:1px solid #0f2742;">
+            <strong>Pesaran, M. H. &amp; Shin, Y. (1999).</strong> "An Autoregressive Distributed Lag Modelling Approach to Cointegration Analysis."
             <em>Econometrics and Economic Theory in the 20th Century</em>.
             <span class="text-muted">— ARDL 방법론의 이론적 기초</span>
         </li>
-        <li style="padding: 6px 0; border-bottom: 1px solid #0f2742;">
+        <li style="padding:6px 0;border-bottom:1px solid #0f2742;">
             <strong>Ramey, V. A. (2016).</strong> "Macroeconomic Shocks and Their Propagation."
             <em>Handbook of Macroeconomics</em>, Vol. 2.
             <span class="text-muted">— 충격 전파 분석 방법론 종합 서베이</span>
         </li>
-        <li style="padding: 6px 0;">
-            <strong>Plagborg-Møller, M. & Wolf, C. K. (2021).</strong> "Local Projections and VARs Estimate the Same Impulse Responses."
+        <li style="padding:6px 0;">
+            <strong>Plagborg-Møller, M. &amp; Wolf, C. K. (2021).</strong> "Local Projections and VARs Estimate the Same Impulse Responses."
             <em>Econometrica</em>, 89(2), 955–980.
             <span class="text-muted">— LP와 VAR의 수학적 동치 관계 증명</span>
         </li>
     </ul>
 </div>
 
-<p class="text-muted" style="text-align: center; margin-top: 30px;">
-    Construction Cost Simulation Engine v2 — Methodology Guide<br>
-    <a href="crisis-monitoring-dashboard.html">Dashboard</a> &nbsp;|&nbsp;
-    <a href="macro-cost-system-dynamics.html">System Dynamics</a>
+<p class="text-muted" style="text-align:center;margin-top:30px;">
+    CCC — Cost Crisis Center · Methodology Guide v3 (2026.03)<br>
+    <a href="crisis-monitoring-dashboard.html">← 대시보드로 돌아가기</a>
 </p>
 
 </div>
 
 <script>
-mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose',
-    flowchart: { curve: 'basis', padding: 20 } });
+mermaid.initialize({
+    startOnLoad: false,
+    theme: 'dark',
+    securityLevel: 'loose',
+    flowchart: { curve: 'basis', padding: 20, nodeSpacing: 30, rankSpacing: 40 },
+    gantt: { fontSize: 12, barHeight: 24, barGap: 6 }
+});
+// 스크립트가 body 끝에 있으므로 DOM은 이미 파싱 완료 → 즉시 run()
+mermaid.run();
 </script>
 </body>
 </html>

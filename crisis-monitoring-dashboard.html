@@ -234,7 +234,7 @@
         .dashboard {
             display: grid;
             grid-template-columns: minmax(220px, 1.22fr) minmax(290px, 1.38fr) minmax(290px, 1.38fr) minmax(220px, 1fr);
-            grid-template-rows: minmax(160px, 0.96fr) minmax(160px, 0.94fr) minmax(200px, 1.18fr);
+            grid-template-rows: minmax(160px, 1.06fr) minmax(160px, 0.94fr) minmax(200px, 1.18fr);
             gap: var(--dashboard-gap);
             padding: var(--dashboard-gap);
             max-width: 1920px;
@@ -1067,9 +1067,9 @@
             box-shadow: 0 0 8px rgba(255,179,0,0.2);
             white-space: nowrap; margin-left: -20px; margin-top: -10px;
         }
-        .oil-infra-marker .oil-icon { font-size: 11px; }
+        .oil-infra-marker .oil-icon { font-size: 13px; }
         .oil-infra-marker .oil-label {
-            font-size: 8px; color: #d4a844;
+            font-size: 10px; color: #d4a844;
             font-family: 'IBM Plex Mono', Consolas, monospace;
             letter-spacing: 0.3px;
         }
@@ -3884,7 +3884,19 @@
         }
 
         // Initialize
+        // Measure actual header+ticker height and update CSS variable so dashboard fits perfectly
+        function syncDashboardHeight() {
+            const ticker = document.querySelector('.news-ticker');
+            const header = document.querySelector('.header');
+            const tickerH = ticker ? ticker.getBoundingClientRect().height : 24;
+            const headerH = header ? header.getBoundingClientRect().height : 52;
+            document.documentElement.style.setProperty('--ticker-height', tickerH + 'px');
+            document.documentElement.style.setProperty('--header-height', headerH + 'px');
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+            syncDashboardHeight();
+            window.addEventListener('resize', syncDashboardHeight);
             updateTimestamp();
             initLiveNews();
             initMapAssets();
@@ -4717,7 +4729,7 @@
                 const mid = pipe.coords[Math.floor(pipe.coords.length / 2)];
                 const labelIcon = window.L.divIcon({
                     className: 'map-asset-icon',
-                    html: `<span style="font-size:7px;color:${pipe.color};text-shadow:0 0 4px #000,0 0 2px #000;white-space:nowrap;font-family:'IBM Plex Mono',Consolas,monospace;font-weight:700;letter-spacing:0.5px;">${pipe.name.split('(')[0].trim()}</span>`,
+                    html: `<span style="font-size:10px;color:${pipe.color};text-shadow:0 0 4px #000,0 0 2px #000;white-space:nowrap;font-family:'IBM Plex Mono',Consolas,monospace;font-weight:700;letter-spacing:0.5px;">${pipe.name.split('(')[0].trim()}</span>`,
                     iconSize: [0, 0], iconAnchor: [0, 0]
                 });
                 window.L.marker(mid, { icon: labelIcon, interactive: false, keyboard: false }).addTo(mapLayers.pipelines);
@@ -8705,10 +8717,12 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
         }
 
         function renderReImpact(deltas, shocks) {
-            // deltas: { d3, d6, d12 } pre-computed by runSimulation, or null to compute fresh
             const container = document.getElementById('simReImpact');
             if (!container) return;
-            if (!macroSimData || macroSimData.length < 13) { container.innerHTML = '<div style="color:#5a7a9a;font-size:10px;text-align:center;padding:20px;">시뮬레이션 실행 후 표시됩니다</div>'; return; }
+            if (!macroSimData || macroSimData.length < 13) {
+                container.innerHTML = '<div style="color:#5a7a9a;font-size:11px;text-align:center;padding:20px;">시뮬레이션 실행 후 표시됩니다</div>';
+                return;
+            }
             let d3, d6, d12;
             if (deltas && deltas.d3 !== undefined) {
                 ({ d3, d6, d12 } = deltas);
@@ -8719,71 +8733,146 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
                 d6 = forecast[5] ? forecast[5].deltaPct : 0;
                 d12 = forecast[11] ? forecast[11].deltaPct : 0;
             }
-            const latest = macroSimData[macroSimData.length - 1];
-            const icons = { apt: '🏢', officetel: '🏨', commercial: '🏬', office: '🏛️', knowledge: '🏭', logistics: '📦' };
-            const colors = { apt: '#4ec9ff', officetel: '#a78bfa', commercial: '#f59e0b', office: '#22c55e', knowledge: '#fb7185', logistics: '#38bdf8' };
 
-            let html = '<table style="width:100%;border-collapse:collapse;font-size:11px;">';
-            html += '<thead><tr style="border-bottom:1px solid #1a2a42;">';
-            html += '<th style="text-align:left;padding:5px 3px;color:#6a8aaa;font-size:10px;">유형</th>';
-            html += '<th style="text-align:right;padding:5px 3px;color:#6a8aaa;font-size:10px;">현행(만/평)</th>';
-            html += '<th style="text-align:right;padding:5px 3px;color:#38bdf8;font-size:10px;">3M</th>';
-            html += '<th style="text-align:right;padding:5px 3px;color:#f59e0b;font-size:10px;">6M</th>';
-            html += '<th style="text-align:right;padding:5px 3px;color:#fb7185;font-size:10px;">12M</th>';
-            html += '</tr></thead><tbody>';
+            const icons  = { apt:'🏢', officetel:'🏨', commercial:'🏬', office:'🏛️', knowledge:'🏭', logistics:'📦' };
+            const colors = { apt:'#4ec9ff', officetel:'#a78bfa', commercial:'#f59e0b', office:'#22c55e', knowledge:'#fb7185', logistics:'#38bdf8' };
+            const matLabels = { steel:'철강·철근', concrete:'콘크리트', finishing:'마감재', equipment:'설비', other:'기타' };
+            const matColors = { steel:'#38bdf8', concrete:'#a78bfa', finishing:'#f59e0b', equipment:'#22c55e', other:'#475569' };
 
-            // ── 충격 구성 × 패스스루 × 유형별 자재 노출도 → 유형별 민감도 ──
-            // 모델(기간/방법론)이 바뀌면 pt 가중치와 d3/d6/d12가 함께 바뀌어 유형별 영향도 달라짐
+            // 충격 채널별 절대 기여도
             const pt = getPassThrough(currentAnalysisPeriod);
-            // 시스템 평균 자재 구성 (6개 유형 평균)
             const AVG_STEEL = 19.3, AVG_CONCRETE = 14.3, AVG_LABOR_PCT = 30.5;
-            // 현재 충격 조합에서 각 채널(철강/시멘트/노무비/금융)의 절대 기여도
             const sm = k => Math.abs(shocks[k] || 0) * (pt[k]?.weight || 0);
             const steelShock    = sm('oil') + sm('fx') + sm('steel') + sm('importPrice');
             const cementShock   = sm('ppi') + sm('cement');
             const laborShock    = sm('labor');
-            const financialShock = sm('policyRate') + sm('vix') + sm('us10y');
+            const financialShock= sm('policyRate') + sm('vix') + sm('us10y');
             const totalShock    = steelShock + cementShock + laborShock + financialShock || 1;
 
             const recent12 = macroSimData.slice(-12);
+            const mLabel   = { all:'전체평균', gaussian:'Gaussian', ardl:'ARDL', lp:'LP' }[currentSimMethod] || currentSimMethod;
+            const pLabel   = ANALYSIS_PERIODS[currentAnalysisPeriod]?.label || currentAnalysisPeriod;
+
+            // ── 전체 평균 영향 요약 배너 ──
+            const avgImpColor = d12 > 0 ? '#ff6b00' : d12 < 0 ? '#22c55e' : '#8cb4d8';
+            let html = `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:7px;margin-bottom:8px;">
+                <div style="font-size:9px;color:#6a8aaa;text-transform:uppercase;letter-spacing:0.6px;">${mLabel} · ${pLabel}</div>
+                <div style="display:flex;align-items:baseline;gap:4px;">
+                    <span style="font-size:9px;color:#8cb4d8;">12M 평균</span>
+                    <span style="font-size:15px;font-weight:800;color:${avgImpColor};font-family:'IBM Plex Mono',Consolas,monospace;">${d12 >= 0 ? '+' : ''}${d12.toFixed(2)}%</span>
+                </div>
+            </div>`;
+
+            // ── 유형별 인포그래픽 카드 ──
             Object.entries(PYEONG_TYPES).forEach(([key, cfg]) => {
                 const vals = recent12.map(r => r[cfg.simKey] || cfg.baseline);
-                const val = Math.round(vals.reduce((s, v) => s + v, 0) / vals.length);
+                const val  = Math.round(vals.reduce((s, v) => s + v, 0) / vals.length);
 
-                // 유형별 채널 노출도 (평균 대비 상대값)
                 const steelRel    = cfg.materials.steel / AVG_STEEL;
                 const concreteRel = (cfg.materials.concrete || 0) / AVG_CONCRETE;
                 const laborRel    = (cfg.laborPct / AVG_LABOR_PCT) * cfg.laborSensitivity;
-                // 충격 조합 가중 평균 → 유형별 상대 민감도 배율
                 const typeRelMult = (steelShock * steelRel + cementShock * concreteRel
                                    + laborShock * laborRel + financialShock) / totalShock;
-                // 재료비+노무비 비중 × 유형 상대 민감도 = 최종 sens
-                const sens = (cfg.materialPct + cfg.laborPct) / 100 * typeRelMult;
-                const imp3 = d3 * sens, imp6 = d6 * sens, imp12 = d12 * sens;
-                const won3 = Math.round(val * imp3 / 100);
-                const won6 = Math.round(val * imp6 / 100);
+                const sens  = (cfg.materialPct + cfg.laborPct) / 100 * typeRelMult;
+                const imp3  = d3  * sens, imp6  = d6  * sens, imp12 = d12 * sens;
+                const won3  = Math.round(val * imp3  / 100);
+                const won6  = Math.round(val * imp6  / 100);
                 const won12 = Math.round(val * imp12 / 100);
-                const c = colors[key];
-                const fmtWon = w => `<span style="color:${w > 0 ? '#ff6b00' : w < 0 ? '#22c55e' : '#5a7a9a'};font-weight:600;">${w >= 0 ? '+' : ''}${w.toLocaleString()}</span>`;
+                const c     = colors[key];
 
-                html += `<tr style="border-bottom:1px solid rgba(26,42,66,0.5);cursor:pointer;" onclick="showPyeongDetail('${key}')">
-                    <td style="padding:5px 2px;"><span style="font-size:12px;">${icons[key]}</span> <span style="color:${c};font-weight:600;">${cfg.label}</span></td>
-                    <td style="text-align:right;padding:5px 2px;color:#8ea9cc;font-family:'IBM Plex Mono',Consolas,monospace;">${val.toLocaleString()}</td>
-                    <td style="text-align:right;padding:5px 2px;font-family:'IBM Plex Mono',Consolas,monospace;">${fmtWon(won3)}</td>
-                    <td style="text-align:right;padding:5px 2px;font-family:'IBM Plex Mono',Consolas,monospace;">${fmtWon(won6)}</td>
-                    <td style="text-align:right;padding:5px 2px;font-family:'IBM Plex Mono',Consolas,monospace;">${fmtWon(won12)}</td>
-                </tr>`;
+                // 12M 임팩트 방향
+                const impSign  = imp12 > 0 ? '+' : '';
+                const impColor = imp12 > 0 ? '#ff6b00' : imp12 < 0 ? '#22c55e' : '#8cb4d8';
+                const wonColor = w => w > 0 ? '#ff6b00' : w < 0 ? '#22c55e' : '#8cb4d8';
+
+                // 지배 채널 판별
+                const channelAmts = [
+                    { name:'철강', val: steelShock * steelRel },
+                    { name:'시멘트', val: cementShock * concreteRel },
+                    { name:'노무비', val: laborShock * laborRel },
+                    { name:'금융비용', val: financialShock }
+                ];
+                const topChannel = channelAmts.reduce((a, b) => b.val > a.val ? b : a, channelAmts[0]);
+
+                // 노무 민감도 텍스트
+                const sensTag = cfg.laborSensitivity >= 1.05
+                    ? `<span style="color:#fb7185;font-size:9px;font-weight:700;">▲ 민감</span>`
+                    : cfg.laborSensitivity <= 0.85
+                    ? `<span style="color:#22c55e;font-size:9px;font-weight:700;">▼ 둔감</span>`
+                    : `<span style="color:#8cb4d8;font-size:9px;">표준</span>`;
+
+                // 상위 3개 자재만 표시
+                const topMats = Object.entries(cfg.materials)
+                    .sort((a, b) => b[1] - a[1]).slice(0, 3);
+
+                html += `
+                <div style="border:1px solid ${c}28;border-left:3px solid ${c};border-radius:7px;margin-bottom:8px;background:linear-gradient(135deg,rgba(6,10,18,0.9),rgba(10,20,36,0.7));overflow:hidden;">
+
+                    <!-- 헤더 -->
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px 5px;border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:14px;">${icons[key]}</span>
+                            <span style="font-size:12px;font-weight:700;color:${c};letter-spacing:0.3px;">${cfg.label}</span>
+                            ${cfg.steelHeavy ? `<span style="font-size:8px;padding:1px 5px;background:rgba(56,189,248,0.12);color:#38bdf8;border-radius:3px;border:1px solid rgba(56,189,248,0.2);">철강민감</span>` : ''}
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:13px;font-weight:800;color:#e2e8f0;font-family:'IBM Plex Mono',Consolas,monospace;">${val.toLocaleString()}<span style="font-size:9px;color:#6a8aaa;font-weight:400;">만/평</span></div>
+                        </div>
+                    </div>
+
+                    <!-- 충격 KPI 3칸 -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid rgba(255,255,255,0.04);">
+                        ${[
+                            { label:'3M', pct:imp3, won:won3, dimColor:'#38bdf8' },
+                            { label:'6M', pct:imp6, won:won6, dimColor:'#f59e0b' },
+                            { label:'12M', pct:imp12, won:won12, dimColor:'#fb7185' }
+                        ].map((h, i) => `
+                        <div style="padding:6px 8px;${i < 2 ? 'border-right:1px solid rgba(255,255,255,0.05);' : ''}text-align:center;">
+                            <div style="font-size:8px;color:${h.dimColor};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">${h.label}</div>
+                            <div style="font-size:13px;font-weight:800;color:${wonColor(h.won)};font-family:'IBM Plex Mono',Consolas,monospace;line-height:1.1;">${h.won >= 0 ? '+' : ''}${h.won.toLocaleString()}<span style="font-size:8px;font-weight:400;color:#5a7a9a;">만</span></div>
+                            <div style="font-size:9px;color:${wonColor(h.pct)};font-family:'IBM Plex Mono',Consolas,monospace;">${h.pct >= 0 ? '+' : ''}${h.pct.toFixed(2)}%</div>
+                        </div>`).join('')}
+                    </div>
+
+                    <!-- 원가 구성 스택 바 -->
+                    <div style="padding:6px 10px 4px;">
+                        <div style="font-size:8px;color:#4a6a8a;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;">원가 구성</div>
+                        <div style="display:flex;height:18px;border-radius:3px;overflow:hidden;gap:1px;">
+                            <div style="width:${cfg.materialPct}%;background:linear-gradient(90deg,#1d6fa4,#4ec9ff);display:flex;align-items:center;justify-content:center;">
+                                <span style="font-size:8px;font-weight:700;color:#fff;white-space:nowrap;">재료 ${cfg.materialPct}%</span>
+                            </div>
+                            <div style="width:${cfg.laborPct}%;background:linear-gradient(90deg,#a36a00,#f5b642);display:flex;align-items:center;justify-content:center;">
+                                <span style="font-size:8px;font-weight:700;color:#fff;white-space:nowrap;">노무 ${cfg.laborPct}%</span>
+                            </div>
+                            <div style="width:${cfg.overheadPct}%;background:rgba(71,85,105,0.7);display:flex;align-items:center;justify-content:center;">
+                                <span style="font-size:8px;color:#94a3b8;white-space:nowrap;">경비 ${cfg.overheadPct}%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 상위 자재 3개 미니바 -->
+                    <div style="padding:2px 10px 6px;">
+                        ${topMats.map(([mk, pct]) => {
+                            const mc = matColors[mk] || '#475569';
+                            return `<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
+                                <span style="font-size:8px;color:#5a7a9a;min-width:44px;">${matLabels[mk] || mk}</span>
+                                <div style="flex:1;height:5px;background:rgba(255,255,255,0.04);border-radius:2px;overflow:hidden;">
+                                    <div style="width:${pct}%;height:100%;background:${mc};border-radius:2px;opacity:0.75;"></div>
+                                </div>
+                                <span style="font-size:8px;font-weight:700;color:${mc};min-width:22px;text-align:right;font-family:'IBM Plex Mono',Consolas,monospace;">${pct}%</span>
+                            </div>`;
+                        }).join('')}
+                    </div>
+
+                    <!-- 하단 메타 -->
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 10px 6px;border-top:1px solid rgba(255,255,255,0.04);">
+                        <div style="font-size:8px;color:#4a6a8a;">주도채널: <span style="color:#8cb4d8;font-weight:600;">${topChannel.name}</span> &nbsp;·&nbsp; 노무민감도 ${sensTag}</div>
+                        <div style="font-size:9px;font-weight:800;color:${impColor};font-family:'IBM Plex Mono',Consolas,monospace;">${impSign}${imp12.toFixed(2)}%</div>
+                    </div>
+                </div>`;
             });
-            html += '</tbody></table>';
 
-            const avgImpact = d12;
-            const mLabel = { all:'3M평균', gaussian:'Gaussian', ardl:'ARDL', lp:'LP' }[currentSimMethod] || currentSimMethod;
-            html += `<div style="margin-top:6px;padding:6px 8px;background:rgba(255,179,71,0.06);border:1px solid rgba(255,179,71,0.2);border-radius:5px;text-align:center;">
-                <div style="font-size:8px;color:#ffb347;text-transform:uppercase;letter-spacing:0.5px;">건설공사비 평균 영향 (12M)</div>
-                <div style="font-size:16px;font-weight:700;font-family:'IBM Plex Mono',Consolas,monospace;color:${avgImpact > 0 ? '#ff6b00' : '#22c55e'};">${avgImpact >= 0 ? '+' : ''}${avgImpact.toFixed(2)}%</div>
-                <div style="font-size:8px;color:#5a7a9a;">${mLabel} · ${ANALYSIS_PERIODS[currentAnalysisPeriod]?.label || currentAnalysisPeriod}</div>
-            </div>
-            `;
             container.innerHTML = html;
         }
 
