@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v2026.03.09-i -->
+<!-- v2026.03.09-j -->
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -2697,13 +2697,6 @@
                     <div class="hist-range" id="hist-construction"></div>
                 </div>
             </div>
-            <!-- Construction Impact Interpretation -->
-            <div id="constInterpretBlock" style="margin-top:8px;padding:7px 10px;background:rgba(78,201,255,0.04);border:1px solid rgba(78,201,255,0.12);border-radius:3px;font-size:10px;color:#8ea9cc;line-height:1.7">
-                <div style="font-size:9px;font-weight:700;color:#4ec9ff;letter-spacing:0.4px;margin-bottom:4px">CONSTRUCTION COST DRIVERS</div>
-                <div id="constInterpret1" style="color:#64748b">환율·유가 데이터 수신 대기 중</div>
-                <div id="constInterpret2"></div>
-                <div id="constInterpret3"></div>
-            </div>
             <button class="popup-launch" onclick="openSimulationPopup()">시뮬레이션</button>
             <button class="popup-launch" onclick="openGuidePresentation()" style="margin-top:3px;background:rgba(56,189,248,0.06);border-color:rgba(56,189,248,0.25);color:#38bdf8;">GUIDE</button>
         </div>
@@ -3889,6 +3882,26 @@
             initMapAssets();
             scheduleStockReset(); // daily 08:00 KST reset
             updateWarBarsFromData(); // initialize bars immediately with floor values
+
+            // Construction index: populate from macroSimData (most recent monthly value)
+            if (macroSimData && macroSimData.length > 0) {
+                const latest = macroSimData[macroSimData.length - 1];
+                const prev   = macroSimData.length > 1 ? macroSimData[macroSimData.length - 2] : null;
+                const cci    = latest.constructionCost;
+                const momPct = prev ? ((cci / prev.constructionCost) - 1) * 100 : 0;
+                const el   = document.getElementById('construction');
+                const chEl = document.getElementById('construction-change');
+                const rgEl = document.getElementById('hist-construction');
+                if (el)   { el.textContent = cci.toFixed(1); el.style.color = 'var(--text-primary)'; }
+                if (chEl) {
+                    chEl.textContent = (momPct >= 0 ? '+' : '') + momPct.toFixed(2) + '%';
+                    chEl.className = 'market-change ' + (momPct > 0 ? 'down' : momPct < 0 ? 'up' : '');
+                }
+                if (rgEl && latest.month) {
+                    rgEl.textContent = '기준: ' + latest.month;
+                    rgEl.style.cssText = 'font-size:9px;color:#5a7a9a;margin-top:2px;';
+                }
+            }
             setInterval(updateTimestamp, 1000);
             setInterval(updateMarketData, 5000);
             if (window.location.protocol === 'file:') {
