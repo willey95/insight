@@ -6471,14 +6471,18 @@
 
         function openSimulationPopup() {
             const popup = document.getElementById('simulationPopup');
+            popup.style.removeProperty('display'); // clear any stale inline display:none from close
             popup.classList.add('active');
             // Force 3-column layout via JS (CSS alone doesn't work reliably)
             forceSimLayout();
             renderMechanism();
             renderReImpact(); renderPfImpact();
-            setTimeout(() => {
-                try { runSimulation(); } catch(e) { console.error('Auto-run sim failed:', e); }
-            }, 300);
+            // Double-rAF: fires after layout is fully computed — more reliable than setTimeout for canvas
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    runSimulation();
+                });
+            });
         }
 
         function forceSimLayout() {
@@ -6512,7 +6516,7 @@
         function closeSimulationPopup() {
             const popup = document.getElementById('simulationPopup');
             popup.classList.remove('active');
-            popup.style.display = 'none';
+            popup.style.removeProperty('display'); // let CSS handle display:none via :not(.active)
         }
 
         /* Scenario Presets — macro driver shocks */
