@@ -2968,8 +2968,8 @@
                                 </div>
                                 <div id="simInterpretBox" style="display:none;margin:6px 0;padding:8px 10px;border-radius:5px;font-size:10px;line-height:1.7;background:rgba(14,30,50,0.85);border-left:3px solid #38bdf8;color:#94a3b8;"></div>
                                 <div class="sim-chart-grid">
-                                    <div class="chart-container" style="height:346px;"><canvas id="simulationChart"></canvas></div>
                                     <div class="chart-container" style="height:346px;"><canvas id="simulationChart2"></canvas></div>
+                                    <div class="chart-container" style="height:346px;"><canvas id="simulationChart"></canvas></div>
                                 </div>
                             </div>
                         </div>
@@ -3515,6 +3515,9 @@
             return (h <= ardlModel.maxLag && c[h] !== undefined) ? c[h] : 0;
         }
 
+        // Cost-push drivers: positive shock must not reduce construction costs (economic constraint)
+        const COST_PUSH_KEYS = ['oil', 'fx', 'ppi', 'labor', 'importPrice', 'steel', 'cement'];
+
         function buildForecastARDL(series, shocks, ardlModel, periodKey) {
             if (!ardlModel) return buildForecastGaussian(series, shocks, periodKey);
             periodKey = periodKey || currentAnalysisPeriod || 'full';
@@ -3533,8 +3536,9 @@
                 const meanReversion = Math.max(0.3, 1 - h * 0.04);
                 Object.entries(shocks).forEach(([key, val]) => {
                     const irfAtH = ardlIRF(ardlModel, key, h);
-                    // Clamp OLS coefficients to prevent explosive forecasts
-                    const clamped = Math.max(-2, Math.min(2, irfAtH));
+                    let clamped = Math.max(-2, Math.min(2, irfAtH));
+                    // Economic constraint: cost-push driver with positive shock cannot reduce costs
+                    if (COST_PUSH_KEYS.includes(key) && val > 0) clamped = Math.max(0, clamped);
                     shockGr += val * clamped * scale * meanReversion;
                 });
                 baseIdx *= 1 + baseGr / 100;
@@ -3604,8 +3608,9 @@
                 let shockCumGr = 0;
                 Object.entries(shocks).forEach(([key, val]) => {
                     if (lp[key] !== undefined) {
-                        // Clamp LP coefficients and apply period scale
-                        const clamped = Math.max(-3, Math.min(3, lp[key]));
+                        let clamped = Math.max(-3, Math.min(3, lp[key]));
+                        // Economic constraint: cost-push driver with positive shock cannot reduce costs
+                        if (COST_PUSH_KEYS.includes(key) && val > 0) clamped = Math.max(0, clamped);
                         shockCumGr += val * clamped * scale;
                     }
                 });
@@ -3803,11 +3808,37 @@
             ).join('');
         }
 
+        // Stock change% reset at 08:00 KST (before market open)
+        function resetStockChangePct() {
+            const stockKeys = ['kospi', 'kosdaq', 'nasdaq', 'dow', 'sp500'];
+            stockKeys.forEach(key => {
+                const el = document.getElementById(key + '-change');
+                if (el) { el.textContent = '+0.00%'; el.className = 'header-stock-change'; }
+                externalIndicatorState[key + 'ChangePct'] = 0;
+            });
+            const kpiMeta = document.getElementById('kpiKospiMeta');
+            if (kpiMeta) { kpiMeta.textContent = '장전 기준 초기화'; kpiMeta.style.color = '#5a7090'; }
+            // Refresh war bars (finance contagion) after kospiChangePct reset
+            updateWarBarsFromData();
+        }
+        function scheduleStockReset() {
+            const nowKst = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+            const resetKst = new Date(nowKst);
+            resetKst.setHours(8, 0, 0, 0);
+            if (nowKst >= resetKst) resetKst.setDate(resetKst.getDate() + 1);
+            const msUntil = resetKst - nowKst;
+            setTimeout(() => {
+                resetStockChangePct();
+                scheduleStockReset(); // reschedule for next day
+            }, msUntil);
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             updateTimestamp();
             initLiveNews();
             initMapAssets();
+            scheduleStockReset(); // daily 08:00 KST reset
             setInterval(updateTimestamp, 1000);
             setInterval(updateMarketData, 5000);
             if (window.location.protocol === 'file:') {
@@ -4076,45 +4107,37 @@
             }
         }
 
-        // Baseline values for Gold/Silver % change normalization (set on first data point)
+        // Baseline for Gold % change normalization (set from sparkline first value)
         let _financeGoldBase = null;
-        let _financeSilverBase = null;
 
         function applyFinanceChartData(payload) {
             if (!charts.finance) return;
             const usdkrw = payload.usdkrw;
             const gold = payload.gold;
-            const silver = payload.commodities?.silver?.value ?? null;
             if (!Number.isFinite(usdkrw) && !Number.isFinite(gold)) return;
 
             const fxData = charts.finance.data.datasets[0].data;
             const goldData = charts.finance.data.datasets[1].data;
-            const silverData = charts.finance.data.datasets[2].data;
             const labels = charts.finance.data.labels;
 
-            if (Number.isFinite(usdkrw)) fxData.push(usdkrw);
-
-            // Gold/Silver: store as % change from first received value
+            // Gold: % change from sparkline base (set in applySparklineData)
             if (Number.isFinite(gold)) {
                 if (_financeGoldBase === null) _financeGoldBase = gold;
                 goldData.push(parseFloat(((gold - _financeGoldBase) / _financeGoldBase * 100).toFixed(3)));
             }
-            if (Number.isFinite(silver)) {
-                if (_financeSilverBase === null) _financeSilverBase = silver;
-                silverData.push(parseFloat(((silver - _financeSilverBase) / _financeSilverBase * 100).toFixed(3)));
-            }
+            if (Number.isFinite(usdkrw)) fxData.push(usdkrw);
 
-            // Append current date+time label — do NOT regenerate all labels
+            // Append label — keep both series in sync
             const now = new Date();
             const liveLabel = `${now.getMonth()+1}/${now.getDate()} ` +
                 String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
             labels.push(liveLabel);
 
-            const maxLen = Math.max(fxData.length, goldData.length, silverData.length);
+            // Keep buffer ≤ 48 points
+            const maxLen = Math.max(fxData.length, goldData.length);
             if (maxLen > 48) {
                 fxData.length > 48 && fxData.shift();
                 goldData.length > 48 && goldData.shift();
-                silverData.length > 48 && silverData.shift();
                 labels.length > 48 && labels.shift();
             }
             charts.finance.update('none');
@@ -4146,57 +4169,72 @@
                 charts.energy.data.datasets[1].data = brent.slice(0, len).map(p => p.value);
                 charts.energy.update('none');
             }
-            // Finance chart: USD/KRW (left, absolute), Gold/Silver (right, % change)
+            // Finance chart: USD/KRW (left, absolute) | Gold % change (right)
+            // Silver excluded per user request. Both series aligned to same time labels.
             if (charts.finance) {
                 const fx = downsample(sparklines.usdkrw || [], STEP);
                 const gold = downsample(sparklines.gold || [], STEP);
-                const silver = downsample(sparklines.silver || [], STEP);
-                const longest = [fx, gold, silver].reduce((a, b) => a.length >= b.length ? a : b);
-                if (longest.length > 0) {
-                    charts.finance.data.labels = longest.map(p => sparkLabel(p.label));
-                    charts.finance.data.datasets[0].data = fx.map(p => p.value);
-                    // Normalize Gold and Silver to % change from first value
-                    const toChangePct = arr => {
-                        if (!arr.length) return [];
-                        const base = arr[0].value;
-                        return base ? arr.map(p => parseFloat(((p.value - base) / base * 100).toFixed(3))) : [];
-                    };
-                    charts.finance.data.datasets[1].data = toChangePct(gold);
-                    charts.finance.data.datasets[2].data = toChangePct(silver);
+                // Align to shorter of the two to keep time scale in sync
+                const len = Math.min(fx.length, gold.length);
+                if (len > 0) {
+                    const fxSlice = fx.slice(0, len);
+                    const goldSlice = gold.slice(0, len);
+                    charts.finance.data.labels = fxSlice.map(p => sparkLabel(p.label));
+                    charts.finance.data.datasets[0].data = fxSlice.map(p => p.value);
+                    // Normalize Gold to % change from sparkline first value
+                    const goldBase = goldSlice[0].value;
+                    if (goldBase) {
+                        _financeGoldBase = goldBase; // anchor for live ticks
+                        charts.finance.data.datasets[1].data = goldSlice.map(p =>
+                            parseFloat(((p.value - goldBase) / goldBase * 100).toFixed(3))
+                        );
+                    }
                     charts.finance.update('none');
                 }
             }
         }
 
+        // Regional baseline floors — Hormuz / Middle East has chronic structural tension
+        const CRISIS_FLOOR = { blockade: 18, energy: 14, finance: 8, construction: 12 };
+
         function updateWarBarsFromData() {
             const s = externalIndicatorState;
             const c = crisisCounts;
 
-            // Blockade risk: prefer LLM hormuz_threat_level, fallback to formula
-            const blockade = (c.llmHormuz != null)
-                ? c.llmHormuz
-                : Math.min(100, Math.round(c.hormuz * 10 + c.conflicts * 3 + Math.min(20, c.aircraft * 2)));
-            setWarBar('warBarBlockade', 'warBarBlockadeVal', blockade);
-
-            // Energy supply shock: prefer LLM energy_disruption_risk, fallback to formula
+            // Blockade risk: max(LLM, formula) so neither alone can zero the bar
             const wtiChange = Math.abs(s.wtiChangePct || 0);
             const brentChange = Math.abs(s.brentChangePct || 0);
-            const energyShock = (c.llmEnergy != null)
-                ? c.llmEnergy
-                : Math.min(100, Math.round((wtiChange + brentChange) * 8 + c.aircraft * 3 + c.hormuz * 5));
+            const blockadeFormula = Math.min(100, Math.round(c.hormuz * 10 + c.conflicts * 3 + Math.min(20, c.aircraft * 2)));
+            const blockadeLlm = c.llmHormuz ?? 0;
+            const blockade = Math.max(CRISIS_FLOOR.blockade, blockadeLlm, blockadeFormula);
+            setWarBar('warBarBlockade', 'warBarBlockadeVal', blockade);
+
+            // Energy supply shock: max(LLM, formula)
+            const energyFormula = Math.min(100, Math.round((wtiChange + brentChange) * 8 + c.aircraft * 3 + c.hormuz * 5));
+            const energyLlm = c.llmEnergy ?? 0;
+            const energyShock = Math.max(CRISIS_FLOOR.energy, energyLlm, energyFormula);
             setWarBar('warBarEnergy', 'warBarEnergyVal', energyShock);
 
-            // Financial contagion: FX + stock volatility + conflicts/fatalities
+            // Financial contagion: FX + stock + military activity
             const fxChange = Math.abs(s.usdkrwChangePct || 0);
             const kospiChange = Math.abs(s.kospiChangePct || 0);
-            const finContagion = Math.min(100, Math.round((fxChange + kospiChange) * 10 + c.fatalities * 0.5 + c.conflicts * 2 + c.aircraft * 1));
+            // Scale up: 1% FX move = 15 points; use usdkrw as primary signal on weekends
+            const finFormula = Math.min(100, Math.round(
+                fxChange * 15 + kospiChange * 8 +
+                c.fatalities * 0.5 + c.conflicts * 2 + c.aircraft * 1.5
+            ));
+            const finContagion = Math.max(CRISIS_FLOOR.finance, finFormula);
             setWarBar('warBarFinance', 'warBarFinanceVal', finContagion);
 
-            // Construction cost impact: LLM preferred; fallback uses military activity
-            const constImpact = (c.llmConstruction != null)
-                ? Math.round(c.llmConstruction * 10)
-                : Math.min(100, Math.round((c.aircraft * 0.5 + c.conflicts * 0.3 + c.fatalities * 0.1) * 10));
+            // Construction cost impact: max(LLM, formula)
+            const constFormula = Math.min(100, Math.round(
+                (wtiChange + brentChange) * 4 +
+                (c.aircraft * 0.5 + c.conflicts * 0.3 + c.fatalities * 0.1) * 10
+            ));
+            const constLlm = c.llmConstruction != null ? Math.round(c.llmConstruction * 10) : 0;
+            const constImpact = Math.max(CRISIS_FLOOR.construction, constLlm, constFormula);
             setWarBar('warBarConstruction', 'warBarConstructionVal', constImpact);
+
             // Sync KPI crisis score after bars update
             updateKpiCrisisScore();
         }
@@ -5448,17 +5486,6 @@
                             backgroundColor: 'rgba(255, 202, 40, 0.06)',
                             tension: 0.35,
                             borderWidth: 1.5,
-                            pointRadius: 0,
-                            pointHitRadius: 6,
-                            fill: false,
-                            yAxisID: 'y1'
-                        }, {
-                            label: 'Silver %',
-                            data: [],
-                            borderColor: '#b0bec5',
-                            backgroundColor: 'rgba(176, 190, 197, 0.06)',
-                            tension: 0.35,
-                            borderWidth: 1.2,
                             pointRadius: 0,
                             pointHitRadius: 6,
                             fill: false,
