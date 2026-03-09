@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v2026.03.09-c -->
+<!-- v2026.03.09-d -->
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -22,7 +22,7 @@
         }
 
         :root {
-            --ticker-height: 24px;
+            --ticker-height: 0px;
             --header-height: 52px;
             --kpi-bar-height: 78px;
             --situation-banner-height: 34px;
@@ -2404,13 +2404,6 @@
     </style>
 </head>
 <body>
-    <!-- News Ticker -->
-    <div class="news-ticker">
-        <div class="ticker-content" id="newsTicker">
-            <span class="ticker-item">LOADING LIVE NEWS...</span>
-        </div>
-    </div>
-
     <!-- Header -->
     <div class="header">
         <h1>
@@ -2451,13 +2444,6 @@
 
     <!-- KPI Top Bar -->
     <div class="kpi-top-bar" id="kpiTopBar">
-        <div class="kpi-top-card kpi-crisis" onclick="document.querySelector('.war-status').scrollIntoView({behavior:'smooth'})">
-            <div class="kpi-top-label">CRISIS SCORE
-                <span class="status-badge syncing" id="kpiCrisisBadge" style="font-size:8px;padding:1px 4px">SYNCING</span>
-            </div>
-            <div class="kpi-top-value" id="kpiCrisisScore">—</div>
-            <div class="kpi-top-meta" id="kpiCrisisMeta">데이터 수집 중</div>
-        </div>
         <div class="kpi-top-card" onclick="showDetails('usd')">
             <div class="kpi-top-label">USD/KRW <span>₩/$</span></div>
             <div class="kpi-top-value" id="kpiUsdVal">—</div>
