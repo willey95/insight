@@ -6386,7 +6386,20 @@
                             ? delta12 * pf.baseSpread * 0.023
                             : delta12 * pf.baseSpread * 0.012;
                         const totalDelta = (shocks.policyRate || 0) + costRiskPremium;
-                        return { grade: pf.grade, currentRate: +(baseRate + pf.baseSpread).toFixed(2), newRate: +(baseRate + pf.baseSpread + totalDelta).toFixed(2), delta: +totalDelta.toFixed(2) };
+                        const base = baseRate + pf.baseSpread;
+                        return {
+                            grade: pf.grade,
+                            currentRate: +base.toFixed(2),
+                            newRate: +(base + totalDelta).toFixed(2),
+                            delta: +totalDelta.toFixed(2),
+                            seniorCurrent: +(base + pf.seniorDisc).toFixed(2),
+                            seniorNew: +(base + pf.seniorDisc + totalDelta).toFixed(2),
+                            mezzCurrent: +(base + pf.mezzDisc).toFixed(2),
+                            mezzNew: +(base + pf.mezzDisc + totalDelta).toFixed(2),
+                            juniorCurrent: +(base + pf.juniorDisc).toFixed(2),
+                            juniorNew: +(base + pf.juniorDisc + totalDelta).toFixed(2),
+                            ltv: pf.ltv, dscr: pf.dscr
+                        };
                     });
                 }
             } catch(e) {}
@@ -6538,47 +6551,67 @@
         }
 
         function renderConsultingReport(md) {
-            // Strip any raw HTML tables the LLM might have emitted (converts to markdown-compatible text)
+            // ── 1. Strip raw HTML tables the LLM might emit ──────────────────
             md = md
-                .replace(/<table[^>]*>/gi, '')
-                .replace(/<\/table>/gi, '')
-                .replace(/<thead[^>]*>|<\/thead>/gi, '')
-                .replace(/<tbody[^>]*>|<\/tbody>/gi, '')
-                .replace(/<tr[^>]*>/gi, '')
-                .replace(/<\/tr>/gi, '\n')
-                .replace(/<t[dh][^>]*>/gi, '| ')
-                .replace(/<\/t[dh]>/gi, ' ')
-                .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+                .replace(/<table[^>]*>/gi,'').replace(/<\/table>/gi,'')
+                .replace(/<thead[^>]*>|<\/thead>/gi,'').replace(/<tbody[^>]*>|<\/tbody>/gi,'')
+                .replace(/<tr[^>]*>/gi,'').replace(/<\/tr>/gi,'\n')
+                .replace(/<t[dh][^>]*>/gi,'| ').replace(/<\/t[dh]>/gi,' ')
+                .replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
 
-            // Parse markdown tables into real HTML tables
+            // ── 2. Parse markdown tables ─────────────────────────────────────
             const lines = md.split('\n');
             const out = [];
-            let inTable = false;
-            let tableRows = [];
+            let tableRows = [], inTable = false;
+
+            const colColor = (val) => {
+                const v = val.trim();
+                if (/^[+]/.test(v) && /%/.test(v)) return 'color:#f87171;font-weight:700;';
+                if (/^[-]/.test(v) && /%/.test(v)) return 'color:#4ade80;font-weight:700;';
+                if (/\[ALERT\]/.test(v)) return 'color:#ff4d6d;font-weight:700;';
+                if (/\[WATCH\]/.test(v)) return 'color:#f59e0b;font-weight:700;';
+                if (/HIGH/.test(v)) return 'color:#f87171;font-weight:700;';
+                if (/MODERATE/.test(v)) return 'color:#fbbf24;font-weight:700;';
+                if (/LOW/.test(v)) return 'color:#4ade80;font-weight:700;';
+                return '';
+            };
+
             const flushTable = () => {
-                if (tableRows.length < 2) { out.push(...tableRows.map(r => r._raw)); tableRows = []; return; }
-                let t = '<table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;">';
-                tableRows.forEach((row, ri) => {
+                if (tableRows.length < 2) { out.push(...tableRows.map(r => r._raw||'')); tableRows=[]; return; }
+                let t = '<div style="overflow-x:auto;margin:10px 0 16px;">'
+                      + '<table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid #1a2840;">';
+                // find actual header row (first non-sep row)
+                let headerDone = false;
+                tableRows.forEach((row) => {
                     if (row._sep) return;
-                    const tag = ri === 0 ? 'th' : 'td';
-                    const bg = ri === 0 ? 'background:rgba(56,189,248,0.08);' : (ri % 2 === 0 ? 'background:rgba(255,255,255,0.015);' : '');
-                    t += '<tr>';
-                    row.cells.forEach(c => {
-                        const align = /^\d|^[+\-]/.test(c.trim()) ? 'text-align:right;' : '';
-                        const style = `padding:7px 10px;border-bottom:1px solid #1a2840;color:${ri === 0 ? '#8cb4d8' : '#c0d0e4'};font-weight:${ri === 0 ? '700' : '400'};font-size:${ri === 0 ? '11px' : '13px'};${align}${bg}`;
-                        t += `<${tag} style="${style}">${c.trim()}</${tag}>`;
-                    });
-                    t += '</tr>';
+                    if (!headerDone) {
+                        t += '<thead><tr>';
+                        row.cells.forEach(c => {
+                            t += `<th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid #243c5a;white-space:nowrap;text-align:left;">${c.trim()}</th>`;
+                        });
+                        t += '</tr></thead><tbody>';
+                        headerDone = true;
+                    } else {
+                        t += '<tr>';
+                        row.cells.forEach((c, ci) => {
+                            const cv = c.trim();
+                            const isNum = /^[+\-]?[\d,.]+(%p?|원|bp)?$/.test(cv);
+                            const extra = colColor(cv);
+                            t += `<td style="padding:5px 10px;border-bottom:1px solid #121f30;color:#c0d0e4;${isNum?'text-align:right;font-family:\'IBM Plex Mono\',monospace;':''}${ci===0?'color:#dde8f8;font-weight:600;':''}${extra}">${cv||'—'}</td>`;
+                        });
+                        t += '</tr>';
+                    }
                 });
-                t += '</table>';
+                t += '</tbody></table></div>';
                 out.push(t);
                 tableRows = [];
             };
+
             lines.forEach(line => {
                 if (/^\|(.+)\|$/.test(line)) {
-                    const inner = line.slice(1, -1);
-                    if (/^[\s\-:|]+$/.test(inner)) { tableRows.push({ _sep: true }); }
-                    else { tableRows.push({ cells: inner.split('|'), _raw: line }); }
+                    const inner = line.slice(1,-1);
+                    if (/^[\s\-:|]+$/.test(inner)) { tableRows.push({_sep:true}); }
+                    else { tableRows.push({cells: inner.split('|'), _raw: line}); }
                     inTable = true;
                 } else {
                     if (inTable) { flushTable(); inTable = false; }
@@ -6587,25 +6620,44 @@
             });
             if (inTable) flushTable();
 
+            // ── 3. Markdown → HTML ───────────────────────────────────────────
             let html = out.join('\n')
-                .replace(/^#### (.+)$/gm, '<h5 style="color:#a78bfa;margin:14px 0 6px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;font-family:\'IBM Plex Mono\',Consolas,monospace;">$1</h5>')
-                .replace(/^### (.+)$/gm, '<h4 style="color:#38bdf8;margin:18px 0 8px;font-size:15px;font-weight:700;padding-left:12px;border-left:3px solid #38bdf8;">$1</h4>')
-                .replace(/^## (.+)$/gm, '<div style="margin:24px 0 12px;padding:10px 14px;background:linear-gradient(90deg,rgba(56,189,248,0.08),transparent);border-left:4px solid #14b8a6;border-radius:0 6px 6px 0;"><h3 style="color:#e2e8f0;font-size:17px;font-weight:700;margin:0;font-family:\'IBM Plex Mono\',Consolas,monospace;">$1</h3></div>')
-                .replace(/^# (.+)$/gm, '<div style="margin:0 0 18px;padding:14px 0;border-bottom:2px solid #1a2d48;"><h2 style="color:#f0f6ff;font-size:21px;font-weight:800;margin:0;letter-spacing:0.5px;">$1</h2></div>')
-                .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e8f0ff;font-weight:700;">$1</strong>')
-                .replace(/`(.+?)`/g, '<code style="background:rgba(56,189,248,0.08);color:#38bdf8;padding:2px 6px;border-radius:3px;font-size:12px;font-family:\'IBM Plex Mono\',Consolas,monospace;">$1</code>')
-                .replace(/^- (.+)$/gm, '<div style="display:flex;gap:10px;padding:4px 0 4px 6px;"><span style="color:#38bdf8;font-size:9px;margin-top:6px;flex-shrink:0;">●</span><span>$1</span></div>')
-                .replace(/^(\d+)\. (.+)$/gm, '<div style="display:flex;gap:10px;padding:4px 0 4px 6px;"><span style="color:#14b8a6;font-weight:700;min-width:20px;flex-shrink:0;font-family:\'IBM Plex Mono\',Consolas,monospace;font-size:14px;">$1.</span><span>$2</span></div>')
-                .replace(/→/g, '<span style="color:#f59e0b;font-weight:600;"> → </span>')
-                // Truncate decimals to 1 place in percentage values
-                .replace(/([+\-]?\d+)\.(\d)\d+(%p?)/g, '$1.$2$3')
-                .replace(/([+\-]?\d+\.?\d*%p?)/g, '<span style="font-family:\'IBM Plex Mono\',Consolas,monospace;font-weight:700;color:#4ec9ff;">$1</span>')
-                .replace(/(₩[\d,]+만?)/g, '<span style="font-family:\'IBM Plex Mono\',Consolas,monospace;font-weight:600;color:#22c55e;">$1</span>')
-                .replace(/(\$[\d,.]+)/g, '<span style="font-family:\'IBM Plex Mono\',Consolas,monospace;font-weight:600;color:#f59e0b;">$1</span>')
-                .replace(/^---$/gm, '<hr style="border:none;border-top:1px solid #1a2d48;margin:16px 0;">')
-                .replace(/\n\n/g, '<div style="height:10px;"></div>')
-                .replace(/\n/g, '<br>');
-            return '<div style="font-size:14.5px;line-height:1.8;color:#c0d0e4;">' + html + '</div>';
+                // Alert labels
+                .replace(/\*\*\[ALERT\]\*\*/g,'<span style="display:inline-block;background:#ff4d6d22;border:1px solid #ff4d6d66;color:#ff4d6d;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;letter-spacing:0.5px;margin-right:6px;">ALERT</span>')
+                .replace(/\*\*\[WATCH\]\*\*/g,'<span style="display:inline-block;background:#f59e0b22;border:1px solid #f59e0b66;color:#f59e0b;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;letter-spacing:0.5px;margin-right:6px;">WATCH</span>')
+                .replace(/\*\*\[INFO\]\*\*/g,'<span style="display:inline-block;background:#38bdf822;border:1px solid #38bdf866;color:#38bdf8;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;letter-spacing:0.5px;margin-right:6px;">INFO</span>')
+                .replace(/\[ALERT\]/g,'<span style="display:inline-block;background:#ff4d6d22;border:1px solid #ff4d6d66;color:#ff4d6d;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;letter-spacing:0.5px;margin-right:4px;">ALERT</span>')
+                .replace(/\[WATCH\]/g,'<span style="display:inline-block;background:#f59e0b22;border:1px solid #f59e0b66;color:#f59e0b;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;letter-spacing:0.5px;margin-right:4px;">WATCH</span>')
+                .replace(/\[INFO\]/g,'<span style="display:inline-block;background:#38bdf822;border:1px solid #38bdf866;color:#38bdf8;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;letter-spacing:0.5px;margin-right:4px;">INFO</span>')
+                .replace(/\[RISK (\d)\]/g,'<span style="display:inline-block;background:#a855f722;border:1px solid #a855f766;color:#c084fc;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;letter-spacing:0.5px;margin-right:4px;">RISK $1</span>')
+                // Headings
+                .replace(/^#### (.+)$/gm,'<div style="margin:12px 0 4px;color:#a78bfa;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;font-family:\'IBM Plex Mono\',monospace;">$1</div>')
+                .replace(/^### (.+)$/gm,'<div style="margin:16px 0 6px;padding:5px 10px;border-left:2px solid #38bdf8;color:#a8d4f0;font-size:13px;font-weight:700;">$1</div>')
+                .replace(/^## SECTION ([A-Z]) — (.+)$/gm,'<div style="margin:22px 0 10px;padding:8px 14px;background:linear-gradient(90deg,rgba(20,184,166,0.1),rgba(20,184,166,0.02));border-left:3px solid #14b8a6;"><span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:#14b8a6;font-weight:700;letter-spacing:1px;">SECTION $1</span><div style="color:#e2e8f0;font-size:15px;font-weight:700;margin-top:2px;">$2</div></div>')
+                .replace(/^## (.+)$/gm,'<div style="margin:20px 0 10px;padding:8px 14px;background:linear-gradient(90deg,rgba(56,189,248,0.07),transparent);border-left:3px solid #38bdf8;color:#e2e8f0;font-size:15px;font-weight:700;">$1</div>')
+                .replace(/^# ◆ (.+)$/gm,'<div style="margin:0 0 16px;padding:12px 16px;background:linear-gradient(90deg,rgba(56,189,248,0.06),transparent);border-bottom:1px solid #1a3050;"><div style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;color:#38bdf8;letter-spacing:2px;margin-bottom:4px;">EXECUTIVE SUMMARY</div><div style="color:#f0f6ff;font-size:18px;font-weight:800;letter-spacing:0.3px;">$1</div></div>')
+                .replace(/^# (.+)$/gm,'<div style="margin:0 0 14px;padding:10px 0;border-bottom:1px solid #1a2d48;color:#f0f6ff;font-size:18px;font-weight:800;">$1</div>')
+                // Inline
+                .replace(/\*\*(.+?)\*\*/g,'<strong style="color:#dde8f8;font-weight:700;">$1</strong>')
+                .replace(/`(.+?)`/g,'<code style="background:rgba(56,189,248,0.08);color:#38bdf8;padding:1px 5px;border-radius:2px;font-size:11.5px;font-family:\'IBM Plex Mono\',monospace;">$1</code>')
+                // Lists
+                .replace(/^- \*\*Key Figure\*\*:(.+)$/gm,'<div style="display:flex;gap:8px;padding:5px 10px;margin:4px 0;background:rgba(20,184,166,0.06);border-left:2px solid #14b8a6;border-radius:0 4px 4px 0;"><span style="color:#14b8a6;font-size:10px;font-weight:700;flex-shrink:0;margin-top:3px;font-family:\'IBM Plex Mono\',monospace;">KEY</span><span style="color:#5eead4;">$1</span></div>')
+                .replace(/^\*\*Key Figure\*\*:(.+)$/gm,'<div style="padding:5px 12px;margin:6px 0;background:rgba(20,184,166,0.06);border-left:2px solid #14b8a6;border-radius:0 4px 4px 0;font-family:\'IBM Plex Mono\',monospace;font-size:12px;color:#5eead4;"><span style="color:#14b8a6;font-weight:700;margin-right:6px;">KEY FIGURE</span>$1</div>')
+                .replace(/^- (.+)$/gm,'<div style="display:flex;gap:8px;padding:3px 0 3px 4px;"><span style="color:#38bdf8;font-size:8px;margin-top:5px;flex-shrink:0;">▸</span><span style="color:#b8cce0;line-height:1.55;">$1</span></div>')
+                .replace(/^(\d+)\. (.+)$/gm,'<div style="display:flex;gap:8px;padding:3px 0;"><span style="color:#14b8a6;font-weight:700;min-width:18px;flex-shrink:0;font-family:\'IBM Plex Mono\',monospace;font-size:12px;">$1.</span><span style="color:#b8cce0;line-height:1.55;">$2</span></div>')
+                // Arrows and numbers
+                .replace(/→/g,'<span style="color:#f59e0b;font-weight:600;margin:0 3px;">→</span>')
+                .replace(/([+\-]?\d+\.?\d*%p)/g,'<span style="font-family:\'IBM Plex Mono\',monospace;font-weight:700;color:#fb923c;">$1</span>')
+                .replace(/([+\-]?\d+\.?\d*%)(?!p)/g,'<span style="font-family:\'IBM Plex Mono\',monospace;font-weight:700;color:#4ec9ff;">$1</span>')
+                .replace(/(\$[\d,.]+)/g,'<span style="font-family:\'IBM Plex Mono\',monospace;font-weight:600;color:#fbbf24;">$1</span>')
+                .replace(/([\d,]+원)/g,'<span style="font-family:\'IBM Plex Mono\',monospace;font-weight:600;color:#a3e635;">$1</span>')
+                .replace(/^---$/gm,'<div style="border-top:1px solid #182840;margin:14px 0;"></div>')
+                // Spacing
+                .replace(/\n\n\n/g,'\n\n')
+                .replace(/\n\n/g,'<div style="height:8px;"></div>')
+                .replace(/\n/g,'<br style="line-height:1.5;">');
+
+            return `<div style="font-size:13.5px;line-height:1.55;color:#b8cce0;font-family:'Pretendard','Noto Sans KR',sans-serif;">${html}</div>`;
         }
 
         function markdownToHtml(md) { return renderConsultingReport(md); }
