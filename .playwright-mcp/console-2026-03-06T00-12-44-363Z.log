@@ -1,2 +1,0 @@
-[  765472ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://reinsight-vercel.vercel.app/api/military:0
-[  792584ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_RESET @ https://reinsight-vercel.vercel.app/api/military:0
