@@ -6538,6 +6538,18 @@
         }
 
         function renderConsultingReport(md) {
+            // Strip any raw HTML tables the LLM might have emitted (converts to markdown-compatible text)
+            md = md
+                .replace(/<table[^>]*>/gi, '')
+                .replace(/<\/table>/gi, '')
+                .replace(/<thead[^>]*>|<\/thead>/gi, '')
+                .replace(/<tbody[^>]*>|<\/tbody>/gi, '')
+                .replace(/<tr[^>]*>/gi, '')
+                .replace(/<\/tr>/gi, '\n')
+                .replace(/<t[dh][^>]*>/gi, '| ')
+                .replace(/<\/t[dh]>/gi, ' ')
+                .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+
             // Parse markdown tables into real HTML tables
             const lines = md.split('\n');
             const out = [];
