@@ -8,7 +8,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <script>if(sessionStorage.getItem('bshy_auth')!=='1')window.location.replace('/');</script>
+    <script>const _auth=sessionStorage.getItem('bshy_auth');if(_auth!=='1'&&_auth!=='2')window.location.replace('/');</script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
@@ -2700,7 +2700,7 @@
                     <div class="hist-range" id="hist-construction"></div>
                 </div>
             </div>
-            <button class="popup-launch" onclick="openSimulationPopup()">시뮬레이션</button>
+            <button class="popup-launch" id="btnSimLaunch" onclick="openSimulationPopup()">시뮬레이션</button>
             <button class="popup-launch" onclick="openGuidePresentation()" style="margin-top:3px;background:rgba(56,189,248,0.06);border-color:rgba(56,189,248,0.25);color:#38bdf8;">GUIDE</button>
         </div>
 
@@ -10003,6 +10003,21 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
         const dx = e.changedTouches[0].clientX - _touchX;
         if (Math.abs(dx) > 50) guideGo(dx < 0 ? 1 : -1);
     }, { passive: true });
+})();
+</script>
+<script>
+// Auth level 2: disable simulation button
+(function(){
+    if(sessionStorage.getItem('bshy_auth')==='2'){
+        const btn=document.getElementById('btnSimLaunch');
+        if(btn){
+            btn.disabled=true;
+            btn.style.opacity='0.35';
+            btn.style.cursor='not-allowed';
+            btn.title='시뮬레이션 접근 권한 없음';
+            btn.onclick=null;
+        }
+    }
 })();
 </script>
 </body>

@@ -296,7 +296,7 @@ async function callMoonshot(context) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MOONSHOT_API_KEY}` },
         body: JSON.stringify({
-            model: 'kimi-k2.5',
+            model: 'kimi-latest',
             messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: USER_MSG(context) }],
             max_tokens: 8000, temperature: 0.3
         })

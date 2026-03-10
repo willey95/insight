@@ -111,11 +111,16 @@
   <div class="err" id="err">Invalid code</div>
 </div>
 <script>
-  const H='ef51306214d9a6361ee1d5b452e6d2bb70dc7ebb85bf9e02c3d4747fb57d6bec';
+  const CODES={
+    'ef51306214d9a6361ee1d5b452e6d2bb70dc7ebb85bf9e02c3d4747fb57d6bec':'1',
+    '0246b3795893d6ae607424165bb93e2bbe696caee06e3b2b1b4ddee8b48519a0':'2'
+  };
   async function hash(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
   async function go(){
-    if(await hash(document.getElementById('pw').value)===H){
-      sessionStorage.setItem('bshy_auth','1');
+    const h=await hash(document.getElementById('pw').value);
+    const level=CODES[h];
+    if(level){
+      sessionStorage.setItem('bshy_auth',level);
       document.getElementById('page').classList.add('ok');
       setTimeout(()=>location.href='/crisis-monitoring-dashboard.html',400);
     }else{
