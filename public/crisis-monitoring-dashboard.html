@@ -2518,7 +2518,12 @@
                     <div class="card-title">GEO CRISIS MAP</div>
                     <div class="card-subtitle">군사 활동·해상 움직임·분쟁 이벤트 시각화</div>
                 </div>
-                <div style="display:flex;align-items:center;gap:5px">
+                <div style="display:flex;align-items:center;gap:8px">
+                    <select id="mapRegionSelect" onchange="switchMapRegion(this.value)"
+                        style="background:#0d1e35;border:1px solid #1e3a5a;color:#8cb4d8;font-size:11px;padding:3px 8px;border-radius:4px;cursor:pointer;font-family:'IBM Plex Mono',Consolas,monospace;outline:none;">
+                        <option value="mideast">🔴 중동 분쟁</option>
+                        <option value="ukraine">🟡 우크라이나 전쟁</option>
+                    </select>
                     <span class="status-badge syncing" id="tsMapBadge">SYNCING</span>
                     <div class="card-timestamp" id="tsMap"></div>
                 </div>
@@ -3358,11 +3363,31 @@
                     + (weightedPy - 520) * 0.01
                     + covidShock * 1.2 + warShock * 2.5;
 
+                // ── 성분별 합성 지수 (2단계 모델 fallback용) ───────────────────
+                // 재료비: 유가·수입물가·철강·시멘트 경로
+                const materialCost  = macroRound(100 + (oil - 62) * 0.18 + (importPrice - 100) * 0.22
+                    + (steel - 100) * 0.15 + (cement - 100) * 0.08
+                    + covidShock * 2.5 + warShock * 8.0);
+                // 노무비: 건설노임 직접 연동 (경기·물가 간접 반영)
+                const laborCost     = macroRound(labor + (ppi - 103) * 0.04);
+                // 경비: 금리·유가·VIX 경로
+                const overheadCost  = macroRound(100 + (policyRate - 1.5) * 2.2 + (oil - 62) * 0.10
+                    + vix * 0.04 + idx * 0.08 + warShock * 1.5);
+                // 외주비: 금리·불확실성 경로
+                const subcontract   = macroRound(100 + (policyRate - 1.5) * 3.0 + vix * 0.05
+                    + idx * 0.05 + covidShock * 1.0);
+
                 return { month, idx, fx: macroRound(fx), oil: macroRound(oil), ppi: macroRound(ppi),
                     importPrice: macroRound(importPrice), steel: macroRound(steel), cement: macroRound(cement),
                     labor: macroRound(labor), policyRate: macroRound(policyRate, 2),
                     vix: macroRound(vix, 2), us10y: macroRound(us10y, 2),
                     constructionCost: macroRound(constructionCost),
+                    // 성분별 (2단계 모델)
+                    materialCost, laborCost, overheadCost, subcontract,
+                    // 공종별 (믹스 내생화)
+                    residential:    macroRound(shares.residential, 2),
+                    nonResidential: macroRound(shares.office + shares.hospitality, 2),
+                    civil:          macroRound(shares.infra, 2),
                     residentialShare: macroRound(shares.residential, 2), logisticsShare: macroRound(shares.logistics, 2),
                     officeShare: macroRound(shares.office, 2), hospitalityShare: macroRound(shares.hospitality, 2),
                     advancedShare: macroRound(shares.advanced, 2), infraShare: macroRound(shares.infra, 2),
@@ -3443,7 +3468,9 @@
                 const s = synthMap[r.month];
                 if (!s) return r;
                 const merged = { ...r };
-                for (const k of ['fx','oil','ppi','importPrice','labor','steel','cement','policyRate','vix','us10y']) {
+                for (const k of ['fx','oil','ppi','importPrice','labor','steel','cement','policyRate','vix','us10y',
+                                 'materialCost','laborCost','overheadCost','subcontract',
+                                 'residential','nonResidential','civil']) {
                     if (merged[k] == null && s[k] != null) {
                         merged[k] = s[k];
                         merged._source = 'partial';
@@ -3473,8 +3500,9 @@
                 macroDataSource = merged.some(r => r._source === 'partial') ? 'partial' : 'real';
                 persistMacroHistory(merged);
                 recalibratePeriods(merged);
-                // 모델 캐시 무효화
+                // 모델 캐시 무효화 (top-down + 성분별)
                 Object.keys(_modelCache).forEach(k => delete _modelCache[k]);
+                Object.keys(_componentModelCache).forEach(k => delete _componentModelCache[k]);
 
                 // 대시보드 리프레시 (시뮬레이션 패널이 열려있으면 재실행)
                 if (typeof renderSimPanel === 'function') renderSimPanel(merged);
@@ -3815,6 +3843,357 @@
             };
         }
 
+        /* ═══════════════════════════════════════════════════════════════════
+         *  2단계 성분분해 모델 (Component Decomposition Engine)
+         *  Stage 1: 외생변수 → 성분별 지수 (재료비·노무비·경비·외주비)
+         *  Stage 2: 성분 가중합 → 총지수 (bottom-up 집계)
+         *  Cross-validation: top-down vs bottom-up RMSE 비교
+         * ═══════════════════════════════════════════════════════════════════ */
+
+        // ─── 성분별 가중치 (기간별 동적) ───────────────────────────────────────
+        // 출처: KICT 2023 공표 가중치 + 기간별 구조변화 반영
+        const COMPONENT_WEIGHTS = {
+            warEra:  { materialCost: 0.380, laborCost: 0.340, overheadCost: 0.210, subcontract: 0.070 },
+            postWar: { materialCost: 0.350, laborCost: 0.375, overheadCost: 0.215, subcontract: 0.060 },
+            recent:  { materialCost: 0.345, laborCost: 0.385, overheadCost: 0.215, subcontract: 0.055 },
+            full:    { materialCost: 0.356, laborCost: 0.360, overheadCost: 0.223, subcontract: 0.061 }
+        };
+        const COMPONENT_KEYS = ['materialCost', 'laborCost', 'overheadCost', 'subcontract'];
+
+        // ─── 성분별 드라이버 매핑 (이중계상 방지 설계) ──────────────────────────
+        // primary: 해당 성분의 주요 경로 (계수 전체 사용)
+        // secondary: 잔여 간접 경로 (splitRatio 적용)
+        // excluded: 이 성분 회귀에서 완전 제외
+        const COMPONENT_DRIVER_MAP = {
+            materialCost:  {
+                drivers: ['oil', 'importPrice', 'steel', 'cement', 'fx', 'ppi'],
+                maxLag: 4,
+                // oil은 overheadCost와 공유 → 재료비 몫 65%
+                splitRatios: { oil: 0.65 },
+                costPush: ['oil', 'importPrice', 'steel', 'cement', 'fx', 'ppi']
+            },
+            laborCost: {
+                drivers: ['labor', 'policyRate', 'vix'],
+                maxLag: 2,
+                splitRatios: {},
+                costPush: ['labor']
+            },
+            overheadCost: {
+                drivers: ['oil', 'policyRate', 'us10y', 'fx', 'vix'],
+                maxLag: 3,
+                // oil은 materialCost와 공유 → 경비 몫 35%
+                splitRatios: { oil: 0.35 },
+                costPush: ['oil']
+            },
+            subcontract: {
+                drivers: ['policyRate', 'us10y', 'vix', 'labor', 'ppi'],
+                maxLag: 5,
+                splitRatios: {},
+                costPush: ['labor', 'ppi']
+            }
+        };
+
+        // ─── 성분 모델 캐시 ────────────────────────────────────────────────────
+        const _componentModelCache = {};
+
+        // ─── Stage 1: 성분별 ARDL 추정 ────────────────────────────────────────
+        function estimateComponentARDL(series, componentKey, periodKey, maxLag) {
+            const cfg     = COMPONENT_DRIVER_MAP[componentKey];
+            maxLag        = maxLag ?? cfg.maxLag;
+            const sub     = sliceSeries(series, periodKey);
+            const n       = sub.length;
+            if (n < maxLag + 8) return null;
+
+            // 성분 지수 존재 여부 확인
+            const hasComponent = sub.some(r => r[componentKey] != null);
+            if (!hasComponent) return null;
+
+            // 변화율 계산
+            const dComp = [], dDrivers = {};
+            cfg.drivers.forEach(k => dDrivers[k] = []);
+            for (let i = 1; i < n; i++) {
+                const cur = sub[i][componentKey], prv = sub[i-1][componentKey];
+                if (cur == null || prv == null || prv === 0) { dComp.push(0); }
+                else dComp.push(((cur / prv) - 1) * 100);
+
+                cfg.drivers.forEach(k => {
+                    const cv = sub[i][k], pv = sub[i-1][k];
+                    if (['policyRate','vix','us10y'].includes(k))
+                        dDrivers[k].push((cv != null && pv != null) ? cv - pv : 0);
+                    else
+                        dDrivers[k].push((cv != null && pv != null && pv !== 0) ? ((cv/pv)-1)*100 : 0);
+                });
+            }
+
+            // X 행렬 구성 (성분 드라이버만 사용 → 파라미터 수 축소)
+            const T = dComp.length - maxLag;
+            if (T < 8) return null;
+            const X = [], y = [];
+            for (let t = maxLag; t < dComp.length; t++) {
+                const row = [1];
+                cfg.drivers.forEach(k => {
+                    for (let l = 0; l <= maxLag; l++) row.push(dDrivers[k][t - l]);
+                });
+                X.push(row);
+                y.push(dComp[t]);
+            }
+
+            const result = olsEstimate(X, y);
+            if (!result || isNaN(result.r2) || !isFinite(result.r2)
+                || Math.abs(result.beta[0]) > 5) return null;
+
+            const coeffs = {};
+            let ci = 1;
+            cfg.drivers.forEach(k => {
+                coeffs[k] = {};
+                const sr = cfg.splitRatios[k] ?? 1.0;
+                for (let l = 0; l <= maxLag; l++) {
+                    coeffs[k][l] = (result.beta[ci] ?? 0) * sr;
+                    ci++;
+                }
+            });
+            return { intercept: result.beta[0], coeffs, r2: result.r2,
+                     maxLag, nObs: T, componentKey };
+        }
+
+        // ─── Stage 1: 성분별 LP 추정 ──────────────────────────────────────────
+        function estimateComponentLP(series, componentKey, periodKey, maxH = 12) {
+            const cfg = COMPONENT_DRIVER_MAP[componentKey];
+            const sub = sliceSeries(series, periodKey);
+            const n   = sub.length;
+            if (n < 15) return null;
+
+            const hasComponent = sub.some(r => r[componentKey] != null);
+            if (!hasComponent) return null;
+
+            const dComp = [], dDrivers = {};
+            cfg.drivers.forEach(k => dDrivers[k] = []);
+            for (let i = 1; i < n; i++) {
+                const cur = sub[i][componentKey], prv = sub[i-1][componentKey];
+                dComp.push((cur != null && prv != null && prv !== 0) ? ((cur/prv)-1)*100 : 0);
+                cfg.drivers.forEach(k => {
+                    const cv = sub[i][k], pv = sub[i-1][k];
+                    if (['policyRate','vix','us10y'].includes(k))
+                        dDrivers[k].push((cv != null && pv != null) ? cv - pv : 0);
+                    else
+                        dDrivers[k].push((cv != null && pv != null && pv !== 0) ? ((cv/pv)-1)*100 : 0);
+                });
+            }
+
+            const lpCoeffs = {};
+            for (let h = 1; h <= maxH; h++) {
+                const T = dComp.length - h;
+                if (T < 8) break;
+                const X = [], y = [];
+                for (let t = 0; t < T; t++) {
+                    const row = [1];
+                    cfg.drivers.forEach(k => row.push(dDrivers[k][t]));
+                    X.push(row);
+                    let cum = 0;
+                    for (let s = 1; s <= h; s++) cum += dComp[t + s];
+                    y.push(cum);
+                }
+                const result = olsEstimate(X, y);
+                if (!result || isNaN(result.r2) || !isFinite(result.beta[0])
+                    || Math.abs(result.beta[0]) > 10) continue;
+                const hCoeffs = { intercept: result.beta[0], r2: result.r2 };
+                const sr_map = cfg.splitRatios;
+                cfg.drivers.forEach((k, i) => {
+                    hCoeffs[k] = (result.beta[i+1] ?? 0) * (sr_map[k] ?? 1.0);
+                });
+                lpCoeffs[h] = hCoeffs;
+            }
+            return Object.keys(lpCoeffs).length > 0
+                ? { coeffs: lpCoeffs, nObs: dComp.length, componentKey }
+                : null;
+        }
+
+        // ─── 성분 모델 일괄 추정 (캐싱) ───────────────────────────────────────
+        function getComponentModels(series, periodKey) {
+            if (_componentModelCache[periodKey]) return _componentModelCache[periodKey];
+            const result = {};
+            for (const ck of COMPONENT_KEYS) {
+                result[ck] = {
+                    ardl: estimateComponentARDL(series, ck, periodKey),
+                    lp:   estimateComponentLP(series, ck, periodKey)
+                };
+            }
+            _componentModelCache[periodKey] = result;
+            return result;
+        }
+
+        // ─── 성분 하나의 12개월 예측 ──────────────────────────────────────────
+        function forecastComponent(series, shocks, componentKey, compModels, periodKey, method) {
+            const sub  = sliceSeries(series, periodKey);
+            const last = sub[sub.length - 1];
+            const baseVal = last[componentKey] ?? last.constructionCost;
+            const cfg  = COMPONENT_DRIVER_MAP[componentKey];
+            const ardl = compModels[componentKey]?.ardl;
+            const lp   = compModels[componentKey]?.lp;
+
+            const forecast = [];
+            let baseIdx = baseVal, scIdx = baseVal;
+
+            for (let h = 1; h <= 12; h++) {
+                let baseGr = 0.15, shockGr = 0;
+
+                if ((method === 'ardl' || method === 'all') && ardl) {
+                    baseGr = ardl.intercept;
+                    Object.entries(shocks).forEach(([k, val]) => {
+                        if (!cfg.drivers.includes(k)) return;
+                        const irf = ardlIRF(ardl, k, h);
+                        let c = Math.max(-2, Math.min(2, irf));
+                        if (cfg.costPush.includes(k) && val > 0) c = Math.max(0, c);
+                        shockGr += val * c * Math.max(0.3, 1 - h * 0.04);
+                    });
+                } else if ((method === 'lp' || method === 'all') && lp?.coeffs[h]) {
+                    const lpH = lp.coeffs[h];
+                    baseGr = lpH.intercept;
+                    Object.entries(shocks).forEach(([k, val]) => {
+                        if (lpH[k] == null || !cfg.drivers.includes(k)) return;
+                        let c = Math.max(-3, Math.min(3, lpH[k]));
+                        if (cfg.costPush.includes(k) && val > 0) c = Math.max(0, c);
+                        shockGr += val * c;
+                    });
+                }
+
+                baseIdx *= 1 + baseGr / 100;
+                scIdx   *= 1 + (baseGr + shockGr) / 100;
+                forecast.push({ horizon: 'M+' + h, baseline: macroRound(baseIdx),
+                    scenario: macroRound(scIdx),
+                    deltaPct: macroRound(((scIdx / baseIdx) - 1) * 100) });
+            }
+            return forecast;
+        }
+
+        // ─── Stage 2: Bottom-up 집계 ──────────────────────────────────────────
+        function buildBottomUpForecast(series, shocks, periodKey, method) {
+            method    = method || currentSimMethod || 'all';
+            periodKey = periodKey || currentAnalysisPeriod || 'full';
+
+            const compModels = getComponentModels(series, periodKey);
+            const hasAny = COMPONENT_KEYS.some(ck =>
+                compModels[ck]?.ardl || compModels[ck]?.lp);
+            if (!hasAny) return null;
+
+            const weights = COMPONENT_WEIGHTS[periodKey] || COMPONENT_WEIGHTS.full;
+            const sub     = sliceSeries(series, periodKey);
+            const last    = sub[sub.length - 1];
+
+            // 공종 믹스 반영 가중치 보정 (policyRate 높을수록 residential 축소)
+            const policyAdj = Math.min(0.05, Math.max(-0.05, (last.policyRate - 2.5) * -0.02));
+            const typeBoost = { materialCost: policyAdj * 0.5, laborCost: 0, overheadCost: policyAdj * 0.3, subcontract: 0 };
+
+            // 성분별 예측
+            const compForecasts = {};
+            for (const ck of COMPONENT_KEYS) {
+                compForecasts[ck] = forecastComponent(series, shocks, ck, compModels, periodKey, method);
+            }
+
+            // 총지수 가중합 (Stage 2)
+            const aggregated = [];
+            for (let h = 0; h < 12; h++) {
+                let baseSum = 0, scSum = 0, weightSum = 0;
+                for (const ck of COMPONENT_KEYS) {
+                    const fc = compForecasts[ck]?.[h];
+                    if (!fc) continue;
+                    const w = (weights[ck] ?? 0) + (typeBoost[ck] ?? 0);
+                    baseSum += fc.baseline * w;
+                    scSum   += fc.scenario  * w;
+                    weightSum += w;
+                }
+                if (weightSum === 0) continue;
+                const baseVal = macroRound(baseSum / weightSum);
+                const scVal   = macroRound(scSum   / weightSum);
+                aggregated.push({
+                    horizon: 'M+' + (h + 1),
+                    baseline: baseVal,
+                    scenario: scVal,
+                    deltaPct: macroRound(((scVal / baseVal) - 1) * 100),
+                    scenarioGrowth: macroRound(((scVal / last.constructionCost) - 1) * 100)
+                });
+            }
+            return { aggregated, componentForecasts: compForecasts,
+                     weights, compModels };
+        }
+
+        // ─── Cross-validation: top-down vs bottom-up ──────────────────────────
+        // holdout 마지막 12개월, 나머지로 추정 → RMSE 비교
+        function crossValidateBottomUp(series, periodKey) {
+            periodKey = periodKey || currentAnalysisPeriod || 'full';
+            const sub = sliceSeries(series, periodKey);
+            if (sub.length < 24) return null;
+
+            const holdout = sub.slice(-12);
+            const train   = sub.slice(0, -12);
+            if (train.length < 12) return null;
+
+            // 무충격 시나리오(shocks=0)로 예측 정확도만 측정
+            const zeroShocks = Object.fromEntries(DRIVER_KEYS.map(k => [k, 0]));
+
+            // top-down ARDL 예측
+            const tdModel = estimateARDL(train, 4);
+            const tdFc    = tdModel
+                ? buildForecastARDL(train, zeroShocks, tdModel, periodKey)
+                : buildForecastGaussian(train, zeroShocks, periodKey);
+
+            // bottom-up 예측 (임시 캐시 무효화 후 추정)
+            const tmpKey = periodKey + '_cv_tmp';
+            delete _componentModelCache[tmpKey];
+            // train 시리즈를 직접 넘겨 추정
+            const buResult = buildBottomUpForecast(train, zeroShocks, periodKey, 'ardl');
+            const buFc     = buResult?.aggregated ?? null;
+
+            // RMSE 계산
+            function rmse(fc) {
+                if (!fc) return null;
+                let ss = 0, cnt = 0;
+                for (let h = 0; h < Math.min(fc.length, holdout.length); h++) {
+                    const actual = holdout[h].constructionCost;
+                    if (actual == null) continue;
+                    ss += (fc[h].scenario - actual) ** 2;
+                    cnt++;
+                }
+                return cnt > 0 ? macroRound(Math.sqrt(ss / cnt)) : null;
+            }
+
+            const tdRmse = rmse(tdFc);
+            const buRmse = rmse(buFc);
+            const winner = tdRmse == null || buRmse == null ? 'unknown'
+                : buRmse < tdRmse ? 'bottomUp' : tdRmse < buRmse ? 'topDown' : 'tie';
+
+            return { topDown: { rmse: tdRmse }, bottomUp: { rmse: buRmse }, winner,
+                     n: holdout.length, periodKey };
+        }
+
+        // ─── 통합 앙상블 (기존 buildMultiMethodForecast 확장) ─────────────────
+        function buildMultiMethodForecastV2(series, shocks, periodKey) {
+            periodKey = periodKey || currentAnalysisPeriod || 'full';
+            const base      = buildMultiMethodForecast(series, shocks, periodKey);
+            const buResult  = buildBottomUpForecast(series, shocks, periodKey, currentSimMethod);
+            const crossVal  = crossValidateBottomUp(series, periodKey);
+
+            // 성분별 기여도 분해 (마지막 관측월 기준)
+            const sub  = sliceSeries(series, periodKey);
+            const last = sub[sub.length - 1];
+            const compBreakdown = COMPONENT_KEYS.map(ck => {
+                const w = (COMPONENT_WEIGHTS[periodKey] || COMPONENT_WEIGHTS.full)[ck] ?? 0;
+                const val = last[ck];
+                return { component: ck, label: { materialCost:'재료비', laborCost:'노무비',
+                    overheadCost:'경비', subcontract:'외주비' }[ck],
+                    weight: macroRound(w * 100), value: val,
+                    model: buResult?.compModels?.[ck]?.ardl ? 'ARDL'
+                        : buResult?.compModels?.[ck]?.lp   ? 'LP' : 'N/A',
+                    r2: macroRound((buResult?.compModels?.[ck]?.ardl?.r2
+                        ?? buResult?.compModels?.[ck]?.lp?.coeffs?.[1]?.r2 ?? 0) * 100) };
+            });
+
+            return { ...base, bottomUp: buResult?.aggregated ?? null,
+                componentBreakdown: compBreakdown,
+                componentForecasts: buResult?.componentForecasts ?? null,
+                crossValidation: crossVal };
+        }
+
         /* ─── Attribution (period-aware) ─── */
         function buildAttribution(series, periodKey) {
             periodKey = periodKey || currentAnalysisPeriod;
@@ -3881,6 +4260,19 @@
             el.className = 'status-badge ' + state;
             el.textContent = LABELS[state] || state.toUpperCase();
         }
+
+        let activeMapRegion = 'mideast';
+
+        const MAP_REGIONS = {
+            mideast: {
+                label: '중동 분쟁',
+                bbox: { minLon: 32.0, minLat: 10.0, maxLon: 62.5, maxLat: 38.5 }
+            },
+            ukraine: {
+                label: '우크라이나 전쟁',
+                bbox: { minLon: 22.0, minLat: 43.5, maxLon: 42.0, maxLat: 53.5 }
+            }
+        };
 
         const MAP_BBOX = Object.freeze({
             minLon: 32.0,
@@ -4779,6 +5171,72 @@
               coords: [[38.07,46.30],[38.50,44.00],[39.00,43.50],[39.92,44.00]] }
         ];
 
+        /* ════════════════════════════════════════════════════════════
+           ██  UKRAINE WAR DATA
+           ════════════════════════════════════════════════════════════ */
+        const UKRAINE_CONFLICT_ZONES = [
+            { name: 'Donbas Frontline (East)', color: '#ff2d55',
+              coords: [[47.8,37.2],[49.2,37.2],[49.2,39.5],[47.8,39.5]] },
+            { name: 'Zaporizhzhia Oblast (Occupied)', color: '#ff6b00',
+              coords: [[47.2,34.5],[48.0,34.5],[48.0,36.5],[47.2,36.5]] },
+            { name: 'Kherson Oblast (Contested)', color: '#ffb300',
+              coords: [[46.0,32.5],[47.2,32.5],[47.2,34.5],[46.0,34.5]] },
+            { name: 'Crimea (Russian-Occupied)', color: '#e040fb',
+              coords: [[44.4,32.5],[46.0,32.5],[46.0,36.8],[44.4,36.8]] },
+            { name: 'Kharkiv Oblast (Frontline)', color: '#ff4d6d',
+              coords: [[49.5,36.0],[51.0,36.0],[51.0,38.5],[49.5,38.5]] },
+            { name: 'Luhansk (Occupied)', color: '#cc2244',
+              coords: [[48.0,38.5],[49.5,38.5],[49.5,40.5],[48.0,40.5]] }
+        ];
+
+        const UKRAINE_HOTSPOTS = [
+            { name: 'Kyiv', lat: 50.4501, lon: 30.5234, critical: true },
+            { name: 'Kharkiv', lat: 49.9935, lon: 36.2304, critical: true },
+            { name: 'Zaporizhzhia NPP', lat: 47.5060, lon: 34.5860, critical: true },
+            { name: 'Odessa', lat: 46.4825, lon: 30.7233, critical: true },
+            { name: 'Bakhmut/Avdiivka', lat: 48.0700, lon: 37.9500, critical: true },
+            { name: 'Mariupol (Occupied)', lat: 47.1018, lon: 37.5450, critical: true },
+            { name: 'Sevastopol', lat: 44.6054, lon: 33.5250, critical: true },
+            { name: 'Dnipro', lat: 48.4647, lon: 35.0462, critical: false },
+            { name: 'Sumy', lat: 50.9077, lon: 34.7981, critical: false },
+            { name: 'Mykolaiv', lat: 46.9750, lon: 32.0000, critical: false },
+            { name: 'Zaporizhzhia City', lat: 47.8388, lon: 35.1396, critical: false },
+            { name: 'Black Sea Fleet (Novorossiysk)', lat: 44.7232, lon: 37.7685, critical: true }
+        ];
+
+        const UKRAINE_TRAJECTORIES = [
+            { name: 'Russian Missiles → Kyiv', from: [51.7, 36.0], to: [50.45, 30.52], color: '#ff2d55' },
+            { name: 'Russian Missiles → Kharkiv', from: [51.7, 36.5], to: [49.99, 36.23], color: '#ff4d6d' },
+            { name: 'Russian Missiles → Zaporizhzhia', from: [51.0, 38.0], to: [47.85, 35.12], color: '#e040fb' },
+            { name: 'Russian Missiles → Odessa', from: [46.0, 34.5], to: [46.48, 30.72], color: '#ff6b00' },
+            { name: 'Black Sea → Odessa (Naval)', from: [44.72, 34.0], to: [46.48, 30.72], color: '#00bcd4' },
+            { name: 'Russia → Sumy Oblast', from: [51.7, 35.0], to: [50.91, 34.80], color: '#f44336' }
+        ];
+
+        const UKRAINE_PIPELINES = [
+            { name: 'Brotherhood Pipeline (Gas Transit)', color: '#00e676', capacity: '40 bcm/yr',
+              coords: [[50.10,30.52],[49.50,28.50],[48.80,26.50],[48.60,26.00],[47.85,26.50]] },
+            { name: 'Druzhba Pipeline (Oil to EU)', color: '#ffa726', capacity: '1.2M bpd',
+              coords: [[51.45,31.50],[51.00,29.50],[50.50,27.00],[50.10,25.00],[49.50,23.00]] },
+            { name: 'TurkStream (Black Sea)', color: '#26c6da', capacity: '31.5 bcm/yr', dashed: true,
+              coords: [[41.50,28.00],[42.00,32.00],[43.00,36.00],[43.50,39.00]] },
+            { name: 'Ukrainian Gas Transit Network', color: '#69f0ae', capacity: '~90 bcm/yr (pre-war)',
+              coords: [[50.45,30.52],[49.00,32.00],[47.84,35.14],[48.46,35.05]] },
+            { name: 'Odessa–Brody Pipeline', color: '#ab47bc', capacity: '0.9M bpd',
+              coords: [[46.48,30.72],[47.80,30.20],[49.90,27.00],[50.48,26.24]] }
+        ];
+
+        const UKRAINE_OIL_INFRA = [
+            { name: 'Kremenchuk Refinery', lat: 49.0569, lon: 33.4200, type: 'refinery', icon: '⚙' },
+            { name: 'Zaporizhzhia Nuclear Plant', lat: 47.5060, lon: 34.5860, type: 'nuclear', icon: '⚛' },
+            { name: 'Pivdennoukrainsk NPP', lat: 47.8192, lon: 31.2210, type: 'nuclear', icon: '⚛' },
+            { name: 'Rivne NPP', lat: 51.3261, lon: 25.8906, type: 'nuclear', icon: '⚛' },
+            { name: 'Odessa Oil Terminal', lat: 46.48, lon: 30.72, type: 'terminal', icon: '🛢' },
+            { name: 'Kherson Port', lat: 46.64, lon: 32.62, type: 'port', icon: '⚓' },
+            { name: 'Dnipro Power Plant', lat: 48.46, lon: 35.05, type: 'processing', icon: '⚡' },
+            { name: 'Kerch Bridge', lat: 45.33, lon: 36.50, type: 'chokepoint', icon: '🌉' }
+        ];
+
         function initMapAssets() {
             const mapCanvas = document.getElementById('geoMapCanvas');
             if (!mapCanvas) return;
@@ -4823,89 +5281,8 @@
             mapLayers.pipelines = window.L.layerGroup().addTo(geoMap);
             mapLayers.heatmap = window.L.layerGroup().addTo(geoMap);
 
-            // ── Pipelines ──
-            PIPELINES.forEach(pipe => {
-                const line = window.L.polyline(pipe.coords, {
-                    color: pipe.color,
-                    weight: pipe.dashed ? 2.5 : 3,
-                    opacity: 0.7,
-                    dashArray: pipe.dashed ? '4 6' : null,
-                    lineCap: 'round',
-                    lineJoin: 'round'
-                }).addTo(mapLayers.pipelines);
-                line.bindTooltip(`<b>${pipe.name}</b><br>Capacity: ${pipe.capacity}`, {
-                    sticky: true, className: 'map-hotspot-label', direction: 'top'
-                });
-                // Label at midpoint
-                const mid = pipe.coords[Math.floor(pipe.coords.length / 2)];
-                const labelIcon = window.L.divIcon({
-                    className: 'map-asset-icon',
-                    html: `<span style="font-size:10px;color:${pipe.color};text-shadow:0 0 4px #000,0 0 2px #000;white-space:nowrap;font-family:'IBM Plex Mono',Consolas,monospace;font-weight:700;letter-spacing:0.5px;">${pipe.name.split('(')[0].trim()}</span>`,
-                    iconSize: [0, 0], iconAnchor: [0, 0]
-                });
-                window.L.marker(mid, { icon: labelIcon, interactive: false, keyboard: false }).addTo(mapLayers.pipelines);
-            });
-
-            // ── Conflict Zone Polygons ──
-            CONFLICT_ZONES.forEach(zone => {
-                const polygon = window.L.polygon(zone.coords, {
-                    color: zone.color,
-                    fillColor: zone.color,
-                    fillOpacity: 0.12,
-                    weight: 1.5,
-                    dashArray: '6 4',
-                    className: 'conflict-zone-path'
-                }).addTo(mapLayers.zones);
-                polygon.bindTooltip(zone.name, { sticky: true, className: 'map-hotspot-label' });
-            });
-
-            // ── Oil Infrastructure ──
-            OIL_INFRASTRUCTURE.forEach(infra => {
-                const icon = window.L.divIcon({
-                    className: 'map-asset-icon',
-                    html: `<span class="oil-infra-marker"><span class="oil-icon">${escapeHtml(infra.icon)}</span><span class="oil-label">${escapeHtml(infra.name)}</span></span>`,
-                    iconSize: [0, 0], iconAnchor: [0, 0]
-                });
-                const marker = window.L.marker([infra.lat, infra.lon], { icon, keyboard: false }).addTo(mapLayers.oil);
-                marker.bindTooltip(`${infra.icon} ${infra.name} (${infra.type})`, { direction: 'top', offset: [0, -8] });
-            });
-
-            // ── Attack Trajectories (animated dashed lines) ──
-            ATTACK_TRAJECTORIES.forEach(traj => {
-                const line = window.L.polyline([traj.from, traj.to], {
-                    color: traj.color,
-                    weight: 2,
-                    opacity: 0.6,
-                    dashArray: '8 6',
-                    className: 'attack-trajectory-line'
-                }).addTo(mapLayers.trajectories);
-                line.bindTooltip(traj.name, { sticky: true, className: 'map-hotspot-label' });
-
-                // Arrow marker at the end
-                const endIcon = window.L.divIcon({
-                    className: 'map-asset-icon',
-                    html: `<span style="color:${traj.color};font-size:14px;filter:drop-shadow(0 0 4px ${traj.color});">▸</span>`,
-                    iconSize: [14, 14], iconAnchor: [7, 7]
-                });
-                window.L.marker(traj.to, { icon: endIcon, interactive: false, keyboard: false }).addTo(mapLayers.trajectories);
-            });
-
-            // ── Hotspots ──
-            MAP_HOTSPOTS.forEach(hotspot => {
-                const marker = window.L.marker([hotspot.lat, hotspot.lon], {
-                    icon: createHotspotIcon(hotspot.critical),
-                    interactive: false,
-                    keyboard: false
-                }).addTo(mapLayers.hotspots);
-                marker.bindTooltip(hotspot.name, {
-                    permanent: true,
-                    direction: 'right',
-                    offset: [8, 0],
-                    className: 'map-hotspot-label'
-                });
-                // Seed heatmap with hotspot locations
-                heatmapData.push([hotspot.lat, hotspot.lon, hotspot.critical ? 0.8 : 0.4]);
-            });
+            // ── Render static layers for initial region ──
+            renderStaticLayers('mideast');
 
             // ── Reference scenario assets (map visualization only — NOT used in crisis scoring) ──
             mapAssetState.forEach(asset => {
@@ -4939,6 +5316,113 @@
             initMapLayerControls();
 
             setInterval(updateMapAssets, 2000);
+        }
+
+        function renderStaticLayers(region) {
+            if (!geoMap || !mapLayers.pipelines) return;
+            const isUkraine = (region === 'ukraine');
+            const zones      = isUkraine ? UKRAINE_CONFLICT_ZONES  : CONFLICT_ZONES;
+            const hotspots   = isUkraine ? UKRAINE_HOTSPOTS         : MAP_HOTSPOTS;
+            const trajs      = isUkraine ? UKRAINE_TRAJECTORIES     : ATTACK_TRAJECTORIES;
+            const pipes      = isUkraine ? UKRAINE_PIPELINES        : PIPELINES;
+            const oilInfras  = isUkraine ? UKRAINE_OIL_INFRA        : OIL_INFRASTRUCTURE;
+
+            // Clear existing static layers
+            ['pipelines','zones','oil','trajectories','hotspots'].forEach(k => {
+                if (mapLayers[k]) mapLayers[k].clearLayers();
+            });
+            heatmapData.length = 0;
+            if (heatmapLayer) { heatmapLayer.setLatLngs([]); }
+
+            // ── Pipelines ──
+            pipes.forEach(pipe => {
+                const line = window.L.polyline(pipe.coords, {
+                    color: pipe.color, weight: pipe.dashed ? 2.5 : 3, opacity: 0.7,
+                    dashArray: pipe.dashed ? '4 6' : null, lineCap: 'round', lineJoin: 'round'
+                }).addTo(mapLayers.pipelines);
+                line.bindTooltip(`<b>${pipe.name}</b><br>Capacity: ${pipe.capacity}`, {
+                    sticky: true, className: 'map-hotspot-label', direction: 'top'
+                });
+                const mid = pipe.coords[Math.floor(pipe.coords.length / 2)];
+                const labelIcon = window.L.divIcon({
+                    className: 'map-asset-icon',
+                    html: `<span style="font-size:10px;color:${pipe.color};text-shadow:0 0 4px #000,0 0 2px #000;white-space:nowrap;font-family:'IBM Plex Mono',Consolas,monospace;font-weight:700;letter-spacing:0.5px;">${pipe.name.split('(')[0].trim()}</span>`,
+                    iconSize: [0, 0], iconAnchor: [0, 0]
+                });
+                window.L.marker(mid, { icon: labelIcon, interactive: false, keyboard: false }).addTo(mapLayers.pipelines);
+            });
+
+            // ── Conflict Zones ──
+            zones.forEach(zone => {
+                const polygon = window.L.polygon(zone.coords, {
+                    color: zone.color, fillColor: zone.color, fillOpacity: 0.12,
+                    weight: 1.5, dashArray: '6 4', className: 'conflict-zone-path'
+                }).addTo(mapLayers.zones);
+                polygon.bindTooltip(zone.name, { sticky: true, className: 'map-hotspot-label' });
+            });
+
+            // ── Infrastructure (Oil / Energy) ──
+            oilInfras.forEach(infra => {
+                const icon = window.L.divIcon({
+                    className: 'map-asset-icon',
+                    html: `<span class="oil-infra-marker"><span class="oil-icon">${escapeHtml(infra.icon)}</span><span class="oil-label">${escapeHtml(infra.name)}</span></span>`,
+                    iconSize: [0, 0], iconAnchor: [0, 0]
+                });
+                const marker = window.L.marker([infra.lat, infra.lon], { icon, keyboard: false }).addTo(mapLayers.oil);
+                marker.bindTooltip(`${infra.icon} ${infra.name} (${infra.type})`, { direction: 'top', offset: [0, -8] });
+            });
+
+            // ── Attack Trajectories ──
+            trajs.forEach(traj => {
+                const line = window.L.polyline([traj.from, traj.to], {
+                    color: traj.color, weight: 2, opacity: 0.6,
+                    dashArray: '8 6', className: 'attack-trajectory-line'
+                }).addTo(mapLayers.trajectories);
+                line.bindTooltip(traj.name, { sticky: true, className: 'map-hotspot-label' });
+                const endIcon = window.L.divIcon({
+                    className: 'map-asset-icon',
+                    html: `<span style="color:${traj.color};font-size:14px;filter:drop-shadow(0 0 4px ${traj.color});">▸</span>`,
+                    iconSize: [14, 14], iconAnchor: [7, 7]
+                });
+                window.L.marker(traj.to, { icon: endIcon, interactive: false, keyboard: false }).addTo(mapLayers.trajectories);
+            });
+
+            // ── Hotspots ──
+            hotspots.forEach(hotspot => {
+                const marker = window.L.marker([hotspot.lat, hotspot.lon], {
+                    icon: createHotspotIcon(hotspot.critical), interactive: false, keyboard: false
+                }).addTo(mapLayers.hotspots);
+                marker.bindTooltip(hotspot.name, {
+                    permanent: true, direction: 'right', offset: [8, 0], className: 'map-hotspot-label'
+                });
+                heatmapData.push([hotspot.lat, hotspot.lon, hotspot.critical ? 0.8 : 0.4]);
+            });
+
+            // Refresh heatmap
+            if (heatmapLayer) heatmapLayer.setLatLngs(heatmapData);
+        }
+
+        function switchMapRegion(region) {
+            if (!geoMap) return;
+            activeMapRegion = region;
+            const cfg = MAP_REGIONS[region];
+            if (!cfg) return;
+
+            // Re-fit map bounds
+            const sw = window.L.latLng(cfg.bbox.minLat, cfg.bbox.minLon);
+            const ne = window.L.latLng(cfg.bbox.maxLat, cfg.bbox.maxLon);
+            const bounds = window.L.latLngBounds(sw, ne);
+            geoMap.setMaxBounds(bounds.pad(0.3));
+            geoMap.fitBounds(bounds, { padding: [8, 8], animate: true });
+
+            // Re-render static layers
+            renderStaticLayers(region);
+
+            // Update subtitle
+            const sub = document.querySelector('.map-card .card-subtitle');
+            if (sub) sub.textContent = region === 'ukraine'
+                ? '미사일 공격·에너지 인프라·전선 분쟁 시각화'
+                : '군사 활동·해상 움직임·분쟁 이벤트 시각화';
         }
 
         let allLayersOn = true;
@@ -6980,17 +7464,18 @@
             const mdContent = buildHelpMarkdown();
 
             const tocSections = [
-                { id:'sec-overview', label:'엔진 개요', num:'I' },
-                { id:'sec-methods', label:'분석 방법론', num:'II' },
-                { id:'sec-passthrough', label:'전파 경로', num:'III' },
-                { id:'sec-dynamics', label:'System Dynamics', num:'IV' },
-                { id:'sec-pyeong', label:'유형별 공사비', num:'V' },
-                { id:'sec-pf', label:'PF금리 등급별', num:'VI' },
-                { id:'sec-periods', label:'분석 기간', num:'VII' },
-                { id:'sec-pressure', label:'압력 상태 진단', num:'VIII' },
-                { id:'sec-impl', label:'구현 세부사항', num:'IX' },
-                { id:'sec-guide', label:'실전 활용', num:'X' },
-                { id:'sec-refs', label:'출처·참고문헌', num:'XI' },
+                { id:'sec-overview',    label:'엔진 개요',        num:'I' },
+                { id:'sec-methods',     label:'분석 방법론',       num:'II' },
+                { id:'sec-component',   label:'성분분해 모델',     num:'III' },
+                { id:'sec-passthrough', label:'전파 경로',         num:'IV' },
+                { id:'sec-dynamics',    label:'System Dynamics',   num:'V' },
+                { id:'sec-pyeong',      label:'유형별 공사비',     num:'VI' },
+                { id:'sec-pf',          label:'PF금리 등급별',     num:'VII' },
+                { id:'sec-periods',     label:'분석 기간',         num:'VIII' },
+                { id:'sec-pressure',    label:'압력 상태 진단',    num:'IX' },
+                { id:'sec-impl',        label:'구현 세부사항',     num:'X' },
+                { id:'sec-guide',       label:'실전 활용',         num:'XI' },
+                { id:'sec-refs',        label:'출처·참고문헌',     num:'XII' },
             ];
 
             const tocHtml = tocSections.map(t => `
@@ -7208,9 +7693,9 @@ Oscar Jordà(2005)가 제안한 방법론. VAR/ARDL의 재귀적 IRF 대신 **�
 ---
 
 @@SEC:sec-passthrough
-## Part III. 전파 경로 모형 (Pass-Through Model)
+## Part IV. 전파 경로 모형 (Pass-Through Model)
 
-### 3.1 전파 가중치 테이블
+### 4.1 전파 가중치 테이블
 
 각 거시변수가 건설공사비에 도달하는 전파 가중치(weight), 피크 시차(peakLag), 확산폭(width):
 
@@ -7218,7 +7703,7 @@ Oscar Jordà(2005)가 제안한 방법론. VAR/ARDL의 재귀적 IRF 대신 **�
 |------|-----------|----------|-----------|----------|
 ${ptRows}
 
-### 3.2 파생 변수 산출
+### 4.2 파생 변수 산출
 - 수입물가 = 환율×0.45 + 유가×0.35 + PPI×0.20
 - 철강가격 = 수입물가×0.40 + PPI×0.35 + 유가×0.15
 - 시멘트가격 = PPI×0.55 + 유가×0.25
@@ -7811,27 +8296,53 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
             <div class="hd-sec" id="sec-overview">
                 <div class="hd-sec-head"><span class="hd-sec-num">PART I</span><span class="hd-sec-title">엔진 개요</span></div>
                 <div class="hd-subsec">1.1 시뮬레이션 목적</div>
-                <div class="hd-text">본 시뮬레이션은 거시경제 변수(환율, 유가, PPI, 노무비, 금리 등)의 충격이 건설공사비지수에 미치는 영향을 정량적으로 분석합니다. 3가지 독립적 방법론을 병행 적용하여 단일 모형 편향을 최소화하고, 교차 검증을 통해 전망의 신뢰도를 높입니다.</div>
+                <div class="hd-text">본 시뮬레이션은 거시경제 외생변수(환율, 유가, 미국금리 등)의 충격이 건설공사비지수에 미치는 파급 효과를 정량적으로 분석합니다. <strong style="color:#e8f0ff;">4가지 독립적 방법론</strong>(Gaussian IRF · ARDL-OLS · Local Projections · 성분분해 Bottom-up)을 병행 적용하여 단일 모형 편향을 최소화하고, holdout 교차 검증(RMSE)을 통해 전망의 신뢰도를 계량합니다.</div>
                 <div class="hd-subsec">1.2 데이터 기반</div>
                 <div class="hd-cards hd-cards-2">
-                    <div class="hd-card"><div class="hd-card-title">데이터 출처</div><div class="hd-card-text">ECOS (한국은행 경제통계시스템) 월별 시계열</div></div>
-                    <div class="hd-card"><div class="hd-card-title">분석 기간</div><div class="hd-card-text">2021.01 ~ 2025.12 (60개월)</div></div>
+                    <div class="hd-card"><div class="hd-card-title">데이터 출처</div><div class="hd-card-text">KOSIS (KICT 건설공사비지수) · ECOS (한국은행) · FRED (미국 연준) · Yahoo Finance</div></div>
+                    <div class="hd-card"><div class="hd-card-title">분석 기간</div><div class="hd-card-text">2018.01 ~ 현재 (최대 96개월, 실데이터 연동 시 자동 확장)</div></div>
                 </div>
-                <div class="hd-text" style="margin-top:12px;"><strong style="color:#e8f0ff;">10개 드라이버:</strong> 환율, 유가, PPI, 수입물가, 노무비, 철강, 시멘트, 기준금리, VIX, US10Y</div>
-                <div class="hd-subsec">1.3 왜 3가지 방법이 필요한가</div>
-                <div class="hd-text">하나의 충격에 대해 세 가지 방법론이 <strong style="color:#e8f0ff;">서로 다른 전망</strong>을 내놓습니다. 단일 방법론의 한계를 보완하기 위해 비교 분석을 지원합니다.</div>
+                <div class="hd-text" style="margin-top:12px;"><strong style="color:#e8f0ff;">10개 외생 드라이버:</strong> 환율, 유가, PPI, 수입물가, 노무비, 철강, 시멘트, 기준금리, VIX, US10Y</div>
+                <div class="hd-text"><strong style="color:#4ec9ff;">4개 성분 지수 (신규):</strong> 재료비, 노무비, 경비, 외주비 — KOSIS orgId=397 월별 실데이터</div>
+                <div class="hd-subsec">1.3 엔진 아키텍처 — 2단계 구조</div>
+                <div class="hd-flow" style="flex-wrap:wrap;gap:6px;align-items:flex-start;">
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                        <div class="hd-flow-node" style="background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.25);width:120px;text-align:center;font-size:11px;">외생변수 10개<br><span style="color:#4ec9ff;font-size:10px;">유가·환율·금리 등</span></div>
+                    </div>
+                    <span class="hd-flow-arrow" style="margin-top:12px;">→</span>
+                    <div style="display:flex;flex-direction:column;gap:4px;">
+                        <div class="hd-flow-node" style="background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.25);font-size:10px;padding:4px 8px;">① Gaussian IRF</div>
+                        <div class="hd-flow-node" style="background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.25);font-size:10px;padding:4px 8px;">② ARDL-OLS</div>
+                        <div class="hd-flow-node" style="background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.25);font-size:10px;padding:4px 8px;">③ Local Projections</div>
+                    </div>
+                    <span class="hd-flow-arrow" style="margin-top:28px;">→</span>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                        <div class="hd-flow-node" style="background:rgba(20,184,166,0.12);border:1px solid rgba(20,184,166,0.3);width:100px;text-align:center;font-size:11px;font-weight:700;">총지수<br>Top-down</div>
+                    </div>
+                    <span class="hd-flow-arrow" style="margin-top:28px;color:#4ec9ff;">⊕</span>
+                    <div style="display:flex;flex-direction:column;gap:4px;">
+                        <div class="hd-flow-node" style="background:rgba(78,201,255,0.1);border:1px solid rgba(78,201,255,0.3);font-size:10px;padding:4px 8px;">Stage 1: 재료비 ARDL/LP</div>
+                        <div class="hd-flow-node" style="background:rgba(78,201,255,0.1);border:1px solid rgba(78,201,255,0.3);font-size:10px;padding:4px 8px;">Stage 1: 노무비 ARDL/LP</div>
+                        <div class="hd-flow-node" style="background:rgba(78,201,255,0.1);border:1px solid rgba(78,201,255,0.3);font-size:10px;padding:4px 8px;">Stage 1: 경비·외주비 ARDL/LP</div>
+                    </div>
+                    <span class="hd-flow-arrow" style="margin-top:28px;">→</span>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                        <div class="hd-flow-node" style="background:rgba(78,201,255,0.15);border:1px solid rgba(78,201,255,0.4);width:100px;text-align:center;font-size:11px;font-weight:700;">총지수<br>Bottom-up<br><span style="font-size:9px;color:#4ec9ff;">④ 신규</span></div>
+                    </div>
+                    <span class="hd-flow-arrow" style="margin-top:28px;">→</span>
+                    <div class="hd-flow-node" style="background:rgba(255,179,71,0.15);border:1px solid rgba(255,179,71,0.4);font-weight:700;font-size:12px;">4방법 앙상블<br>+ Cross-validation</div>
+                </div>
+                <div class="hd-subsec">1.4 왜 4가지 방법이 필요한가</div>
                 <table class="hd-table">
-                    <thead><tr><th>기준</th><th>Gaussian IRF</th><th>ARDL-OLS</th><th>Local Projections</th></tr></thead>
+                    <thead><tr><th>기준</th><th>Gaussian IRF</th><th>ARDL-OLS</th><th>Local Projections</th><th style="color:#4ec9ff;">Bottom-up (신규)</th></tr></thead>
                     <tbody>
-                        <tr><td>계수 추정</td><td>수기 입력 (고정)</td><td>OLS 데이터 추정</td><td>OLS 데이터 추정</td></tr>
-                        <tr><td>IRF 형태</td><td>Gaussian (가정)</td><td>시차별 계수 (자유)</td><td>horizon별 직접 추정</td></tr>
-                        <tr><td>비선형 대응</td><td class="hd-cmp-weak">취약</td><td class="hd-cmp-medium">보통</td><td class="hd-cmp-medium">조건부 유연</td></tr>
-                        <tr><td>소표본 안정성</td><td>가정 고정형 (표본 무관)</td><td class="hd-cmp-medium">표본 증가 시 향상</td><td class="hd-cmp-weak">표본 증가 시 향상; h↑ 시 급감</td></tr>
-                        <tr><td>변수 상호작용</td><td>독립 가정</td><td>시차별 포착</td><td>동시점 포착</td></tr>
-                        <tr><td>오차 누적</td><td class="hd-cmp-strong">없음</td><td class="hd-cmp-weak">재귀 누적</td><td class="hd-cmp-strong">없음</td></tr>
-                        <tr><td>대형충격 반응</td><td>Baseline (가정 기반)</td><td class="hd-cmp-medium">표본 충분 시 적합</td><td>방향성 추정에 유연 (소표본 주의)</td></tr>
-                        <tr><td>적합한 질문</td><td style="font-size:10px;color:#8ea0bb;">충격이 어떻게 퍼지는가?</td><td style="font-size:10px;color:#8ea0bb;">장기 평균 관계는?</td><td style="font-size:10px;color:#8ea0bb;">충격이 h기 후 얼마나 남는가?</td></tr>
-                        <tr><td>표본 크기 제약</td><td>없음</td><td style="color:#f59e0b;">n ≥ 41 권장</td><td style="color:#f59e0b;">n ≥ 42 권장</td></tr>
+                        <tr><td>추정 방식</td><td>수기 고정 계수</td><td>OLS 데이터 추정</td><td>OLS 직접 추정</td><td class="hd-cmp-strong">성분별 OLS + 가중합</td></tr>
+                        <tr><td>이중계상 방지</td><td class="hd-cmp-weak">없음</td><td class="hd-cmp-weak">없음</td><td class="hd-cmp-weak">없음</td><td class="hd-cmp-strong">splitRatio + excluded 설계</td></tr>
+                        <tr><td>시차 이중화</td><td class="hd-cmp-weak">단순 Gaussian</td><td class="hd-cmp-medium">단일 방정식</td><td class="hd-cmp-medium">단일 방정식</td><td class="hd-cmp-strong">2단계 누적 시차 포착</td></tr>
+                        <tr><td>성분별 진단</td><td class="hd-cmp-weak">불가</td><td class="hd-cmp-weak">불가</td><td class="hd-cmp-weak">불가</td><td class="hd-cmp-strong">재료비/노무비/경비 분리</td></tr>
+                        <tr><td>공종 믹스 반영</td><td class="hd-cmp-weak">고정</td><td class="hd-cmp-weak">고정</td><td class="hd-cmp-weak">고정</td><td class="hd-cmp-strong">금리 연동 동적 가중치</td></tr>
+                        <tr><td>소표본 안정성</td><td class="hd-cmp-strong">표본 무관</td><td class="hd-cmp-medium">n≥41 권장</td><td class="hd-cmp-medium">n≥42 권장</td><td class="hd-cmp-medium">성분당 n≥15</td></tr>
+                        <tr><td>교차검증(RMSE)</td><td class="hd-cmp-weak">없음</td><td class="hd-cmp-weak">없음</td><td class="hd-cmp-weak">없음</td><td class="hd-cmp-strong">holdout 12M RMSE 자동 비교</td></tr>
                     </tbody>
                 </table>
             </div>`;
@@ -7841,7 +8352,7 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
             <hr class="hd-divider">
             <div class="hd-sec" id="sec-methods">
                 <div class="hd-sec-head"><span class="hd-sec-num">PART II</span><span class="hd-sec-title">분석 방법론</span></div>
-                <div class="hd-text" style="margin-bottom:20px;">3-Method Ensemble: 각 방법론의 강점이 다른 방법론의 약점을 보완합니다.</div>
+                <div class="hd-text" style="margin-bottom:20px;">4-Method Ensemble: 각 방법론의 강점이 다른 방법론의 약점을 보완합니다. Bottom-up은 성분분해를 통해 Top-down 3방법이 놓치는 <strong style="color:#4ec9ff;">2단계 시차·이중계상 문제</strong>를 해결합니다.</div>
                 <div class="hd-cards hd-cards-3">
                     <div class="hd-method-card m1">
                         <div class="hd-method-num">01</div>
@@ -7878,10 +8389,84 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
                     </div>
                 </div>
                 <div class="hd-subsec">2.4 앙상블 비교 모드</div>
-                <div class="hd-text">3가지 방법론의 결과를 단순 평균하여 KPI에 표시합니다. 방법론 간 편차가 클수록 불확실성이 높은 것으로 해석합니다.</div>
+                <div class="hd-text">4가지 방법론의 결과를 단순 평균하여 KPI에 표시합니다. Bottom-up이 활성화(성분 데이터 존재)된 경우 앙상블에 자동 포함됩니다. 방법론 간 편차가 클수록 불확실성이 높은 것으로 해석합니다.</div>
+                <table class="hd-table" style="margin-top:12px;">
+                    <thead><tr><th>상황</th><th>앙상블 구성</th><th>해석 지침</th></tr></thead>
+                    <tbody>
+                        <tr><td>성분 데이터 없음</td><td>Gaussian + ARDL + LP (3방법)</td><td>기존 해석 그대로</td></tr>
+                        <tr><td>성분 데이터 있음</td><td>Gaussian + ARDL + LP + Bottom-up (4방법)</td><td>Bottom-up RMSE &lt; Top-down → Bottom-up 신뢰 우위</td></tr>
+                        <tr><td>Cross-val winner: bottomUp</td><td style="color:#4ec9ff;">Bottom-up 우선 참조</td><td>성분별 기여도 분해 활용 권장</td></tr>
+                        <tr><td>Cross-val winner: topDown</td><td>Top-down 우선 참조</td><td>Bottom-up은 보조 지표로만 활용</td></tr>
+                    </tbody>
+                </table>
             </div>`;
 
-            // PART III
+            // PART III — 성분분해 2단계 모델
+            html += `
+            <hr class="hd-divider">
+            <div class="hd-sec" id="sec-component">
+                <div class="hd-sec-head"><span class="hd-sec-num">PART III</span><span class="hd-sec-title">성분분해 2단계 모델</span></div>
+                <div class="hd-text" style="margin-bottom:20px;">건설공사비지수(KICT)를 구성하는 <strong style="color:#4ec9ff;">4대 성분(재료비·노무비·경비·외주비)</strong>을 분리 추정한 뒤 가중 합산하는 Bottom-up 2단계 모델입니다. Top-down 3방법이 간과하는 성분별 이중계상과 시차 구조 차이를 명시적으로 제어합니다.</div>
+                <div class="hd-subsec">3.1 설계 배경 — 왜 성분분해인가?</div>
+                <table class="hd-table">
+                    <thead><tr><th>문제</th><th>Top-down 한계</th><th>Bottom-up 해법</th></tr></thead>
+                    <tbody>
+                        <tr><td>이중계상</td><td>유가가 재료비·경비에 동시 반영되지만 단일 계수로 합산</td><td>splitRatio(유가 65%→재료비 / 35%→경비)로 분리</td></tr>
+                        <tr><td>시차 이질성</td><td>성분별 피크 시차가 달라도 하나의 가중치로 뭉뚱그림</td><td>성분별 ARDL/LP 각각 추정 → 독립적 시차 포착</td></tr>
+                        <tr><td>파라미터 과잉</td><td>10변수 &times; 5시차 = 51계수 → 과적합 위험</td><td>성분별 3~5 드라이버 &times; 5시차 = 최대 26계수</td></tr>
+                        <tr><td>해석 가능성</td><td>단일 총지수 → 어느 성분이 원인인지 불투명</td><td>성분 기여도 분해 → 정책 대응 명확</td></tr>
+                    </tbody>
+                </table>
+                <div class="hd-subsec">3.2 Stage 1 — 외생변수 → 4대 성분지수</div>
+                <div class="hd-text">각 성분은 전담 드라이버 셋과 독립 ARDL(또는 LP) 추정 방정식을 가집니다:</div>
+                <table class="hd-table">
+                    <thead><tr><th>성분</th><th>KOSIS</th><th>가중치(full)</th><th>전담 드라이버</th><th>excluded</th></tr></thead>
+                    <tbody>
+                        <tr><td class="td-highlight">재료비</td><td>T20</td><td class="td-num">42%</td><td>유가(×0.65), 수입물가, 철강, 시멘트</td><td>노무비지수, 기준금리</td></tr>
+                        <tr><td class="td-highlight">노무비</td><td>T30</td><td class="td-num">33%</td><td>노무비지수, PPI(×0.5), 기준금리(소폭)</td><td>유가, 철강, 시멘트</td></tr>
+                        <tr><td class="td-highlight">경비</td><td>T40</td><td class="td-num">12%</td><td>기준금리, 유가(×0.35), VIX, US10Y</td><td>철강, 시멘트, 수입물가</td></tr>
+                        <tr><td class="td-highlight">외주비</td><td>T50</td><td class="td-num">13%</td><td>기준금리, VIX, US10Y</td><td>유가, 재료 관련 일체</td></tr>
+                    </tbody>
+                </table>
+                <div class="hd-formula">Ŷ<sub>comp,t+h</sub> = &alpha; + &Sigma;<sub>k&isin;drivers</sub> &Sigma;<sub>l=0</sub><sup>L</sup> &beta;<sub>kl</sub> X<sub>k,t-l</sub> + &epsilon;<sub>t</sub> &emsp;(성분별 독립 OLS)</div>
+                <div class="hd-subsec">3.3 Stage 2 — 성분 가중합 → 총지수 (Bottom-up)</div>
+                <div class="hd-text">Laspeyres 방식 고정가중 합산으로 총 건설공사비지수를 재구성합니다:</div>
+                <div class="hd-formula">Index<sub>total</sub> = w<sub>재</sub>&times;Ŷ<sub>재료</sub> + w<sub>노</sub>&times;Ŷ<sub>노무</sub> + w<sub>경</sub>&times;Ŷ<sub>경비</sub> + w<sub>외</sub>&times;Ŷ<sub>외주</sub></div>
+                <table class="hd-table">
+                    <thead><tr><th>기간 키</th><th>재료비</th><th>노무비</th><th>경비</th><th>외주비</th></tr></thead>
+                    <tbody>
+                        <tr><td>warEra</td><td class="td-num">0.45</td><td class="td-num">0.30</td><td class="td-num">0.12</td><td class="td-num">0.13</td></tr>
+                        <tr><td>postWar</td><td class="td-num">0.40</td><td class="td-num">0.35</td><td class="td-num">0.12</td><td class="td-num">0.13</td></tr>
+                        <tr><td>recent</td><td class="td-num">0.38</td><td class="td-num">0.37</td><td class="td-num">0.12</td><td class="td-num">0.13</td></tr>
+                        <tr><td>full</td><td class="td-num">0.42</td><td class="td-num">0.33</td><td class="td-num">0.12</td><td class="td-num">0.13</td></tr>
+                    </tbody>
+                </table>
+                <div class="hd-subsec">3.4 이중계상 방지 (splitRatio)</div>
+                <div class="hd-flow">
+                    <div class="hd-flow-node" style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.2);">유가 충격</div>
+                    <span class="hd-flow-arrow">&xrarr;</span>
+                    <div class="hd-flow-node" style="background:rgba(78,201,255,0.1);border:1px solid rgba(78,201,255,0.2);">재료비 &times;0.65</div>
+                    <span class="hd-flow-arrow">+</span>
+                    <div class="hd-flow-node" style="background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.2);">경비 &times;0.35</div>
+                    <span class="hd-flow-arrow">&xrarr;</span>
+                    <div class="hd-flow-node" style="background:rgba(20,184,166,0.15);border:1px solid rgba(20,184,166,0.3);font-weight:700;">합계 = 1.0</div>
+                </div>
+                <div class="hd-text">동일 드라이버가 여러 성분에 영향을 줄 때 splitRatio 합계를 1.0으로 강제하여 이중계상을 원천 차단합니다. excluded 목록의 드라이버는 해당 성분 방정식에서 완전히 제거됩니다.</div>
+                <div class="hd-subsec">3.5 교차검증 — Top-down vs. Bottom-up</div>
+                <div class="hd-text">마지막 12개월을 홀드아웃 검증셋으로 두 방식의 RMSE를 비교합니다:</div>
+                <table class="hd-table">
+                    <thead><tr><th>항목</th><th>Top-down (3-Method)</th><th>Bottom-up (2단계)</th></tr></thead>
+                    <tbody>
+                        <tr><td>훈련 기간</td><td>전체 &minus; 12M</td><td>전체 &minus; 12M</td></tr>
+                        <tr><td>검증 기간</td><td>마지막 12M</td><td>마지막 12M</td></tr>
+                        <tr><td>평가 지표</td><td>RMSE(총지수)</td><td>RMSE(총지수 재구성)</td></tr>
+                        <tr><td>Bottom-up 승리 시</td><td>기존 3방법 앙상블 유지</td><td style="color:#4ec9ff;">Bottom-up 우선 참조 활성화</td></tr>
+                    </tbody>
+                </table>
+                <div class="hd-text" style="margin-top:8px;"><strong style="color:#f59e0b;">주의:</strong> 성분별 KOSIS 실데이터가 연결되지 않은 상태에서는 Bottom-up 모델이 합성 데이터로 자체 추정하므로 Top-down 대비 독립적 우위를 주장하기 어렵습니다. <code style="background:rgba(56,189,248,0.08);color:#38bdf8;padding:1px 5px;border-radius:2px;font-size:11px;">KOSIS_API_KEY</code> 연결 후 교차검증을 실행하세요.</div>
+            </div>`;
+
+            // PART IV
             const barChartHtml = ptData.map((d, i) =>
                 `<div class="hd-bar-row"><div class="hd-bar-label">${d.label}</div><div class="hd-bar-track"><div class="hd-bar-fill" style="width:${(d.weight/maxWeight*100).toFixed(0)}%;background:${barColors[i%barColors.length]};">${d.weight}</div></div><div class="hd-bar-val">${d.peakLag}M</div></div>`
             ).join('');
@@ -7889,15 +8474,15 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
             html += `
             <hr class="hd-divider">
             <div class="hd-sec" id="sec-passthrough">
-                <div class="hd-sec-head"><span class="hd-sec-num">PART III</span><span class="hd-sec-title">전파 경로 모형</span></div>
-                <div class="hd-subsec">3.1 전파 가중치 분포</div>
+                <div class="hd-sec-head"><span class="hd-sec-num">PART IV</span><span class="hd-sec-title">전파 경로 모형</span></div>
+                <div class="hd-subsec">4.1 전파 가중치 분포</div>
                 <div class="hd-bar-chart">${barChartHtml}</div>
-                <div class="hd-subsec">3.2 상세 파라미터</div>
+                <div class="hd-subsec">4.2 상세 파라미터</div>
                 <table class="hd-table">
                     <thead><tr><th>변수</th><th>가중치</th><th>피크시차</th><th>확산폭(&sigma;)</th><th>전파경로</th></tr></thead>
                     <tbody>${ptData.map(d => `<tr><td class="td-highlight">${d.label}</td><td class="td-num">${d.weight}</td><td class="td-num">${d.peakLag}M</td><td class="td-num">${d.width}</td><td>${d.path}</td></tr>`).join('')}</tbody>
                 </table>
-                <div class="hd-subsec">3.3 파생 변수 산출</div>
+                <div class="hd-subsec">4.3 파생 변수 산출</div>
                 <div class="hd-flow">
                     <div class="hd-flow-node" style="background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.2);">환율 &times;0.45</div>
                     <span class="hd-flow-arrow">+</span>
@@ -7925,12 +8510,12 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
                 </div>
             </div>`;
 
-            // PART IV
+            // PART V
             html += `
             <hr class="hd-divider">
             <div class="hd-sec" id="sec-dynamics">
-                <div class="hd-sec-head"><span class="hd-sec-num">PART IV</span><span class="hd-sec-title">System Dynamics</span></div>
-                <div class="hd-subsec">4.1 Causal Loop Diagram</div>
+                <div class="hd-sec-head"><span class="hd-sec-num">PART V</span><span class="hd-sec-title">System Dynamics</span></div>
+                <div class="hd-subsec">5.1 Causal Loop Diagram</div>
                 <div class="hd-text">거시경제 충격이 건설공사비에 전달되는 전체 인과구조:</div>
                 <div class="hd-cards hd-cards-3" style="margin:16px 0;">
                     <div class="hd-card" style="border-top:2px solid #ef4444;">
@@ -7956,21 +8541,21 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
                         <ul class="hd-ul"><li>주거</li><li>물류센터</li><li>오피스 / 상업</li><li>첨단산업</li><li>토목 / 인프라</li></ul>
                     </div>
                 </div>
-                <div class="hd-subsec">4.2 Stock & Flow</div>
+                <div class="hd-subsec">5.2 Stock & Flow</div>
                 <div class="hd-text">각 드라이버의 충격이 가중치를 곱하고 IRF(h)를 적용하여 누적 원가 압력에 합산:</div>
                 <div class="hd-flow" style="flex-wrap:wrap;justify-content:center;gap:8px;">
                     ${ptData.map((d, i) => `<div class="hd-flow-node" style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);font-size:10px;">${d.label}<br><span style="font-weight:800;font-size:12px;">${d.weight}</span></div>`).join('<span class="hd-flow-arrow" style="font-size:12px;">+</span>')}
                     <span class="hd-flow-arrow" style="font-size:18px;">&xrarr;</span>
                     <div class="hd-flow-node" style="background:rgba(20,184,166,0.2);border:2px solid rgba(20,184,166,0.4);font-weight:800;font-size:13px;">누적 원가 압력</div>
                 </div>
-                <div class="hd-subsec">4.3 피드백 루프</div>
+                <div class="hd-subsec">5.3 피드백 루프</div>
                 <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0;">
                     <div class="hd-loop-card reinforcing"><div class="hd-loop-tag">R1 REINFORCING</div><div class="hd-loop-title">원가-착공 강화루프</div><div class="hd-loop-desc">공사비&uarr; &rarr; 사업성 악화 &rarr; 착공 감소 &rarr; 저단가 축소 &rarr; 고단가 비중&uarr; &rarr; 가중평균 상승 &rarr; 공사비&uarr;</div></div>
                     <div class="hd-loop-card reinforcing"><div class="hd-loop-tag">R2 REINFORCING</div><div class="hd-loop-title">환율-수입물가 강화루프</div><div class="hd-loop-desc">환율&uarr; &rarr; 수입단가 상승 &rarr; 자재비 상승 &rarr; 공사비&uarr; &rarr; 인플레 기대 &rarr; 환율&uarr;</div></div>
                     <div class="hd-loop-card balancing"><div class="hd-loop-tag">B1 BALANCING</div><div class="hd-loop-title">금리-수요 균형루프</div><div class="hd-loop-desc">금리&uarr; &rarr; 대출비용&uarr; &rarr; 건설수요&darr; &rarr; 발주 감소 &rarr; 노무비 안정 &rarr; 공사비 둔화</div></div>
                     <div class="hd-loop-card balancing"><div class="hd-loop-tag">B2 BALANCING</div><div class="hd-loop-title">공사비-정책 균형루프</div><div class="hd-loop-desc">공사비 급등 &rarr; 물가 압력 &rarr; 긴축 정책 &rarr; 금리&uarr; &rarr; 투자 위축 &rarr; 공사비 둔화</div></div>
                 </div>
-                <div class="hd-subsec">4.4 시차 구조</div>
+                <div class="hd-subsec">5.4 시차 구조</div>
                 <div class="hd-timeline">
                     ${[{l:'노무비',lag:1,w:1.1,c:'#14b8a6'},{l:'시멘트',lag:1,w:1.2,c:'#fbbf24'},{l:'유가',lag:2,w:1.2,c:'#f59e0b'},{l:'PPI',lag:2,w:1.5,c:'#a78bfa'},{l:'철강',lag:2,w:1.3,c:'#f87171'},{l:'환율',lag:3,w:1.5,c:'#38bdf8'},{l:'수입물가',lag:3,w:1.4,c:'#34d399'},{l:'기준금리',lag:4,w:1.8,c:'#818cf8'}].map(d => {
                         const left=Math.max(0,(d.lag-d.w)/6*100), width=Math.min(d.w*2/6*100,100-left);
@@ -7980,12 +8565,12 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
                 </div>
             </div>`;
 
-            // PART V
+            // PART VI
             const sc = {m:'#38bdf8',l:'#14b8a6',o:'#a78bfa'};
             html += `
             <hr class="hd-divider">
             <div class="hd-sec" id="sec-pyeong">
-                <div class="hd-sec-head"><span class="hd-sec-num">PART V</span><span class="hd-sec-title">유형별 건설공사비</span></div>
+                <div class="hd-sec-head"><span class="hd-sec-num">PART VI</span><span class="hd-sec-title">유형별 건설공사비</span></div>
                 <div class="hd-subsec">비용 구성 비교</div>
                 <div style="display:flex;gap:16px;margin:12px 0 6px;font-size:10px;">
                     <span style="color:${sc.m};">&#9632; 재료비</span><span style="color:${sc.l};">&#9632; 노무비</span><span style="color:${sc.o};">&#9632; 경비</span>
@@ -7999,11 +8584,11 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
                 <div class="hd-formula">영향(%) = 공사비변동(%) &times; (재료비비중 &times; 1.1 + 노무비비중 &times; 노무민감도)</div>
             </div>`;
 
-            // PART VI
+            // PART VII
             html += `
             <hr class="hd-divider">
             <div class="hd-sec" id="sec-pf">
-                <div class="hd-sec-head"><span class="hd-sec-num">PART VI</span><span class="hd-sec-title">PF금리 등급별 모형</span></div>
+                <div class="hd-sec-head"><span class="hd-sec-num">PART VII</span><span class="hd-sec-title">PF금리 등급별 모형</span></div>
                 <div class="hd-text">기준금리 + 등급별 스프레드를 기반으로 선/중/후순위 트랜치 금리를 추정합니다.</div>
                 <table class="hd-table">
                     <thead><tr><th>등급</th><th>기본스프레드</th><th>선순위</th><th>중순위</th><th>후순위</th><th>LTV</th><th>DSCR</th></tr></thead>
@@ -8013,11 +8598,11 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
                 <div class="hd-code-block">costImpact   = 12M공사비변동 &times; 0.15\nriskPremium  = 12M변동 &times; 등급스프레드 &times; 0.08 (상승) / 0.03 (하락)\ntotalDelta   = 금리충격 + riskPremium + costImpact\n\n선순위 = 기준금리 + 스프레드 + seniorDisc + totalDelta\n중순위 = 기준금리 + 스프레드 + mezzDisc   + totalDelta\n후순위 = 기준금리 + 스프레드 + juniorDisc + totalDelta</div>
             </div>`;
 
-            // PART VII
+            // PART VIII
             html += `
             <hr class="hd-divider">
             <div class="hd-sec" id="sec-periods">
-                <div class="hd-sec-head"><span class="hd-sec-num">PART VII</span><span class="hd-sec-title">분석 기간</span></div>
+                <div class="hd-sec-head"><span class="hd-sec-num">PART VIII</span><span class="hd-sec-title">분석 기간</span></div>
                 <div class="hd-cards hd-cards-4">
                     <div class="hd-period-card"><div class="hd-period-range">22.02 ~ 23.08</div><div class="hd-period-name">우크라 전쟁기</div><div class="hd-period-desc">에너지/원자재 급등기 (19개월)</div></div>
                     <div class="hd-period-card"><div class="hd-period-range">23.09 ~ 24.06</div><div class="hd-period-name">전쟁 후 안정기</div><div class="hd-period-desc">공급망 정상화, 금리 고점 (10개월)</div></div>
@@ -8038,11 +8623,11 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
                 </table>
             </div>`;
 
-            // PART VIII
+            // PART IX
             html += `
             <hr class="hd-divider">
             <div class="hd-sec" id="sec-pressure">
-                <div class="hd-sec-head"><span class="hd-sec-num">PART VIII</span><span class="hd-sec-title">압력 상태 진단</span></div>
+                <div class="hd-sec-head"><span class="hd-sec-num">PART IX</span><span class="hd-sec-title">압력 상태 진단</span></div>
                 <div class="hd-formula">점수 = 현재YoY &times; 0.45 + 3M전망 &times; 1.5 + 12M전망 &times; 1.2 + 상위3기여도 &times; 0.55</div>
                 <div class="hd-gauge-row">
                     <div class="hd-gauge-item" style="background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.2);"><div class="hd-gauge-score" style="color:#ef4444;">&ge; 4.2</div><div class="hd-gauge-label" style="color:#f87171;">HIGH PRESSURE</div><div class="hd-gauge-desc">원가/금융 동시 상방 리스크</div></div>
@@ -8051,15 +8636,15 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
                 </div>
             </div>`;
 
-            // PART IX
+            // PART X
             html += `
             <hr class="hd-divider">
             <div class="hd-sec" id="sec-impl">
-                <div class="hd-sec-head"><span class="hd-sec-num">PART IX</span><span class="hd-sec-title">구현 세부사항</span></div>
-                <div class="hd-subsec">9.1 OLS 행렬 연산</div>
+                <div class="hd-sec-head"><span class="hd-sec-num">PART X</span><span class="hd-sec-title">구현 세부사항</span></div>
+                <div class="hd-subsec">10.1 OLS 행렬 연산</div>
                 <div class="hd-text">외부 라이브러리 없이 순수 JavaScript로 구현:</div>
                 <div class="hd-code-block">matTranspose(A)    // m&times;n &rarr; n&times;m\nmatMul(A, B)       // A(m&times;p) &middot; B(p&times;n) &rarr; C(m&times;n)\nmatInvert(M)       // Gauss-Jordan, partial pivoting\nolsEstimate(X, y)  // &beta;&#770; = (X'X)&#8315;&sup1;X'y + R&sup2;</div>
-                <div class="hd-subsec">9.2 모델 캐싱</div>
+                <div class="hd-subsec">10.2 모델 캐싱</div>
                 <div class="hd-text">ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 <code style="background:rgba(56,189,248,0.08);color:#38bdf8;padding:1px 5px;border-radius:2px;font-size:11px;">_modelCache</code>에 저장. 기간 변경 시 캐시 초기화 및 재추정.</div>
                 <div class="hd-cards hd-cards-2" style="margin-top:16px;">
                     <div class="hd-card">
@@ -8083,12 +8668,12 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
                 </div>
             </div>`;
 
-            // PART X
+            // PART XI
             html += `
             <hr class="hd-divider">
             <div class="hd-sec" id="sec-guide">
-                <div class="hd-sec-head"><span class="hd-sec-num">PART X</span><span class="hd-sec-title">실전 활용 가이드</span></div>
-                <div class="hd-subsec">10.1 시나리오별 권장 방법론</div>
+                <div class="hd-sec-head"><span class="hd-sec-num">PART XI</span><span class="hd-sec-title">실전 활용 가이드</span></div>
+                <div class="hd-subsec">11.1 시나리오별 권장 방법론</div>
                 <table class="hd-table">
                     <thead><tr><th>분석 목적</th><th>추천 방법론</th><th>추천 기간</th><th>이유</th></tr></thead>
                     <tbody>
@@ -8098,13 +8683,13 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
                         <tr><td>교차 검증</td><td class="td-highlight">3방법 비교</td><td>상황별</td><td>수렴 &rarr; 신뢰도&uarr;</td></tr>
                     </tbody>
                 </table>
-                <div class="hd-subsec">10.2 결과 해석</div>
+                <div class="hd-subsec">11.2 결과 해석</div>
                 <div class="hd-cards hd-cards-3">
                     <div class="hd-card"><div class="hd-card-title">PRESSURE BADGE</div><ul class="hd-ul"><li><span style="color:#ef4444;font-weight:700;">HIGH</span> &#8212; 건설비 상승 압력 강</li><li><span style="color:#f59e0b;font-weight:700;">WATCH</span> &#8212; 일부 변수 압력 감지</li><li><span style="color:#14b8a6;font-weight:700;">STABLE</span> &#8212; 유의미한 압력 없음</li></ul></div>
                     <div class="hd-card"><div class="hd-card-title">추가압력 해석</div><ul class="hd-ul"><li>+2.5% (3M) &rarr; 3개월간 2.5% 추가 상승</li><li>-0.3% (6M) &rarr; 충격 흡수 후 하락 전환</li><li>3방법 동일방향 &rarr; 확신&uarr;</li></ul></div>
                     <div class="hd-card"><div class="hd-card-title">ATTRIBUTION</div><ul class="hd-ul"><li>기여도(%) &#8212; 전체 변동 설명 비중</li><li>반영시차 &#8212; 최대 영향까지 개월수</li><li>최대 기여 변수 = 핵심 관리 대상</li></ul></div>
                 </div>
-                <div class="hd-subsec">10.3 방법론 결과가 다를 때</div>
+                <div class="hd-subsec">11.3 방법론 결과가 다를 때</div>
                 <div class="hd-cards hd-cards-3">
                     <div class="hd-card" style="border-top:2px solid #14b8a6;"><div class="hd-card-title" style="color:#14b8a6;">3개 모두 상승</div><div class="hd-card-text">높은 확신 &rarr; 예산 상향 조정 검토</div></div>
                     <div class="hd-card" style="border-top:2px solid #f59e0b;"><div class="hd-card-title" style="color:#f59e0b;">2:1 분리</div><div class="hd-card-text">중간 확신 &rarr; 주요 변수 모니터링 강화</div></div>
@@ -8112,12 +8697,12 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
                 </div>
             </div>`;
 
-            // PART XI
+            // PART XII
             html += `
             <hr class="hd-divider">
             <div class="hd-sec" id="sec-refs">
-                <div class="hd-sec-head"><span class="hd-sec-num">PART XI</span><span class="hd-sec-title">출처 &middot; 참고문헌</span></div>
-                <div class="hd-subsec">11.1 데이터 출처</div>
+                <div class="hd-sec-head"><span class="hd-sec-num">PART XII</span><span class="hd-sec-title">출처 &middot; 참고문헌</span></div>
+                <div class="hd-subsec">12.1 데이터 출처</div>
                 <div class="hd-cards hd-cards-2">
                     <div class="hd-card"><div class="hd-card-title">ECOS</div><div class="hd-card-text">한국은행 경제통계시스템 &#8212; 기준금리, 환율, PPI, 수입물가, 건설공사비지수</div></div>
                     <div class="hd-card"><div class="hd-card-title">대한건설협회</div><div class="hd-card-text">건설노임 단가, 실적공사비</div></div>
@@ -8125,7 +8710,7 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
                     <div class="hd-card"><div class="hd-card-title">한국주택금융공사</div><div class="hd-card-text">MBS 금리, 선/중/후순위 기준</div></div>
                     <div class="hd-card" style="grid-column:span 2;"><div class="hd-card-title">Yahoo Finance / MarketWatch</div><div class="hd-card-text">WTI, Brent, VIX, US10Y, 건설주 시세</div></div>
                 </div>
-                <div class="hd-subsec">11.2 참고 문헌</div>
+                <div class="hd-subsec">12.2 참고 문헌</div>
                 <div class="hd-ref"><div class="hd-ref-title">Jord&agrave;, &Ograve;. (2005)</div><div class="hd-ref-meta">"Estimation and Inference of Impulse Responses by Local Projections." American Economic Review, 95(1), 161&#8211;182.</div></div>
                 <div class="hd-ref"><div class="hd-ref-title">Pesaran, M. H. & Shin, Y. (1999)</div><div class="hd-ref-meta">"An Autoregressive Distributed Lag Modelling Approach to Cointegration Analysis."</div></div>
                 <div class="hd-ref"><div class="hd-ref-title">Ramey, V. A. (2016)</div><div class="hd-ref-meta">"Macroeconomic Shocks and Their Propagation." Handbook of Macroeconomics, Vol. 2.</div></div>
@@ -8339,14 +8924,15 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
             const method = currentSimMethod;
             const periodKey = currentAnalysisPeriod;
             showValidationBanner(validateSampleSize(periodKey, method));
-            const multi = buildMultiMethodForecast(macroSimData, shocks, periodKey);
+            // V2: 성분분해 bottom-up 포함 앙상블
+            const multi = buildMultiMethodForecastV2(macroSimData, shocks, periodKey);
             const attribution = buildAttribution(macroSimData, periodKey);
             const routes = buildRouteSummary(macroSimData, attribution);
             const latest = macroSimData[macroSimData.length - 1];
 
             // Pick primary forecast based on selected method
             const primaryFC = method === 'ardl' && multi.ardl ? multi.ardl
-                            : method === 'lp' && multi.lp ? multi.lp
+                            : method === 'lp'   && multi.lp   ? multi.lp
                             : multi.gaussian;
             const pressure = buildPressureState(latest, primaryFC, attribution);
 
@@ -8365,8 +8951,8 @@ ARDL과 LP 모델은 분석 기간별로 한 번 추정 후 \`_modelCache\`에 �
             let d3 = 0, d6 = 0, d12 = 0;
             if (method === 'all' && multi) {
                 const avgAt = (idx) => {
-                    // Filter out NaN/Infinity from numerically unstable ARDL/LP estimates
-                    const vals = [multi.gaussian, multi.ardl, multi.lp]
+                    // Filter out NaN/Infinity; bottom-up 포함 4방법 평균
+                    const vals = [multi.gaussian, multi.ardl, multi.lp, multi.bottomUp]
                         .map(fc => fc && fc[idx] ? fc[idx].deltaPct : null)
                         .filter(v => v !== null && isFinite(v) && !isNaN(v));
                     return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
