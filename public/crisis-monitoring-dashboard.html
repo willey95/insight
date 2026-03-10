@@ -2913,6 +2913,7 @@
                                 <div class="sim-result-header">
                                     <span class="sim-pressure-badge" id="simPressureBadge">STANDBY</span>
                                     <span class="sim-pressure-summary" id="simPressureSummary">시뮬레이션을 실행하세요</span>
+                                    <span id="dataSourceBadge" style="margin-left:auto;font-size:9px;font-family:'IBM Plex Mono',Consolas,monospace;padding:2px 7px;border-radius:3px;border:1px solid #2a3a52;color:#4a6a88;background:rgba(10,15,24,0.6);">SYNTHETIC</span>
                                 </div>
                                 <div id="periodMethodDesc" class="sim-method-desc">전체 96개월 (18.01~25.12) 데이터로 3가지 방법론의 전망을 비교합니다.</div>
                                 <div class="sim-attribution-wrap">
@@ -3378,19 +3379,126 @@
             }));
         }
 
+        // ─── 실데이터 소스 플래그 ───────────────────────────────────────────────
+        let macroDataSource = 'synthetic'; // 'real' | 'partial' | 'synthetic'
+        let macroDataMeta   = null;
+
         function loadMacroHistory() {
             try {
                 const raw = window.localStorage.getItem(MACRO_SIM_STORAGE_KEY);
                 if (!raw) return generateBaseSeries();
                 const parsed = JSON.parse(raw);
-                if (Array.isArray(parsed) && parsed.length >= 96
-                    && parsed[0].vix !== undefined && parsed[0].us10y !== undefined) return parsed;
+                if (Array.isArray(parsed) && parsed.length >= 36
+                    && parsed[0].vix !== undefined && parsed[0].us10y !== undefined) {
+                    macroDataSource = parsed[0]?._source === 'real' ? 'real' : 'synthetic';
+                    return parsed;
+                }
             } catch (e) { console.error('failed to load stored history', e); }
             return generateBaseSeries();
         }
+
         function persistMacroHistory(data) {
             try { window.localStorage.setItem(MACRO_SIM_STORAGE_KEY, JSON.stringify(data)); }
             catch (e) { console.error('failed to persist history', e); }
+        }
+
+        // ─── 실데이터 fetch (서버 API → localStorage 갱신) ─────────────────────
+        // ANALYSIS_PERIODS.full 의 startIdx/endIdx를 실데이터 길이에 맞게 재계산
+        function recalibratePeriods(series) {
+            const n = series.length;
+            const getIdx = (yyyymm) => {
+                const idx = series.findIndex(r => r.yyyymm === yyyymm);
+                return idx >= 0 ? idx : null;
+            };
+            // 동적 재계산 (실데이터 시작이 201801이 아닐 수 있으므로)
+            const targets = {
+                full:     { start: series[0]?.yyyymm,   end: series[n-1]?.yyyymm },
+                post2020: { start: '202101',             end: '202412' },
+                recent3Y: { start: '202301',             end: series[n-1]?.yyyymm },
+                warEra:   { start: '202202',             end: '202308' },
+                covid:    { start: '202001',             end: '202112' },
+                recent:   { start: shiftMonthClient(series[n-1]?.yyyymm, -11), end: series[n-1]?.yyyymm }
+            };
+            for (const [key, { start, end }] of Object.entries(targets)) {
+                if (!ANALYSIS_PERIODS[key]) continue;
+                const si = getIdx(start), ei = getIdx(end);
+                if (si !== null) ANALYSIS_PERIODS[key].startIdx = si;
+                if (ei !== null) ANALYSIS_PERIODS[key].endIdx   = ei;
+            }
+        }
+
+        function shiftMonthClient(yyyymm, delta) {
+            if (!yyyymm) return '201801';
+            const y = parseInt(yyyymm.slice(0, 4), 10);
+            const m = parseInt(yyyymm.slice(4, 6), 10) - 1;
+            const d = new Date(y, m + delta, 1);
+            return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`;
+        }
+
+        // null 필드를 합성 데이터로 보간 (partial real 처리)
+        function mergeWithSynthetic(realSeries, synthSeries) {
+            const synthMap = {};
+            for (const r of synthSeries) synthMap[r.month] = r;
+            return realSeries.map(r => {
+                const s = synthMap[r.month];
+                if (!s) return r;
+                const merged = { ...r };
+                for (const k of ['fx','oil','ppi','importPrice','labor','steel','cement','policyRate','vix','us10y']) {
+                    if (merged[k] == null && s[k] != null) {
+                        merged[k] = s[k];
+                        merged._source = 'partial';
+                    }
+                }
+                return merged;
+            });
+        }
+
+        async function fetchRealDataAndRefresh(macroSimData) {
+            try {
+                const res = await fetch('/api/construction-cost');
+                if (!res.ok) {
+                    console.warn('[real-data] API 응답 실패:', res.status);
+                    return;
+                }
+                const json = await res.json();
+                if (!Array.isArray(json.series) || json.series.length < 24) {
+                    console.warn('[real-data] 시리즈 길이 부족:', json.series?.length);
+                    return;
+                }
+
+                macroDataMeta = json.meta;
+                const synth = generateBaseSeries();
+                const merged = mergeWithSynthetic(json.series, synth);
+
+                macroDataSource = merged.some(r => r._source === 'partial') ? 'partial' : 'real';
+                persistMacroHistory(merged);
+                recalibratePeriods(merged);
+                // 모델 캐시 무효화
+                Object.keys(_modelCache).forEach(k => delete _modelCache[k]);
+
+                // 대시보드 리프레시 (시뮬레이션 패널이 열려있으면 재실행)
+                if (typeof renderSimPanel === 'function') renderSimPanel(merged);
+                // 데이터 소스 뱃지 갱신
+                const badge = document.getElementById('dataSourceBadge');
+                if (badge) {
+                    const isReal = macroDataSource === 'real';
+                    const isPartial = macroDataSource === 'partial';
+                    badge.textContent = isReal ? '● REAL DATA' : isPartial ? '◐ PARTIAL REAL' : 'SYNTHETIC';
+                    badge.style.color = isReal ? '#22c55e' : isPartial ? '#f59e0b' : '#4a6a88';
+                    badge.style.borderColor = isReal ? 'rgba(34,197,94,0.3)' : isPartial ? 'rgba(245,158,11,0.3)' : '#2a3a52';
+                    badge.title = macroDataMeta
+                        ? `KICT 건설공사비지수 실데이터 | ${macroDataMeta.startMonth}~${macroDataMeta.endMonth} (${macroDataMeta.n}개월)`
+                        : '';
+                }
+                console.log(`%c[real-data] ✓ ${merged.length}개월 실데이터 로드 (소스: ${macroDataSource})`,
+                    'color:#22c55e;font-weight:bold;');
+
+                if (json.meta?.warnings?.length) {
+                    console.warn('[real-data] 경고:', json.meta.warnings.join(', '));
+                }
+            } catch (err) {
+                console.warn('[real-data] fetch 실패 → 합성 데이터 유지:', err.message);
+            }
         }
 
         /* ─── Correlation helpers ─── */
@@ -3741,9 +3849,12 @@
             return { label: 'STABLE', tone: '#34d399', summary: '공사비 상방 압력은 제한적이며 지표는 상대적으로 안정적입니다.' };
         }
 
-        // Initialize
+        // Initialize — localStorage 우선, 이후 백그라운드에서 실데이터 갱신
         const macroSimData = loadMacroHistory();
         persistMacroHistory(macroSimData);
+
+        // 실데이터 비동기 로드 (페이지 로드 후 2초 지연 → UX 블로킹 없이)
+        setTimeout(() => fetchRealDataAndRefresh(macroSimData), 2000);
 
         function setCardTimestamp(elementId, isoString) {
             const el = document.getElementById(elementId);
