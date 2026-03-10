@@ -14,6 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -2764,6 +2765,8 @@
                     <div class="card-title">ENERGY PRICE TREND</div>
                     <div class="card-subtitle">에너지 가격 추이 (WTI / Brent)</div>
                 </div>
+                <button onclick="exportChartCSV('energy','energy_price')" title="CSV 다운로드"
+                    style="background:rgba(56,189,248,0.08);border:1px solid #1e3a5a;color:#4a8ab0;font-size:9px;padding:2px 7px;border-radius:3px;cursor:pointer;font-family:'IBM Plex Mono',monospace;">↓CSV</button>
             </div>
             <div class="chart-container">
                 <canvas id="energyChart"></canvas>
@@ -2777,6 +2780,8 @@
                     <div class="card-title">FINANCIAL TREND</div>
                     <div class="card-subtitle">금융지표 추이 (금, 은, 환율)</div>
                 </div>
+                <button onclick="exportChartCSV('finance','financial_trend')" title="CSV 다운로드"
+                    style="background:rgba(56,189,248,0.08);border:1px solid #1e3a5a;color:#4a8ab0;font-size:9px;padding:2px 7px;border-radius:3px;cursor:pointer;font-family:'IBM Plex Mono',monospace;">↓CSV</button>
             </div>
             <div class="chart-container">
                 <canvas id="financeChart"></canvas>
@@ -2851,6 +2856,8 @@
                     </div>
                     <span style="font-size:7px;color:#4a5568;margin-right:4px;">v4</span>
                     <button class="sim-btn-help" onclick="window.open('/methodology-guide.html','_blank')">도움말</button>
+                    <button class="sim-btn-help" onclick="openCostCompositionModal()" style="background:rgba(20,184,166,0.1);border-color:rgba(20,184,166,0.3);color:#2dd4bf;">건설비 구성</button>
+                    <button class="sim-btn-help" onclick="downloadExcelReport()" id="btnExcel" style="background:rgba(74,222,128,0.1);border-color:rgba(74,222,128,0.3);color:#4ade80;">↓ Excel</button>
                     <button class="sim-btn-report" onclick="generateLLMReport()" id="btnReport">AI분석</button>
                     <button class="sim-btn-close" onclick="closeSimulationPopup()">닫기</button>
                 </div>
@@ -6327,6 +6334,7 @@
             return {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
                 plugins: {
                     legend: {
                         labels: { color: '#b7c8e4', font: { size: 9 }, boxWidth: 10, padding: 8 }
@@ -6336,9 +6344,30 @@
                         text: title,
                         color: '#92a6c5',
                         font: { size: 10 }
+                    },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: 'rgba(6,14,26,0.96)',
+                        titleColor: '#8cb4d8',
+                        bodyColor: '#c0d0e4',
+                        borderColor: '#1e3a5a',
+                        borderWidth: 1,
+                        padding: { x: 10, y: 7 },
+                        titleFont: { size: 11, family: "'IBM Plex Mono',Consolas,monospace", weight: 'bold' },
+                        bodyFont: { size: 11, family: "'IBM Plex Mono',Consolas,monospace" },
+                        cornerRadius: 4,
+                        displayColors: true,
+                        boxWidth: 8,
+                        boxHeight: 8,
+                        callbacks: {
+                            label: (ctx) => {
+                                const v = ctx.parsed.y;
+                                return ` ${ctx.dataset.label}: ${v != null ? v.toLocaleString('ko-KR', { maximumFractionDigits: 2 }) : '—'}`;
+                            }
+                        }
                     }
                 },
-                elements: { point: { radius: 0 } },
+                elements: { point: { radius: 0, hitRadius: 8, hoverRadius: 4 } },
                 scales: {
                     y: {
                         ticks: { color: '#95a8c6', font: { size: 9 }, maxTicksLimit: 4 },
@@ -6364,6 +6393,352 @@
                 }));
             }
             return labels;
+        }
+
+        // ══════════════════════════════════════════════════════════════════
+        //  FEATURE: Chart CSV Export
+        // ══════════════════════════════════════════════════════════════════
+        function exportChartCSV(chartKey, filename) {
+            const chart = charts[chartKey];
+            if (!chart || !chart.data.labels.length) {
+                alert('아직 데이터가 로드되지 않았습니다.');
+                return;
+            }
+            const labels = chart.data.labels;
+            const datasets = chart.data.datasets;
+            const header = ['시각', ...datasets.map(d => d.label)];
+            const rows = labels.map((label, i) => [
+                label,
+                ...datasets.map(d => d.data[i] != null ? d.data[i] : '')
+            ]);
+            const csvContent = [header, ...rows]
+                .map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+                .join('\n');
+            const bom = '\uFEFF';
+            const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${filename || chartKey}_${new Date().toISOString().slice(0, 10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // ══════════════════════════════════════════════════════════════════
+        //  FEATURE: Excel Report Download (SheetJS)
+        // ══════════════════════════════════════════════════════════════════
+        function downloadExcelReport() {
+            if (typeof XLSX === 'undefined') {
+                alert('Excel 라이브러리 로딩 중입니다. 잠시 후 다시 시도해주세요.');
+                return;
+            }
+            const btn = document.getElementById('btnExcel');
+            if (btn) { btn.textContent = '생성 중...'; btn.disabled = true; }
+
+            const sd = window._simTypeData;
+            const shocks = (() => { try { return getSimShocks(); } catch(e) { return {}; } })();
+            const wb = XLSX.utils.book_new();
+
+            // ── Sheet 1: 유형별 공사비 영향 요약 ──────────────────────────────
+            const s = shocks;
+            const shockDesc = `환율${s.fx>=0?'+':''}${s.fx||0}% / 유가${s.oil>=0?'+':''}${s.oil||0}% / PPI${s.ppi>=0?'+':''}${s.ppi||0}% / 노무비${s.labor>=0?'+':''}${s.labor||0}% / 금리${s.policyRate>=0?'+':''}${s.policyRate||0}%p`;
+            const summaryAoa = [
+                ['유형별 건축공사비 시뮬레이션 리포트'],
+                [`생성일시: ${new Date().toLocaleString('ko-KR')}`],
+                [`시나리오: ${shockDesc}`],
+                [],
+                ['유형', '기준단가(만원/평)', '재료비%', '노무비%', '경비%', '3M영향(%)', '6M영향(%)', '12M영향(%)', '3M증가(만원/평)', '6M증가(만원/평)', '12M증가(만원/평)']
+            ];
+            Object.entries(PYEONG_TYPES).forEach(([key, pt]) => {
+                const t = sd?.types?.[key];
+                const imp3  = t ? +(t.imp3 * 100).toFixed(2) : null;
+                const imp6  = t ? +(t.imp6 * 100).toFixed(2) : null;
+                const imp12 = t ? +(t.imp12 * 100).toFixed(2) : null;
+                summaryAoa.push([
+                    pt.label, pt.baseline,
+                    pt.materialPct, pt.laborPct, pt.overheadPct || (100 - pt.materialPct - pt.laborPct),
+                    imp3 != null ? imp3 + '%' : 'N/A',
+                    imp6 != null ? imp6 + '%' : 'N/A',
+                    imp12 != null ? imp12 + '%' : 'N/A',
+                    imp3 != null ? Math.round(pt.baseline * imp3 / 100) : 'N/A',
+                    imp6 != null ? Math.round(pt.baseline * imp6 / 100) : 'N/A',
+                    imp12 != null ? Math.round(pt.baseline * imp12 / 100) : 'N/A'
+                ]);
+            });
+            const ws1 = XLSX.utils.aoa_to_sheet(summaryAoa);
+            ws1['!cols'] = [14,16,10,10,8,10,10,10,14,14,14].map(w => ({ wch: w }));
+            ws1['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 10 } }];
+            XLSX.utils.book_append_sheet(wb, ws1, '공사비 영향 요약');
+
+            // ── Sheet 2: 자재 구성비 상세 ─────────────────────────────────────
+            const detailAoa = [
+                ['유형별 건축공사비 자재 구성 상세'],
+                [],
+                ['유형', '기준단가(만원/평)', '재료비%', '노무비%', '경비%',
+                 '철강%', '콘크리트%', '마감재%', '설비%', '기타%', '노무민감도', '출처']
+            ];
+            Object.entries(PYEONG_TYPES).forEach(([, pt]) => {
+                const m = pt.materials || {};
+                detailAoa.push([
+                    pt.label, pt.baseline,
+                    pt.materialPct, pt.laborPct, pt.overheadPct || (100 - pt.materialPct - pt.laborPct),
+                    m.steel || '-', m.concrete || '-', m.finishing || '-', m.equipment || '-', m.other || '-',
+                    pt.laborSensitivity, pt.source || '-'
+                ]);
+            });
+            const ws2 = XLSX.utils.aoa_to_sheet(detailAoa);
+            ws2['!cols'] = [14,16,10,10,8,8,10,8,8,8,10,40].map(w => ({ wch: w }));
+            XLSX.utils.book_append_sheet(wb, ws2, '자재 구성 상세');
+
+            // ── Sheet 3: PF 금리 ──────────────────────────────────────────────
+            const pfAoa = [
+                ['PF금리 시뮬레이션 결과'],
+                [],
+                ['등급', '현행금리', '시뮬후금리', '변동(Δ)', '선순위(현)', '선순위(후)', '중순위(현)', '중순위(후)', '후순위(현)', '후순위(후)', 'LTV', 'DSCR']
+            ];
+            const baseRate = (() => { try { return macroSimData?.[macroSimData.length-1]?.policyRate || 3.0; } catch(e) { return 3.0; } })();
+            const delta12 = sd ? (sd.d12 || 0) : 0;
+            PF_GRADES.forEach(pf => {
+                const costRisk = delta12 > 0 ? delta12 * pf.baseSpread * 0.023 : delta12 * pf.baseSpread * 0.012;
+                const td = (shocks.policyRate || 0) + costRisk;
+                const base = baseRate + pf.baseSpread;
+                pfAoa.push([
+                    pf.grade,
+                    (base).toFixed(2) + '%',
+                    (base + td).toFixed(2) + '%',
+                    (td >= 0 ? '+' : '') + td.toFixed(2) + '%p',
+                    (base + pf.seniorDisc).toFixed(2) + '%',
+                    (base + pf.seniorDisc + td).toFixed(2) + '%',
+                    (base + pf.mezzDisc).toFixed(2) + '%',
+                    (base + pf.mezzDisc + td).toFixed(2) + '%',
+                    (base + pf.juniorDisc).toFixed(2) + '%',
+                    (base + pf.juniorDisc + td).toFixed(2) + '%',
+                    pf.ltv, pf.dscr
+                ]);
+            });
+            const ws3 = XLSX.utils.aoa_to_sheet(pfAoa);
+            ws3['!cols'] = [12,12,12,12,12,12,12,12,12,12,10,10].map(w => ({ wch: w }));
+            XLSX.utils.book_append_sheet(wb, ws3, 'PF금리 시뮬레이션');
+
+            // ── Sheet 4: 에너지 차트 데이터 ──────────────────────────────────
+            if (charts.energy?.data?.labels?.length) {
+                const ec = charts.energy;
+                const energyAoa = [['시각', ...ec.data.datasets.map(d => d.label)]];
+                ec.data.labels.forEach((l, i) => {
+                    energyAoa.push([l, ...ec.data.datasets.map(d => d.data[i] ?? '')]);
+                });
+                const ws4 = XLSX.utils.aoa_to_sheet(energyAoa);
+                ws4['!cols'] = [16, 12, 12].map(w => ({ wch: w }));
+                XLSX.utils.book_append_sheet(wb, ws4, '에너지 가격 추이');
+            }
+
+            // ── Sheet 5: 금융 차트 데이터 ─────────────────────────────────────
+            if (charts.finance?.data?.labels?.length) {
+                const fc = charts.finance;
+                const finAoa = [['시각', ...fc.data.datasets.map(d => d.label)]];
+                fc.data.labels.forEach((l, i) => {
+                    finAoa.push([l, ...fc.data.datasets.map(d => d.data[i] ?? '')]);
+                });
+                const ws5 = XLSX.utils.aoa_to_sheet(finAoa);
+                ws5['!cols'] = [16, 12, 12].map(w => ({ wch: w }));
+                XLSX.utils.book_append_sheet(wb, ws5, '금융지표 추이');
+            }
+
+            const filename = `건설공사비_시뮬레이션_${new Date().toISOString().slice(0,10)}.xlsx`;
+            XLSX.writeFile(wb, filename);
+            if (btn) { btn.textContent = '↓ Excel'; btn.disabled = false; }
+        }
+
+        // ══════════════════════════════════════════════════════════════════
+        //  FEATURE: 건설비 구성 모달 (CSV 업로드 & 편집)
+        // ══════════════════════════════════════════════════════════════════
+        function openCostCompositionModal() {
+            if (document.getElementById('costCompModal')) {
+                document.getElementById('costCompModal').classList.add('active');
+                renderCostCompTable();
+                return;
+            }
+            const modal = document.createElement('div');
+            modal.id = 'costCompModal';
+            modal.style.cssText = 'position:fixed;inset:0;z-index:9900;background:rgba(2,6,15,0.88);display:flex;align-items:center;justify-content:center;';
+            modal.innerHTML = `
+<div style="background:#07111f;border:1px solid #1a3050;border-radius:8px;width:min(900px,95vw);max-height:85vh;overflow:hidden;display:flex;flex-direction:column;">
+  <!-- Header -->
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid #142030;flex-shrink:0;">
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#e2e8f0;letter-spacing:0.5px;font-family:'IBM Plex Mono',monospace;">유형별 건설비 구성</div>
+      <div style="font-size:11px;color:#4a6a88;margin-top:2px;">재료비·노무비·경비·자재 구성비 편집 및 CSV 업로드</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span id="costCompBadge" style="display:none;font-size:9px;padding:2px 7px;background:rgba(20,184,166,0.15);border:1px solid #14b8a633;color:#2dd4bf;border-radius:3px;font-family:'IBM Plex Mono',monospace;">CUSTOM</span>
+      <button onclick="downloadCostCompTemplate()" style="background:rgba(56,189,248,0.08);border:1px solid #1e3a5a;color:#4a8ab0;font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;">CSV 템플릿</button>
+      <label style="background:rgba(20,184,166,0.1);border:1px solid #14b8a633;color:#2dd4bf;font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;">
+        업로드 <input type="file" accept=".csv,.xlsx,.xls" style="display:none;" onchange="uploadCostComposition(this)">
+      </label>
+      <button onclick="resetCostComposition()" style="background:rgba(239,68,68,0.08);border:1px solid #3a1520;color:#f87171;font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;">초기화</button>
+      <button onclick="document.getElementById('costCompModal').classList.remove('active')" style="background:rgba(255,77,109,0.08);border:1px solid #3a1520;color:#ff4d6d;font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;">닫기</button>
+    </div>
+  </div>
+  <!-- Body -->
+  <div style="overflow-y:auto;padding:16px 20px;flex:1;">
+    <div id="costCompTableWrap"></div>
+    <div style="margin-top:12px;padding:10px 14px;background:rgba(56,189,248,0.04);border:1px solid #142030;border-radius:4px;font-size:11px;color:#4a6a88;line-height:1.6;">
+      <strong style="color:#8cb4d8;">CSV 형식:</strong> 유형,기준단가,재료비%,노무비%,경비%,철강%,콘크리트%,마감재%,설비%,기타%<br>
+      헤더 행 포함 7행 (아파트/오피스텔/상가/오피스/지산센터/물류센터). 합계가 100%가 되도록 입력해 주세요.
+    </div>
+  </div>
+</div>`;
+            modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('active'); });
+            document.body.appendChild(modal);
+            modal.classList.add('active');
+            renderCostCompTable();
+        }
+
+        // Store original PYEONG_TYPES for reset
+        let _origPyeongTypes = null;
+        function renderCostCompTable() {
+            const wrap = document.getElementById('costCompTableWrap');
+            if (!wrap) return;
+            let html = `<table style="width:100%;border-collapse:collapse;font-size:12px;">
+<thead><tr>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:left;border-bottom:1px solid #1a2840;white-space:nowrap;">유형</th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:right;border-bottom:1px solid #1a2840;">기준단가<br><span style="font-size:9px;font-weight:400;">(만원/평)</span></th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:right;border-bottom:1px solid #1a2840;">재료비%</th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:right;border-bottom:1px solid #1a2840;">노무비%</th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:right;border-bottom:1px solid #1a2840;">경비%</th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:right;border-bottom:1px solid #1a2840;">철강%</th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:right;border-bottom:1px solid #1a2840;">콘크리트%</th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:right;border-bottom:1px solid #1a2840;">마감재%</th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:right;border-bottom:1px solid #1a2840;">설비%</th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:right;border-bottom:1px solid #1a2840;">기타%</th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:center;border-bottom:1px solid #1a2840;">출처</th>
+</tr></thead><tbody>`;
+            Object.entries(PYEONG_TYPES).forEach(([key, pt], ri) => {
+                const m = pt.materials || {};
+                const overhead = pt.overheadPct || (100 - pt.materialPct - pt.laborPct);
+                const totalMat = (m.steel||0)+(m.concrete||0)+(m.finishing||0)+(m.equipment||0)+(m.other||0);
+                const bg = ri % 2 === 0 ? '' : 'background:rgba(255,255,255,0.012);';
+                const customFlag = pt._custom ? 'border-left:2px solid #14b8a6;' : '';
+                html += `<tr style="${bg}${customFlag}" data-key="${key}">
+  <td style="padding:7px 10px;color:#dde8f8;font-weight:600;white-space:nowrap;">${pt.label} ${pt._custom ? '<span style="font-size:9px;color:#14b8a6;">[수정]</span>' : ''}</td>
+  <td style="padding:7px 10px;text-align:right;color:#4ec9ff;font-family:'IBM Plex Mono',monospace;" contenteditable="true" oninput="updatePyeongCell('${key}','baseline',this.textContent)">${pt.baseline}</td>
+  <td style="padding:7px 10px;text-align:right;color:#fbbf24;font-family:'IBM Plex Mono',monospace;" contenteditable="true" oninput="updatePyeongCell('${key}','materialPct',this.textContent)">${pt.materialPct}</td>
+  <td style="padding:7px 10px;text-align:right;color:#4ade80;font-family:'IBM Plex Mono',monospace;" contenteditable="true" oninput="updatePyeongCell('${key}','laborPct',this.textContent)">${pt.laborPct}</td>
+  <td style="padding:7px 10px;text-align:right;color:#94a3b8;font-family:'IBM Plex Mono',monospace;">${overhead}</td>
+  <td style="padding:7px 10px;text-align:right;color:#c0d0e4;font-family:'IBM Plex Mono',monospace;" contenteditable="true" oninput="updatePyeongMaterial('${key}','steel',this.textContent)">${m.steel||0}</td>
+  <td style="padding:7px 10px;text-align:right;color:#c0d0e4;font-family:'IBM Plex Mono',monospace;" contenteditable="true" oninput="updatePyeongMaterial('${key}','concrete',this.textContent)">${m.concrete||0}</td>
+  <td style="padding:7px 10px;text-align:right;color:#c0d0e4;font-family:'IBM Plex Mono',monospace;" contenteditable="true" oninput="updatePyeongMaterial('${key}','finishing',this.textContent)">${m.finishing||0}</td>
+  <td style="padding:7px 10px;text-align:right;color:#c0d0e4;font-family:'IBM Plex Mono',monospace;" contenteditable="true" oninput="updatePyeongMaterial('${key}','equipment',this.textContent)">${m.equipment||0}</td>
+  <td style="padding:7px 10px;text-align:right;color:#c0d0e4;font-family:'IBM Plex Mono',monospace;" contenteditable="true" oninput="updatePyeongMaterial('${key}','other',this.textContent)">${m.other||0}</td>
+  <td style="padding:7px 10px;text-align:center;font-size:9px;color:#4a6a88;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${pt.source||''}">${pt.source||'-'}</td>
+</tr>`;
+            });
+            html += '</tbody></table>';
+            wrap.innerHTML = html;
+        }
+
+        function updatePyeongCell(key, field, raw) {
+            const val = parseFloat(raw);
+            if (isNaN(val)) return;
+            if (!_origPyeongTypes) _origPyeongTypes = JSON.parse(JSON.stringify(PYEONG_TYPES));
+            PYEONG_TYPES[key][field] = val;
+            PYEONG_TYPES[key]._custom = true;
+            document.getElementById('costCompBadge').style.display = '';
+            try { runSimulation(); } catch(e) {}
+        }
+
+        function updatePyeongMaterial(key, matField, raw) {
+            const val = parseFloat(raw);
+            if (isNaN(val)) return;
+            if (!_origPyeongTypes) _origPyeongTypes = JSON.parse(JSON.stringify(PYEONG_TYPES));
+            if (!PYEONG_TYPES[key].materials) PYEONG_TYPES[key].materials = {};
+            PYEONG_TYPES[key].materials[matField] = val;
+            PYEONG_TYPES[key]._custom = true;
+            document.getElementById('costCompBadge').style.display = '';
+            try { runSimulation(); } catch(e) {}
+        }
+
+        function resetCostComposition() {
+            if (!_origPyeongTypes) return;
+            Object.entries(_origPyeongTypes).forEach(([k, v]) => {
+                Object.assign(PYEONG_TYPES[k], v);
+                delete PYEONG_TYPES[k]._custom;
+            });
+            _origPyeongTypes = null;
+            document.getElementById('costCompBadge').style.display = 'none';
+            renderCostCompTable();
+            try { runSimulation(); } catch(e) {}
+        }
+
+        function downloadCostCompTemplate() {
+            const rows = [
+                ['유형', '기준단가(만원/평)', '재료비%', '노무비%', '경비%', '철강%', '콘크리트%', '마감재%', '설비%', '기타%'],
+                ...Object.entries(PYEONG_TYPES).map(([, pt]) => {
+                    const m = pt.materials || {};
+                    const ov = pt.overheadPct || (100 - pt.materialPct - pt.laborPct);
+                    return [pt.label, pt.baseline, pt.materialPct, pt.laborPct, ov,
+                            m.steel||0, m.concrete||0, m.finishing||0, m.equipment||0, m.other||0];
+                })
+            ];
+            const csv = rows.map(r => r.join(',')).join('\n');
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = '건설비_구성비_템플릿.csv';
+            document.body.appendChild(a); a.click();
+            document.body.removeChild(a); URL.revokeObjectURL(url);
+        }
+
+        function uploadCostComposition(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const ext = file.name.split('.').pop().toLowerCase();
+
+            const applyRows = (rows) => {
+                // rows[0] = header, rows[1..] = data
+                const keys = Object.keys(PYEONG_TYPES);
+                if (!_origPyeongTypes) _origPyeongTypes = JSON.parse(JSON.stringify(PYEONG_TYPES));
+                rows.slice(1).forEach((row, i) => {
+                    const key = keys[i];
+                    if (!key || !row[1]) return;
+                    const get = (idx) => parseFloat(String(row[idx] || '').replace(/[^0-9.\-]/g, '')) || 0;
+                    PYEONG_TYPES[key].baseline    = get(1);
+                    PYEONG_TYPES[key].materialPct = get(2);
+                    PYEONG_TYPES[key].laborPct    = get(3);
+                    PYEONG_TYPES[key].overheadPct = get(4);
+                    PYEONG_TYPES[key].materials   = {
+                        steel: get(5), concrete: get(6), finishing: get(7),
+                        equipment: get(8), other: get(9)
+                    };
+                    PYEONG_TYPES[key]._custom = true;
+                });
+                document.getElementById('costCompBadge').style.display = '';
+                renderCostCompTable();
+                try { runSimulation(); } catch(e) {}
+                input.value = '';
+            };
+
+            if (ext === 'csv') {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const lines = e.target.result.replace(/\r/g, '').split('\n').filter(l => l.trim());
+                    const rows = lines.map(l => l.split(',').map(c => c.trim().replace(/^"|"$/g, '')));
+                    applyRows(rows);
+                };
+                reader.readAsText(file, 'UTF-8');
+            } else if (['xlsx','xls'].includes(ext)) {
+                if (typeof XLSX === 'undefined') { alert('Excel 라이브러리 로딩 중입니다.'); return; }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const wb2 = XLSX.read(e.target.result, { type: 'array' });
+                    const ws = wb2.Sheets[wb2.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+                    applyRows(rows);
+                };
+                reader.readAsArrayBuffer(file);
+            }
         }
 
         function generateRandomData(length, min, max) {
