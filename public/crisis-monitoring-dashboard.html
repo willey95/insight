@@ -6453,18 +6453,21 @@
             ];
             Object.entries(PYEONG_TYPES).forEach(([key, pt]) => {
                 const t = sd?.types?.[key];
-                const imp3  = t ? +(t.imp3 * 100).toFixed(2) : null;
-                const imp6  = t ? +(t.imp6 * 100).toFixed(2) : null;
-                const imp12 = t ? +(t.imp12 * 100).toFixed(2) : null;
+                // imp3/imp6/imp12 are already % values (e.g. 2.34 = 2.34%) — no ×100
+                const imp3  = t ? +t.imp3.toFixed(2)  : null;
+                const imp6  = t ? +t.imp6.toFixed(2)  : null;
+                const imp12 = t ? +t.imp12.toFixed(2) : null;
+                // val = dynamic average from simulation (matches on-screen display); fall back to baseline
+                const avgVal = t?.val ?? pt.baseline;
                 summaryAoa.push([
-                    pt.label, pt.baseline,
+                    pt.label, avgVal,
                     pt.materialPct, pt.laborPct, pt.overheadPct || (100 - pt.materialPct - pt.laborPct),
                     imp3 != null ? imp3 + '%' : 'N/A',
                     imp6 != null ? imp6 + '%' : 'N/A',
                     imp12 != null ? imp12 + '%' : 'N/A',
-                    imp3 != null ? Math.round(pt.baseline * imp3 / 100) : 'N/A',
-                    imp6 != null ? Math.round(pt.baseline * imp6 / 100) : 'N/A',
-                    imp12 != null ? Math.round(pt.baseline * imp12 / 100) : 'N/A'
+                    imp3 != null ? Math.round(avgVal * imp3 / 100) : 'N/A',
+                    imp6 != null ? Math.round(avgVal * imp6 / 100) : 'N/A',
+                    imp12 != null ? Math.round(avgVal * imp12 / 100) : 'N/A'
                 ]);
             });
             const ws1 = XLSX.utils.aoa_to_sheet(summaryAoa);
@@ -6479,10 +6482,11 @@
                 ['유형', '기준단가(만원/평)', '재료비%', '노무비%', '경비%',
                  '철강%', '콘크리트%', '마감재%', '설비%', '기타%', '노무민감도', '출처']
             ];
-            Object.entries(PYEONG_TYPES).forEach(([, pt]) => {
+            Object.entries(PYEONG_TYPES).forEach(([key, pt]) => {
                 const m = pt.materials || {};
+                const avgVal2 = sd?.types?.[key]?.val ?? pt.baseline;
                 detailAoa.push([
-                    pt.label, pt.baseline,
+                    pt.label, avgVal2,
                     pt.materialPct, pt.laborPct, pt.overheadPct || (100 - pt.materialPct - pt.laborPct),
                     m.steel || '-', m.concrete || '-', m.finishing || '-', m.equipment || '-', m.other || '-',
                     pt.laborSensitivity, pt.source || '-'
@@ -6554,45 +6558,62 @@
         // ══════════════════════════════════════════════════════════════════
         //  FEATURE: 건설비 구성 모달 (CSV 업로드 & 편집)
         // ══════════════════════════════════════════════════════════════════
+        function closeCostCompModal() {
+            // remove() is definitive — no display/visibility state to manage
+            document.getElementById('costCompModal')?.remove();
+        }
         function openCostCompositionModal() {
-            if (document.getElementById('costCompModal')) {
-                document.getElementById('costCompModal').classList.add('active');
-                renderCostCompTable();
-                return;
-            }
+            // Always close & recreate so event bindings are fresh
+            closeCostCompModal();
+
             const modal = document.createElement('div');
             modal.id = 'costCompModal';
             modal.style.cssText = 'position:fixed;inset:0;z-index:9900;background:rgba(2,6,15,0.88);display:flex;align-items:center;justify-content:center;';
-            modal.innerHTML = `
-<div style="background:#07111f;border:1px solid #1a3050;border-radius:8px;width:min(900px,95vw);max-height:85vh;overflow:hidden;display:flex;flex-direction:column;">
-  <!-- Header -->
-  <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid #142030;flex-shrink:0;">
-    <div>
-      <div style="font-size:13px;font-weight:700;color:#e2e8f0;letter-spacing:0.5px;font-family:'IBM Plex Mono',monospace;">유형별 건설비 구성</div>
-      <div style="font-size:11px;color:#4a6a88;margin-top:2px;">재료비·노무비·경비·자재 구성비 편집 및 CSV 업로드</div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <span id="costCompBadge" style="display:none;font-size:9px;padding:2px 7px;background:rgba(20,184,166,0.15);border:1px solid #14b8a633;color:#2dd4bf;border-radius:3px;font-family:'IBM Plex Mono',monospace;">CUSTOM</span>
-      <button onclick="downloadCostCompTemplate()" style="background:rgba(56,189,248,0.08);border:1px solid #1e3a5a;color:#4a8ab0;font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;">CSV 템플릿</button>
-      <label style="background:rgba(20,184,166,0.1);border:1px solid #14b8a633;color:#2dd4bf;font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;">
-        업로드 <input type="file" accept=".csv,.xlsx,.xls" style="display:none;" onchange="uploadCostComposition(this)">
-      </label>
-      <button onclick="resetCostComposition()" style="background:rgba(239,68,68,0.08);border:1px solid #3a1520;color:#f87171;font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;">초기화</button>
-      <button onclick="document.getElementById('costCompModal').classList.remove('active')" style="background:rgba(255,77,109,0.08);border:1px solid #3a1520;color:#ff4d6d;font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;">닫기</button>
-    </div>
-  </div>
-  <!-- Body -->
-  <div style="overflow-y:auto;padding:16px 20px;flex:1;">
-    <div id="costCompTableWrap"></div>
-    <div style="margin-top:12px;padding:10px 14px;background:rgba(56,189,248,0.04);border:1px solid #142030;border-radius:4px;font-size:11px;color:#4a6a88;line-height:1.6;">
-      <strong style="color:#8cb4d8;">CSV 형식:</strong> 유형,기준단가,재료비%,노무비%,경비%,철강%,콘크리트%,마감재%,설비%,기타%<br>
-      헤더 행 포함 7행 (아파트/오피스텔/상가/오피스/지산센터/물류센터). 합계가 100%가 되도록 입력해 주세요.
-    </div>
-  </div>
-</div>`;
-            modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('active'); });
+
+            // Build inner HTML without any inline event attributes
+            const inner = document.createElement('div');
+            inner.style.cssText = 'background:#07111f;border:1px solid #1a3050;border-radius:8px;width:min(900px,95vw);max-height:85vh;overflow:hidden;display:flex;flex-direction:column;';
+
+            // ── Header ──
+            const header = document.createElement('div');
+            header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid #142030;flex-shrink:0;';
+            header.innerHTML = `
+              <div>
+                <div style="font-size:14px;font-weight:700;color:#e2e8f0;letter-spacing:0.5px;font-family:'IBM Plex Mono',monospace;">유형별 건설비 구성</div>
+                <div style="font-size:12px;color:#4a6a88;margin-top:2px;">재료비·노무비·경비·자재 구성비 편집 및 CSV 업로드</div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <span id="costCompBadge" style="display:none;font-size:10px;padding:2px 7px;background:rgba(20,184,166,0.15);border:1px solid #14b8a633;color:#2dd4bf;border-radius:3px;font-family:'IBM Plex Mono',monospace;">CUSTOM</span>
+                <button id="ccBtnTemplate" style="background:rgba(56,189,248,0.08);border:1px solid #1e3a5a;color:#4a8ab0;font-size:11px;padding:4px 10px;border-radius:4px;cursor:pointer;">CSV 템플릿</button>
+                <label style="background:rgba(20,184,166,0.1);border:1px solid #14b8a633;color:#2dd4bf;font-size:11px;padding:4px 10px;border-radius:4px;cursor:pointer;">
+                  업로드 <input id="ccFileInput" type="file" accept=".csv,.xlsx,.xls" style="display:none;">
+                </label>
+                <button id="ccBtnReset" style="background:rgba(239,68,68,0.08);border:1px solid #3a1520;color:#f87171;font-size:11px;padding:4px 10px;border-radius:4px;cursor:pointer;">초기화</button>
+                <button id="ccBtnClose" style="background:rgba(255,77,109,0.08);border:1px solid #3a1520;color:#ff4d6d;font-size:11px;padding:4px 12px;border-radius:4px;cursor:pointer;font-weight:700;">✕ 닫기</button>
+              </div>`;
+
+            // ── Body ──
+            const body = document.createElement('div');
+            body.style.cssText = 'overflow-y:auto;padding:16px 20px;flex:1;';
+            body.innerHTML = `
+              <div id="costCompTableWrap"></div>
+              <div style="margin-top:12px;padding:10px 14px;background:rgba(56,189,248,0.04);border:1px solid #142030;border-radius:4px;font-size:12px;color:#4a6a88;line-height:1.6;">
+                <strong style="color:#8cb4d8;">CSV 형식:</strong> 유형,기준단가,재료비%,노무비%,경비%,철강%,콘크리트%,마감재%,설비%,기타%<br>
+                헤더 행 포함 7행 (아파트/오피스텔/상가/오피스/지산센터/물류센터). 합계가 100%가 되도록 입력해 주세요.
+              </div>`;
+
+            inner.appendChild(header);
+            inner.appendChild(body);
+            modal.appendChild(inner);
             document.body.appendChild(modal);
-            modal.classList.add('active');
+
+            // Bind all events via JS — no inline onclick
+            modal.addEventListener('click', e => { if (e.target === modal) closeCostCompModal(); });
+            modal.querySelector('#ccBtnClose').addEventListener('click', closeCostCompModal);
+            modal.querySelector('#ccBtnTemplate').addEventListener('click', downloadCostCompTemplate);
+            modal.querySelector('#ccBtnReset').addEventListener('click', resetCostComposition);
+            modal.querySelector('#ccFileInput').addEventListener('change', function() { uploadCostComposition(this); });
+
             renderCostCompTable();
         }
 
@@ -6601,19 +6622,19 @@
         function renderCostCompTable() {
             const wrap = document.getElementById('costCompTableWrap');
             if (!wrap) return;
-            let html = `<table style="width:100%;border-collapse:collapse;font-size:12px;">
+            let html = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
 <thead><tr>
-  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:left;border-bottom:1px solid #1a2840;white-space:nowrap;">유형</th>
-  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:right;border-bottom:1px solid #1a2840;">기준단가<br><span style="font-size:9px;font-weight:400;">(만원/평)</span></th>
-  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:right;border-bottom:1px solid #1a2840;">재료비%</th>
-  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:right;border-bottom:1px solid #1a2840;">노무비%</th>
-  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:right;border-bottom:1px solid #1a2840;">경비%</th>
-  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:right;border-bottom:1px solid #1a2840;">철강%</th>
-  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:right;border-bottom:1px solid #1a2840;">콘크리트%</th>
-  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:right;border-bottom:1px solid #1a2840;">마감재%</th>
-  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:right;border-bottom:1px solid #1a2840;">설비%</th>
-  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:right;border-bottom:1px solid #1a2840;">기타%</th>
-  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:11px;text-align:center;border-bottom:1px solid #1a2840;">출처</th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:12px;text-align:left;border-bottom:1px solid #1a2840;white-space:nowrap;">유형</th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:12px;text-align:right;border-bottom:1px solid #1a2840;">기준단가<br><span style="font-size:10px;font-weight:400;">(만원/평)</span></th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:12px;text-align:right;border-bottom:1px solid #1a2840;">재료비%</th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:12px;text-align:right;border-bottom:1px solid #1a2840;">노무비%</th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:12px;text-align:right;border-bottom:1px solid #1a2840;">경비%</th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:12px;text-align:right;border-bottom:1px solid #1a2840;">철강%</th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:12px;text-align:right;border-bottom:1px solid #1a2840;">콘크리트%</th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:12px;text-align:right;border-bottom:1px solid #1a2840;">마감재%</th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:12px;text-align:right;border-bottom:1px solid #1a2840;">설비%</th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:12px;text-align:right;border-bottom:1px solid #1a2840;">기타%</th>
+  <th style="padding:6px 10px;background:#0d1e35;color:#8cb4d8;font-size:12px;text-align:center;border-bottom:1px solid #1a2840;">출처</th>
 </tr></thead><tbody>`;
             Object.entries(PYEONG_TYPES).forEach(([key, pt], ri) => {
                 const m = pt.materials || {};
@@ -6622,7 +6643,7 @@
                 const bg = ri % 2 === 0 ? '' : 'background:rgba(255,255,255,0.012);';
                 const customFlag = pt._custom ? 'border-left:2px solid #14b8a6;' : '';
                 html += `<tr style="${bg}${customFlag}" data-key="${key}">
-  <td style="padding:7px 10px;color:#dde8f8;font-weight:600;white-space:nowrap;">${pt.label} ${pt._custom ? '<span style="font-size:9px;color:#14b8a6;">[수정]</span>' : ''}</td>
+  <td style="padding:7px 10px;color:#dde8f8;font-weight:600;white-space:nowrap;">${pt.label} ${pt._custom ? '<span style="font-size:10px;color:#14b8a6;">[수정]</span>' : ''}</td>
   <td style="padding:7px 10px;text-align:right;color:#4ec9ff;font-family:'IBM Plex Mono',monospace;" contenteditable="true" oninput="updatePyeongCell('${key}','baseline',this.textContent)">${pt.baseline}</td>
   <td style="padding:7px 10px;text-align:right;color:#fbbf24;font-family:'IBM Plex Mono',monospace;" contenteditable="true" oninput="updatePyeongCell('${key}','materialPct',this.textContent)">${pt.materialPct}</td>
   <td style="padding:7px 10px;text-align:right;color:#4ade80;font-family:'IBM Plex Mono',monospace;" contenteditable="true" oninput="updatePyeongCell('${key}','laborPct',this.textContent)">${pt.laborPct}</td>
@@ -6632,7 +6653,7 @@
   <td style="padding:7px 10px;text-align:right;color:#c0d0e4;font-family:'IBM Plex Mono',monospace;" contenteditable="true" oninput="updatePyeongMaterial('${key}','finishing',this.textContent)">${m.finishing||0}</td>
   <td style="padding:7px 10px;text-align:right;color:#c0d0e4;font-family:'IBM Plex Mono',monospace;" contenteditable="true" oninput="updatePyeongMaterial('${key}','equipment',this.textContent)">${m.equipment||0}</td>
   <td style="padding:7px 10px;text-align:right;color:#c0d0e4;font-family:'IBM Plex Mono',monospace;" contenteditable="true" oninput="updatePyeongMaterial('${key}','other',this.textContent)">${m.other||0}</td>
-  <td style="padding:7px 10px;text-align:center;font-size:9px;color:#4a6a88;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${pt.source||''}">${pt.source||'-'}</td>
+  <td style="padding:7px 10px;text-align:center;font-size:10px;color:#4a6a88;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${pt.source||''}">${pt.source||'-'}</td>
 </tr>`;
             });
             html += '</tbody></table>';
@@ -7340,13 +7361,14 @@
                         }
                     } catch(e3) {}
 
-                    // PYEONG type impacts
+                    // PYEONG type impacts — use dynamic val (simulation average) for baseline if available
                     const pyeongKeys = Object.keys(PYEONG_TYPES);
                     simCtx.pyeongImpacts = pyeongKeys.map(k => {
                         const pt = PYEONG_TYPES[k];
+                        const simVal = window._simTypeData?.types?.[k]?.val ?? pt.baseline;
                         const d12 = fc && fc[11] ? fc[11].deltaPct : 0;
                         const impact12 = d12 * (pt.materialPct / 100 * 1.1 + pt.laborPct / 100 * pt.laborSensitivity);
-                        return { type: pt.label, baseline: pt.baseline, materialPct: pt.materialPct, laborPct: pt.laborPct, impact12: +impact12.toFixed(2) };
+                        return { type: pt.label, baseline: simVal, materialPct: pt.materialPct, laborPct: pt.laborPct, impact12: +impact12.toFixed(2) };
                     });
                     // PF grade impacts
                     const baseRate = latest.policyRate || 2.5;
